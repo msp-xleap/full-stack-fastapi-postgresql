@@ -14,6 +14,7 @@
 
 ### Features
 
+* 🎨 Improve styles. PR [#673](https://github.com/tiangolo/full-stack-fastapi-postgresql/pull/673) by [@alejsdev](https://github.com/alejsdev).
 * 🎨 Update theme. PR [#666](https://github.com/tiangolo/full-stack-fastapi-postgresql/pull/666) by [@alejsdev](https://github.com/alejsdev).
 * 👷 Add continuous deployment and refactors needed for it. PR [#667](https://github.com/tiangolo/full-stack-fastapi-postgresql/pull/667) by [@tiangolo](https://github.com/tiangolo).
 * ✨ Create endpoint to show password recovery email content and update email template. PR [#664](https://github.com/tiangolo/full-stack-fastapi-postgresql/pull/664) by [@alejsdev](https://github.com/alejsdev).
@@ -67,6 +68,8 @@
 
 ### Refactors
 
+* 🔧 Update VS Code debug config. PR [#676](https://github.com/tiangolo/full-stack-fastapi-postgresql/pull/676) by [@tiangolo](https://github.com/tiangolo).
+* ♻️ Refactor code structure for tests. PR [#674](https://github.com/tiangolo/full-stack-fastapi-postgresql/pull/674) by [@tiangolo](https://github.com/tiangolo).
 * 🔧 Set TanStack Router devtools only in dev mode. PR [#668](https://github.com/tiangolo/full-stack-fastapi-postgresql/pull/668) by [@alejsdev](https://github.com/alejsdev).
 * ♻️ Refactor email logic to allow re-using util functions for testing and development. PR [#663](https://github.com/tiangolo/full-stack-fastapi-postgresql/pull/663) by [@tiangolo](https://github.com/tiangolo).
 * 💬 Improve Delete Account description and confirmation. PR [#661](https://github.com/tiangolo/full-stack-fastapi-postgresql/pull/661) by [@alejsdev](https://github.com/alejsdev).
@@ -106,10 +109,12 @@
 
 ### Upgrades
 
+* ⬆ Add `uvicorn[standard] to include `watchgod` and `uvloop`. PR [#438](https://github.com/tiangolo/full-stack-fastapi-postgresql/pull/438) by [@alonme](https://github.com/alonme).
 * ⬆ Upgrade code to support pydantic V2. PR [#615](https://github.com/tiangolo/full-stack-fastapi-postgresql/pull/615) by [@estebanx64](https://github.com/estebanx64).
 
 ### Docs
 
+* 📝 Update frontend `README.md`. PR [#675](https://github.com/tiangolo/full-stack-fastapi-postgresql/pull/675) by [@alejsdev](https://github.com/alejsdev).
 * 📝 Update deployment docs to use a different directory for traefik-public. PR [#670](https://github.com/tiangolo/full-stack-fastapi-postgresql/pull/670) by [@tiangolo](https://github.com/tiangolo).
 * 📸 Add new screenshots . PR [#657](https://github.com/tiangolo/full-stack-fastapi-postgresql/pull/657) by [@alejsdev](https://github.com/alejsdev).
 * 📝 Refactor README into separate README.md files for backend, frontend, deployment, development. PR [#639](https://github.com/tiangolo/full-stack-fastapi-postgresql/pull/639) by [@tiangolo](https://github.com/tiangolo).
