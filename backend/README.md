@@ -21,9 +21,7 @@ Backend, JSON based web API based on OpenAPI: http://localhost/api/
 
 Automatic interactive documentation with Swagger UI (from the OpenAPI backend): http://localhost/docs
 
-PGAdmin, PostgreSQL web administration: http://localhost:5050
-
-Flower, administration of Celery tasks: http://localhost:5555
+Adminer, database web administration: http://localhost:8080
 
 Traefik UI, to see how the routes are being handled by the proxy: http://localhost:8090
 
@@ -65,7 +63,11 @@ Make sure your editor is using the correct Python virtual environment.
 
 Modify or add SQLModel models for data and SQL tables in `./backend/app/models.py`, API endpoints in `./backend/app/api/`, CRUD (Create, Read, Update, Delete) utils in `./backend/app/crud.py`.
 
-Add and modify tasks to the Celery worker in `./backend/app/worker.py`.
+### VS Code
+
+There are already configurations in place to run the backend through the VS Code debugger, so that you can use breakpoints, pause and explore variables, etc.
+
+The setup is also already configured so you can run the tests through the VS Code Python tests tab.
 
 ### Docker Compose Override
 
@@ -151,19 +153,7 @@ docker compose exec backend bash /app/tests-start.sh -x
 
 #### Test Coverage
 
-Because the test scripts forward arguments to `pytest`, you can enable test coverage HTML report generation by passing `--cov-report=html`.
-
-To run the local tests with coverage HTML reports:
-
-```Bash
-DOMAIN=backend sh ./scripts/test-local.sh --cov-report=html
-```
-
-To run the tests in a running stack with coverage HTML reports:
-
-```bash
-docker compose exec backend bash /app/tests-start.sh --cov-report=html
-```
+When the tests are run, a file `htmlcov/index.html` is generated, you can open it in your browser to see the coverage of the tests.
 
 ### Migrations
 
