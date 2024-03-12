@@ -113,45 +113,31 @@ class NewPassword(SQLModel):
     new_password: str
 
 
-# class XLeapDetailsBase(SQLModel):
-#     server_id: str
-#     session_id: str
-#     workspace_id: str
-#     instance_id: str = Field(unique=True, index=True)
-#     secret: str
-#
-#
-# class AIAgentConfigBase(SQLModel):
-#     api_type: str
-#     model: str
-#     api_url: str | None = None
-#     api_key: str
-#     org_id: str | None = None
-#
-#
-# # Shared properties
-# class AIAgentBase(SQLModel):
-#     xleap = XLeapDetailsBase
-#     config = AIAgentConfigBase
+class XLeapDetailsBase(SQLModel):
+    server_id: str
+    session_id: str
+    workspace_id: str
+    instance_id: str = Field(unique=True, index=True)
+    secret: str
 
 
-# # Database model, database table inferred from class name
-# class AIAgentConfig(SQLModel, table=True):
-#     id: int = Field(default=None, primary_key=True)
-#     owner_id: int = Field(foreign_key="aiagent.id", nullable=False)
-#     owner: "AIAgent" = Relationship("AIAgent", back_populates="config")
-#
-#
-# # Database model, database table inferred from class name
-# class XLeapDetails(SQLModel, table=True):
-#     id: int = Field(default=None, primary_key=True)
-#     owner_id: int = Field(foreign_key="aiagent.id", nullable=False)
-#     owner: "AIAgent" = Relationship("AIAgent", back_populates="xleap")
-#
-#
-# # Database model, database table inferred from class name
-# class AIAgent(SQLModel, table=True):
-#     id: int = Field(default=None, primary_key=True)
-#     hashed_secret: str
-#     xleap: XLeapDetails = Relationship("XLeapDetails", back_populates="owner")
-#     config: AIAgentConfig = Relationship("AIAgentConfig", back_populates="owner")
+class AIAgentConfigBase(SQLModel):
+    api_type: str
+    model: str
+    api_url: str | None = None
+    api_key: str
+    org_id: str | None = None
+
+
+class AIAgentCreate(SQLModel):
+    xleap: XLeapDetailsBase
+    config: AIAgentConfigBase
+
+class AIAgentBase(XLeapDetailsBase, AIAgentConfigBase):
+    pass
+
+
+# Database model, database table inferred from class name
+class AIAgent(AIAgentBase, table=True):
+    id: int = Field(default=None, primary_key=True)
+    # hashed_secret: str

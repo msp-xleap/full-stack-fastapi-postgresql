@@ -3,17 +3,17 @@ from typing import Any
 from sqlmodel import Session, select
 
 from app.core.security import get_password_hash, verify_password
-from app.models import Item, ItemCreate, User, UserCreate, UserUpdate #, AIAgent, AIAgentBase
+from app.models import Item, ItemCreate, User, UserCreate, UserUpdate, AIAgent
 
 
-# def create_ai_agent(*, session: Session, ai_agent: AIAgentBase) -> AIAgent:
-#     db_obj = AIAgent.model_validate(
-#         ai_agent, update={"hashed_password": get_password_hash(ai_agent.xleap.secret)}
-#     )
-#     session.add(db_obj)
-#     session.commit()
-#     session.refresh(db_obj)
-#     return db_obj
+def create_ai_agent(*, session: Session, ai_agent: AIAgent) -> AIAgent:
+    db_obj = AIAgent.model_validate(
+        {**ai_agent.xleap.model_dump(), **ai_agent.config.model_dump()}#, update={"hashed_password": get_password_hash(ai_agent.xleap.secret)}
+    )
+    session.add(db_obj)
+    session.commit()
+    session.refresh(db_obj)
+    return db_obj
 
 
 def create_user(*, session: Session, user_create: UserCreate) -> User:
