@@ -7,9 +7,9 @@ from typing import Any
 import emails  # type: ignore
 from jinja2 import Template
 from jose import JWTError, jwt
+# from langchain_openai import OpenAI
 
 from app.core.config import settings
-
 
 @dataclass
 class EmailData:
@@ -110,3 +110,13 @@ def verify_password_reset_token(token: str) -> str | None:
         return str(decoded_token["sub"])
     except JWTError:
         return None
+
+
+def is_api_key_valid(api_key: str) -> bool:
+    try:
+        llm = OpenAI(openai_api_key=api_key)
+        llm.invoke("Are you ready? Yes or no?")
+    except:
+        return False
+    else:
+        return True
