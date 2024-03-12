@@ -23,17 +23,6 @@ def validate_api_key(
     # api_key = "YOUR API KEY"
     result = is_api_key_valid(api_key=api_key)
 
-    print("""
-    
-    """)
-
-    print(f"RESULT: {result}")
-
-    print("""
-    
-    """)
-
-
     if result:
         return result
     else:
