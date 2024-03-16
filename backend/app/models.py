@@ -1,4 +1,5 @@
 from sqlmodel import Field, Relationship, SQLModel
+import uuid as uuid_pkg
 
 
 # Shared properties
@@ -139,5 +140,10 @@ class AIAgentBase(XLeapDetailsBase, AIAgentConfigBase):
 
 # Database model, database table inferred from class name
 class AIAgent(AIAgentBase, table=True):
-    id: int = Field(default=None, primary_key=True)
+    id: uuid_pkg.UUID = Field(
+        default_factory=uuid_pkg.uuid4,
+        primary_key=True,
+        index=True,
+        nullable=False,
+    )
     # hashed_secret: str
