@@ -45,6 +45,26 @@ def activate_ai_agent(*, session: Session, ai_agent: AIAgent) -> AIAgent:
     return ai_agent
 
 
+def deactivate_ai_agent(*, session: Session, ai_agent: AIAgent) -> AIAgent:
+    """Deactivate AI Agent
+
+    Args:
+        session (Session): Database session
+        ai_agent (AIAgent): AI Agent object
+
+    Returns:
+        AIAgent: Deactivated AI Agent object
+    """
+    extra_data = {
+        "is_active": False
+    }
+    ai_agent.sqlmodel_update(ai_agent, update=extra_data)
+    session.add(ai_agent)
+    session.commit()
+    session.refresh(ai_agent)
+    return ai_agent
+
+
 def create_user(*, session: Session, user_create: UserCreate) -> User:
     db_obj = User.model_validate(
         user_create, update={"hashed_password": get_password_hash(user_create.password)}
