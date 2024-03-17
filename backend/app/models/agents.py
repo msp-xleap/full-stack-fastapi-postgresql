@@ -38,3 +38,7 @@ class AIAgent(AIAgentBase, table=True):
     )
     # hashed_secret: str
     is_active: bool = False
+
+
+class AgentIdResponse(SQLModel):
+    agent_id: str

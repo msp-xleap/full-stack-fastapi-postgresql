@@ -1,5 +1,6 @@
 from sqlmodel import Field, Relationship, SQLModel
-from .agents import (AIAgent, AIAgentBase, AIAgentCreate, XLeapDetailsBase,
+from .agents import (AIAgent, AIAgentBase, AIAgentCreate, AgentIdResponse,
+                     XLeapDetailsBase,
                      AIAgentConfigBase)
 from .users import (User, UserBase, UserCreate, UserCreateOpen, UserUpdate,
                     UserUpdateMe, UpdatePassword, UserOut, UsersOut)

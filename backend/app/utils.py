@@ -169,3 +169,25 @@ def get_agent(agent_id: str, session: SessionDep) -> AIAgent:
             detail="The agent with this id does not exist in the system"
         ) from e
     return agent
+
+
+def check_agent_exists(instance_id: str, session: SessionDep) -> None:
+    """Check if an agent with the given ID already exists.
+
+    Args:
+        instance_id (str): Instance ID of the agent to be created.
+        session (SessionDep): Database session.
+
+    Raises:
+        HTTPException - 409: If the agent already exists.
+
+    Returns:
+        None
+    """
+    existing_agent = session.query(AIAgent).filter_by(
+        instance_id=instance_id).first()
+    if existing_agent:
+        raise HTTPException(
+            status_code=409,
+            detail="An agent with this id already exists in the system"
+        )

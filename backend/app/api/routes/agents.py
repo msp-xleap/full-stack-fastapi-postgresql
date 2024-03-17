@@ -4,20 +4,27 @@ from fastapi import APIRouter
 
 from app import crud
 from app.api.deps import SessionDep
-from app.models import AIAgentCreate
-from app.utils import get_agent
+from app.models import AIAgentCreate, AgentIdResponse
+from app.utils import get_agent, check_agent_exists
 
 router = APIRouter()
 
 
-@router.post("/", response_model=dict, status_code=202)
+@router.post("/",
+             response_model=AgentIdResponse,
+             responses={409: {"detail": "Agent already exists"}},
+             status_code=202)
 def create_agent(*, session: SessionDep, agent_in: AIAgentCreate) -> Any:
     """
     Create new agent.
     """
+    # Check if agent already exists
+    check_agent_exists(agent_in.xleap.instance_id, session)
+
+    # Create agent if it does not exist
     agent = crud.create_ai_agent(session=session, ai_agent=agent_in)
 
-    return {"agent_id": agent.id}
+    return AgentIdResponse(agent_id=str(agent.id))
 
 
 @router.post("/{agent_id}/activate/",
