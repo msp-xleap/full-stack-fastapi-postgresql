@@ -17,7 +17,7 @@ depends_on = None
 
 def upgrade():
     # Enable the uuid-ossp extension
-    
+
     op.execute("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\"")
 
     # Add a new column for UUID type

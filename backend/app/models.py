@@ -147,3 +147,5 @@ class AIAgent(AIAgentBase, table=True):
         nullable=False,
     )
     # hashed_secret: str
+    is_active: bool = False
+
