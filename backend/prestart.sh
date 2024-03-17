@@ -10,4 +10,4 @@ alembic upgrade head
 python /app/app/initial_data.py
 
 # Update lock file
-poetry lock
+poetry lock --no-update
