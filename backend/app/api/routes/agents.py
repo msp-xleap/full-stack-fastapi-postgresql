@@ -20,7 +20,7 @@ def create_agent(*, session: SessionDep, agent_in: AIAgentCreate) -> Any:
     return {"agent_id": agent.id}
 
 
-@router.post("agents/{agent_id}/activate/",
+@router.post("/{agent_id}/activate/",
              responses={403: {"detail": "Invalid secret"},
                         404: {"detail": "Agent not found"}}, status_code=200)
 async def activate_agent(agent_id: str, session: SessionDep) -> None:
@@ -49,7 +49,7 @@ async def activate_agent(agent_id: str, session: SessionDep) -> None:
     return
 
 
-@router.post("agents/{agent_id}/deactivate/",
+@router.post("/{agent_id}/deactivate/",
              responses={403: {"detail": "Invalid secret"},
                         404: {"detail": "Agent not found"}}, status_code=200)
 async def deactivate_agent(agent_id: str, session: SessionDep) -> None:
