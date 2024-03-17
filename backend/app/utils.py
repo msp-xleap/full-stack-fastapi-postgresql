@@ -12,7 +12,9 @@ from langchain_openai import OpenAI
 from openai import AuthenticationError, APITimeoutError, RateLimitError
 from starlette import status
 
+from app.api.deps import SessionDep
 from app.core.config import settings
+from app.models import AIAgent
 
 # Configure logging
 logging.basicConfig(level=logging.INFO,
@@ -142,3 +144,28 @@ async def is_api_key_valid(api_key: str) -> None:
         logging.error(f"An error occurred: {err}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                             detail=str(err))
+
+
+def get_agent(agent_id: str, session: SessionDep) -> AIAgent:
+    """Get agent by ID
+
+    Args:
+        agent_id (str): UUID of the agent to be activated
+        session (SessionDep): Database session
+
+    Raises:
+        HTTPException - 404: If the agent is not found.
+
+    Returns:
+        AIAgent: Agent object
+    """
+    try:
+        # Find agent by ID
+        agent = session.get(AIAgent, agent_id)
+    except Exception as e:
+        # Handle cases where the agent_id is invalid or not found
+        raise HTTPException(
+            status_code=404,
+            detail="The agent with this id does not exist in the system"
+        ) from e
+    return agent

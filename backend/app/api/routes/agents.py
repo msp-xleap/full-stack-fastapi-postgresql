@@ -5,6 +5,7 @@ from app import crud
 
 from app.api.deps import SessionDep
 from app.models import AIAgentCreate
+from app.utils import get_agent
 
 router = APIRouter()
 
@@ -19,3 +20,32 @@ def create_agent(
     agent = crud.create_ai_agent(session=session, ai_agent=agent_in)
 
     return {"agent_id": agent.id}
+
+@router.post("agents/{agent_id}/activate/",
+             responses={403: {"detail": "Invalid secret"},
+                        404: {"detail": "Agent not found"}},
+             status_code=200)
+async def activate_agent(agent_id: str, session: SessionDep) -> None:
+    """
+    Activate agent.
+    
+    To do:
+        - Add/validate secret to the request body or in header.
+    
+    Args:
+        agent_id (str): UUID of the agent to be activated
+        session (SessionDep): Database session
+
+    Raises:
+        HTTPException - 403: If the secret is invalid.
+        HTTPException - 404: If the agent is not found.
+
+    Returns:
+        None
+    """
+    # Find agent by ID
+    agent = get_agent(agent_id, session)
+
+    # Activate agent
+    activated_agent = crud.activate_ai_agent(session=session, ai_agent=agent)
+    return
