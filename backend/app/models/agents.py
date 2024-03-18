@@ -4,7 +4,7 @@ from sqlmodel import Field, SQLModel
 
 
 class XLeapDetailsBase(SQLModel):
-    server_id: str
+    server_address: str
     session_id: str
     workspace_id: str
     instance_id: str = Field(unique=True, index=True)

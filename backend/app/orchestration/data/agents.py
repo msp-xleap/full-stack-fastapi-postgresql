@@ -1,13 +1,11 @@
 import aiohttp
-import asyncio
-
-from app.core.config import settings
 
 import logging
 
 
 async def get_agent_briefing(
         agent_id: str,
+        server_address: str,
         xleap_session_id: str,
         xleap_workspace_id: str,
         xleap_instance_id: str,
@@ -18,6 +16,7 @@ async def get_agent_briefing(
 
     Args:
         agent_id (str): UUID of the agent.
+        server_address (str): XLeap server address.
         xleap_session_id (str): UUID of the XLeap session.
         xleap_workspace_id (str): UUID of the XLeap workspace.
         xleap_instance_id (str): UUID of the XLeap instance.
@@ -28,7 +27,7 @@ async def get_agent_briefing(
     """
     logging.info(f"""
     Requesting briefing for agent {agent_id} from
-    XLeap server: {settings.XLEAP_SERVER}
+    XLeap server: {server_address}
     XLeap session ID: {xleap_session_id}
     XLeap workspace ID: {xleap_workspace_id}
     XLeap instance ID: {xleap_instance_id}
@@ -37,7 +36,7 @@ async def get_agent_briefing(
     # Get agent briefing from XLeap server
     async with aiohttp.ClientSession() as session:
         async with session.get(
-            url=f"{settings.XLEAP_SERVER}services/api/sessions/"
+            url=f"{server_address}services/api/sessions/"
                 f"{xleap_session_id}/workspaces/{xleap_workspace_id}/settings/"
                 f"ai/{xleap_instance_id}",
             headers={"Authorization": f"Bearer {auth_token}"}
