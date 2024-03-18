@@ -14,17 +14,6 @@ from app.utils import get_agent, check_agent_exists
 router = APIRouter()
 
 
-def test_function():
-    time.sleep(5)
-    logging.info("""
-    
-    
-    Test function executed
-    
-    
-    """)
-
-
 @router.post("/",
              response_model=AgentIdResponse,
              responses={409: {"detail": "Agent already exists"}},
@@ -40,7 +29,6 @@ async def create_agent(*, session: SessionDep, agent_in: AIAgentCreate,
     # Create agent if it does not exist
     agent = crud.create_ai_agent(session=session, ai_agent=agent_in)
     bearer_token = "DUMMY-TOKEN-DD"
-    background_tasks.add_task(test_function)
     background_tasks.add_task(get_agent_briefing, str(agent.id),
                               agent.session_id, agent.workspace_id,
                               agent.instance_id, bearer_token)
