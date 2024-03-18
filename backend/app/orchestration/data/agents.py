@@ -39,7 +39,7 @@ async def get_agent_briefing(
         async with session.get(
             url=f"{settings.XLEAP_SERVER}services/api/sessions/"
                 f"{xleap_session_id}/workspaces/{xleap_workspace_id}/settings/"
-                f"ai/{xleap_instance_id}2",
+                f"ai/{xleap_instance_id}",
             headers={"Authorization": f"Bearer {auth_token}"}
         ) as agent_briefing_obj:
             agent_briefing = await agent_briefing_obj.json()
