@@ -46,6 +46,8 @@ services:
       - db
     env_file:
       - .env
+    extra_hosts:
+      - "hogwarts.xleap.org:192.168.0.88"
     environment:
       - DOMAIN=${DOMAIN}
       - ENVIRONMENT=${ENVIRONMENT}
