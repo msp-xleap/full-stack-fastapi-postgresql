@@ -24,11 +24,10 @@ async def create_agent(*, session: SessionDep, agent_in: AIAgentCreate,
 
     # Create agent if it does not exist
     agent = crud.create_ai_agent(session=session, ai_agent=agent_in)
-    bearer_token = "DUMMY-TOKEN-DD"
     background_tasks.add_task(get_agent_briefing, str(agent.id),
                               agent.server_address, agent.session_id,
                               agent.workspace_id, agent.instance_id,
-                              bearer_token)
+                              agent.secret)
 
     return AgentIdResponse(agent_id=str(agent.id))
 
