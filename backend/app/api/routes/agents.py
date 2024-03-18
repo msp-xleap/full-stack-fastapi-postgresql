@@ -1,20 +1,36 @@
+import time
 from typing import Any
+import logging
 
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks
 
 from app import crud
 from app.api.deps import SessionDep
 from app.models import AIAgentCreate, AgentIdResponse
+from app.orchestration.data.agents import get_agent_briefing
 from app.utils import get_agent, check_agent_exists
 
+
 router = APIRouter()
+
+
+def test_function():
+    time.sleep(5)
+    logging.info("""
+    
+    
+    Test function executed
+    
+    
+    """)
 
 
 @router.post("/",
              response_model=AgentIdResponse,
              responses={409: {"detail": "Agent already exists"}},
              status_code=202)
-def create_agent(*, session: SessionDep, agent_in: AIAgentCreate) -> Any:
+async def create_agent(*, session: SessionDep, agent_in: AIAgentCreate,
+                       background_tasks: BackgroundTasks) -> Any:
     """
     Create new agent.
     """
@@ -23,6 +39,11 @@ def create_agent(*, session: SessionDep, agent_in: AIAgentCreate) -> Any:
 
     # Create agent if it does not exist
     agent = crud.create_ai_agent(session=session, ai_agent=agent_in)
+    bearer_token = "DUMMY-TOKEN-DD"
+    background_tasks.add_task(test_function)
+    background_tasks.add_task(get_agent_briefing, str(agent.id),
+                              agent.session_id, agent.workspace_id,
+                              agent.instance_id, bearer_token)
 
     return AgentIdResponse(agent_id=str(agent.id))
 
@@ -85,3 +106,4 @@ async def deactivate_agent(agent_id: str, session: SessionDep) -> None:
     deactivated_agent = crud.deactivate_ai_agent(session=session,
                                                  ai_agent=agent)
     return
+
