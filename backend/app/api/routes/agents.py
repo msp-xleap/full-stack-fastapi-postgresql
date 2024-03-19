@@ -1,17 +1,30 @@
 from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks
+from sqlmodel import select
 
 from app import crud
 from app.api.deps import SessionDep
-from app.models import AIAgentCreate, AgentIdResponse
+from app.models import AIAgent, AIAgentCreate, AIAgentsOut, AIAgentIdResponse
 from app.orchestration.data.agents import get_agent_briefing
-from app.utils import get_agent, check_agent_exists
+from app.utils import get_agent, check_agent_exists_by_instance_id
 
 router = APIRouter()
 
 
-@router.post("/", response_model=AgentIdResponse,
+@router.get(
+    "/", response_model=AIAgentsOut, status_code=200
+)
+def read_agents(session: SessionDep) -> Any:
+    """
+    Retrieve all agents.
+    """
+    agents = session.exec(select(AIAgent)).all()
+
+    return AIAgentsOut(data=agents)
+
+
+@router.post("/", response_model=AIAgentIdResponse,
              responses={409: {"detail": "Agent already exists"}},
              status_code=202)
 async def create_agent(*, session: SessionDep, agent_in: AIAgentCreate,
@@ -20,16 +33,13 @@ async def create_agent(*, session: SessionDep, agent_in: AIAgentCreate,
     Create new agent.
     """
     # Check if agent already exists
-    check_agent_exists(agent_in.xleap.instance_id, session)
+    check_agent_exists_by_instance_id(agent_in.xleap.instance_id, session)
 
     # Create agent if it does not exist
     agent = crud.create_ai_agent(session=session, ai_agent=agent_in)
-    background_tasks.add_task(get_agent_briefing, str(agent.id),
-                              agent.server_address, agent.session_id,
-                              agent.workspace_id, agent.instance_id,
-                              agent.secret)
+    background_tasks.add_task(get_agent_briefing, agent)
 
-    return AgentIdResponse(agent_id=str(agent.id))
+    return AIAgentIdResponse(agent_id=str(agent.id))
 
 
 @router.post("/{agent_id}/activate/",

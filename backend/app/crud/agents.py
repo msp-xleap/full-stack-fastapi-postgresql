@@ -1,12 +1,9 @@
-from typing import Any
+from sqlmodel import Session
 
-from sqlmodel import Session, select
-
-from app.core.security import get_password_hash, verify_password
-from app.models import Item, ItemCreate, User, UserCreate, UserUpdate, AIAgent
+from app.models import AIAgent, AIAgentCreate
 
 
-def create_ai_agent(*, session: Session, ai_agent: AIAgent) -> AIAgent:
+def create_ai_agent(*, session: Session, ai_agent: AIAgentCreate) -> AIAgent:
     """Store new AI Agent in the database
 
     Args:

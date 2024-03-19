@@ -30,6 +30,8 @@ class AIAgentBase(XLeapDetailsBase, AIAgentConfigBase):
 
 # Database model, database table inferred from class name
 class AIAgent(AIAgentBase, table=True):
+    __tablename__ = "ai_agent"
+
     id: uuid_pkg.UUID = Field(
         default_factory=uuid_pkg.uuid4,
         primary_key=True,
@@ -40,5 +42,9 @@ class AIAgent(AIAgentBase, table=True):
     is_active: bool = False
 
 
-class AgentIdResponse(SQLModel):
+class AIAgentIdResponse(SQLModel):
     agent_id: str
+
+
+class AIAgentsOut(SQLModel):
+    data: list[AIAgent]
