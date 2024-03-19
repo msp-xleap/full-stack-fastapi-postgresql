@@ -9,7 +9,8 @@ from fastapi import HTTPException
 from jinja2 import Template
 from jose import JWTError, jwt
 from langchain_openai import OpenAI
-from openai import AuthenticationError, APITimeoutError, RateLimitError
+from openai import AuthenticationError, APITimeoutError, RateLimitError, \
+    NotFoundError
 from starlette import status
 
 from app.api.deps import SessionDep
@@ -39,7 +40,7 @@ def send_email(*, email_to: str, subject: str = "",
                html_content: str = "", ) -> None:
     assert settings.emails_enabled, "no provided configuration for email variables"
     message = emails.Message(subject=subject, html=html_content, mail_from=(
-    settings.EMAILS_FROM_NAME, settings.EMAILS_FROM_EMAIL), )
+        settings.EMAILS_FROM_NAME, settings.EMAILS_FROM_EMAIL), )
     smtp_options = {"host": settings.SMTP_HOST, "port": settings.SMTP_PORT}
     if settings.SMTP_TLS:
         smtp_options["tls"] = True
@@ -111,11 +112,15 @@ def verify_password_reset_token(token: str) -> str | None:
         return None
 
 
-async def is_api_key_valid(api_key: str) -> None:
+async def is_api_key_valid(api_key: str, org_id: str, llm_model: str = "gpt-3.5-turbo-instruct") -> \
+        None:
     """ Validates API Key asynchronously.
 
     Args:
         api_key (str): OpenAI API key.
+        org_id: (str): OpenAI organization ID.
+        llm_model: (str): OpenAI language model. Defaults to
+            "gpt-3.5-turbo-instruct".
 
     Raises:
         HTTPException - 401: If the API key is invalid.
@@ -126,12 +131,23 @@ async def is_api_key_valid(api_key: str) -> None:
         None
     """
     try:
-        llm = OpenAI(openai_api_key=api_key)
+        if org_id:
+            llm = OpenAI(openai_api_key=api_key, openai_organization=org_id,
+                         model_name=llm_model)
+        else:
+            llm = OpenAI(openai_api_key=api_key,
+                         model_name=llm_model)
         llm.invoke("Are you ready? Yes or no?")
+
     except AuthenticationError as auth_err:
         logging.error(f"Unauthorized: Invalid API key")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail="Invalid API key")
+    except NotFoundError as not_found_err:
+        logging.error(f"Provided large language model not found:"
+                      f" {not_found_err}")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="LLM not found")
     except APITimeoutError as timeout_err:
         logging.error(f"Request timed out: {timeout_err}")
         raise HTTPException(status_code=status.HTTP_408_REQUEST_TIMEOUT,
@@ -164,15 +180,14 @@ def get_agent(agent_id: str, session: SessionDep) -> AIAgent:
         agent = session.get(AIAgent, agent_id)
     except Exception as e:
         # Handle cases where the agent_id is invalid or not found
-        raise HTTPException(
-            status_code=404,
-            detail="The agent with this id does not exist in the system"
-        ) from e
+        raise HTTPException(status_code=404,
+            detail="The agent with this id does not exist in the system") from e
     return agent
 
 
-def check_agent_exists(instance_id: str, session: SessionDep) -> None:
-    """Check if an agent with the given ID already exists.
+def check_agent_exists_by_instance_id(instance_id: str,
+                                      session: SessionDep) -> None:
+    """Check if an agent with the given an instance ID already exists.
 
     Args:
         instance_id (str): Instance ID of the agent to be created.
@@ -187,7 +202,5 @@ def check_agent_exists(instance_id: str, session: SessionDep) -> None:
     existing_agent = session.query(AIAgent).filter_by(
         instance_id=instance_id).first()
     if existing_agent:
-        raise HTTPException(
-            status_code=409,
-            detail="An agent with this id already exists in the system"
-        )
+        raise HTTPException(status_code=409,
+            detail="An agent with this id already exists in the system")
