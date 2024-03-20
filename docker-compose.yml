@@ -12,6 +12,8 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
       - POSTGRES_USER=${POSTGRES_USER?Variable not set}
       - POSTGRES_DB=${POSTGRES_DB?Variable not set}
+      - POSTGRES_MULTIPLE_DATABASES=public,${PROMPT_SCHEMA?Variable not set}
+
 
   adminer:
     image: adminer
@@ -128,6 +130,24 @@ services:
       # to disable www redirection remove the section: ${STACK_NAME?Variable not set}-www-redirect,
       - traefik.http.routers.${STACK_NAME?Variable not set}-frontend-http.middlewares=https-redirect,${STACK_NAME?Variable not set}-www-redirect
 
+  langfuse-server:
+    image: ghcr.io/langfuse/langfuse:latest
+    restart: always
+    networks:
+      - default
+    depends_on:
+      - db
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER?Variable not set}:${POSTGRES_PASSWORD?Variable not set}@db:${POSTGRES_PORT?Variable not set}/?schema=${PROMPT_SCHEMA?Variable not set}
+      - NEXTAUTH_SECRET=mysecret
+      - SALT=mysalt
+      - NEXTAUTH_URL=http://localhost:3000
+      - TELEMETRY_ENABLED=${TELEMETRY_ENABLED:-true}
+      - NEXT_PUBLIC_SIGN_UP_DISABLED=${NEXT_PUBLIC_SIGN_UP_DISABLED:-false}
+      - LANGFUSE_ENABLE_EXPERIMENTAL_FEATURES=${LANGFUSE_ENABLE_EXPERIMENTAL_FEATURES:-false}
+
 volumes:
   app-db-data:
 
@@ -135,3 +155,5 @@ networks:
   traefik-public:
     # Allow setting it to false for testing
     external: true
+  default:
+    driver: bridge
