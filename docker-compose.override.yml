@@ -69,6 +69,11 @@ services:
         - VITE_API_URL=http://${DOMAIN?Variable not set}
         - NODE_ENV=development
 
+  langfuse-server:
+    restart: "no"
+    ports:
+      - "3000:3000"
+
 networks:
   traefik-public:
     # For local dev, don't expect an external Traefik network

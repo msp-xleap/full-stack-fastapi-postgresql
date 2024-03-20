@@ -14,7 +14,6 @@ services:
       - POSTGRES_DB=${POSTGRES_DB?Variable not set}
       - POSTGRES_MULTIPLE_DATABASES=public,prompt
 
-
   adminer:
     image: adminer
     restart: always
@@ -140,13 +139,25 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER?Variable not set}:${POSTGRES_PASSWORD?Variable not set}@db:${POSTGRES_PORT?Variable not set}/${POSTGRES_DB?Variable not set}?schema=prompt
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:${POSTGRES_PORT}/${POSTGRES_DB}?schema=prompt
       - NEXTAUTH_SECRET=mysecret
       - SALT=mysalt
       - NEXTAUTH_URL=http://localhost:3000
       - TELEMETRY_ENABLED=${TELEMETRY_ENABLED:-true}
       - NEXT_PUBLIC_SIGN_UP_DISABLED=${NEXT_PUBLIC_SIGN_UP_DISABLED:-false}
       - LANGFUSE_ENABLE_EXPERIMENTAL_FEATURES=${LANGFUSE_ENABLE_EXPERIMENTAL_FEATURES:-false}
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik-public
+      - traefik.constraint-label=traefik-public
+      - traefik.http.services.${STACK_NAME?Variable not set}-langfuse.loadbalancer.server.port=3000
+      - traefik.http.routers.${STACK_NAME?Variable not set}-langfuse-http.rule=Host(`langfuse.${DOMAIN?Variable not set}`)
+      - traefik.http.routers.${STACK_NAME?Variable not set}-langfuse-http.entrypoints=http
+      - traefik.http.routers.${STACK_NAME?Variable not set}-langfuse-http.middlewares=https-redirect
+      - traefik.http.routers.${STACK_NAME?Variable not set}-langfuse-https.rule=Host(`langfuse.${DOMAIN?Variable not set}`)
+      - traefik.http.routers.${STACK_NAME?Variable not set}-langfuse-https.entrypoints=https
+      - traefik.http.routers.${STACK_NAME?Variable not set}-langfuse-https.tls=true
+      - traefik.http.routers.${STACK_NAME?Variable not set}-langfuse-https.tls.certresolver=le
 
 volumes:
   app-db-data:
