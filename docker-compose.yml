@@ -12,7 +12,7 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
       - POSTGRES_USER=${POSTGRES_USER?Variable not set}
       - POSTGRES_DB=${POSTGRES_DB?Variable not set}
-      - POSTGRES_MULTIPLE_DATABASES=public,${PROMPT_SCHEMA?Variable not set}
+      - POSTGRES_MULTIPLE_DATABASES=public,prompt
 
 
   adminer:
@@ -140,7 +140,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER?Variable not set}:${POSTGRES_PASSWORD?Variable not set}@db:${POSTGRES_PORT?Variable not set}/?schema=${PROMPT_SCHEMA?Variable not set}
+      - DATABASE_URL=postgresql://${POSTGRES_USER?Variable not set}:${POSTGRES_PASSWORD?Variable not set}@db:${POSTGRES_PORT?Variable not set}/${POSTGRES_DB?Variable not set}?schema=prompt
       - NEXTAUTH_SECRET=mysecret
       - SALT=mysalt
       - NEXTAUTH_URL=http://localhost:3000
