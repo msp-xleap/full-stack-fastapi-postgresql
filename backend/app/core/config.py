@@ -53,6 +53,9 @@ class Settings(BaseSettings):
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str = ""
+    LANGFUSE_SERVER_URL: str
+    LANGFUSE_PUBLIC_KEY: str
+    LANGFUSE_SECRET_KEY: str
 
     @computed_field  # type: ignore[misc]
     @property
