@@ -3,7 +3,7 @@ from langfuse.callback import CallbackHandler
 from app.core.config import settings
 
 # Initialize Langfuse client (prompt management)
-langfuse = Langfuse(
+langfuse_client = Langfuse(
     public_key=settings.LANGFUSE_PUBLIC_KEY,
     secret_key=settings.LANGFUSE_SECRET_KEY,
     host=settings.LANGFUSE_SERVER_URL,

@@ -1,1 +1,1 @@
-from .prompt_manager import langfuse, langfuse_handler
+from .prompt_manager import langfuse_client, langfuse_handler
