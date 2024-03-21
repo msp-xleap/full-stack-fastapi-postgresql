@@ -16,6 +16,7 @@ from starlette import status
 from app.api.deps import SessionDep
 from app.core.config import settings
 from app.models import AIAgent
+from app.orchestration.prompts import langfuse_client, langfuse_handler
 
 # Configure logging
 logging.basicConfig(level=logging.INFO,
@@ -137,7 +138,12 @@ async def is_api_key_valid(api_key: str, org_id: str, llm_model: str = "gpt-3.5-
         else:
             llm = OpenAI(openai_api_key=api_key,
                          model_name=llm_model)
-        llm.invoke("Are you ready? Yes or no?")
+
+        langfuse_prompt_obj = langfuse_client.get_prompt("API_KEY_VALIDATION")
+        llm.invoke(
+            langfuse_prompt_obj.prompt,
+            config={"callbacks": [langfuse_handler]}
+        )
 
     except AuthenticationError as auth_err:
         logging.error(f"Unauthorized: Invalid API key")
