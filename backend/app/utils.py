@@ -208,5 +208,11 @@ def check_agent_exists_by_instance_id(instance_id: str,
     existing_agent = session.query(AIAgent).filter_by(
         instance_id=instance_id).first()
     if existing_agent:
-        raise HTTPException(status_code=409,
-            detail="An agent with this id already exists in the system")
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "error_message": "An agent with this instance id already "
+                                 "exists in the system",
+                "agent_id": str(existing_agent.id),
+            }
+        )
