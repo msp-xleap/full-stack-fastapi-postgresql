@@ -45,10 +45,12 @@ services:
       - default
     depends_on:
       - db
+      - langfuse-server
     env_file:
       - .env
     extra_hosts:
       - "hogwarts.xleap.org:192.168.0.88"
+      - "localhost:192.168.0.88"
     environment:
       - DOMAIN=${DOMAIN}
       - ENVIRONMENT=${ENVIRONMENT}
@@ -66,6 +68,9 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER?Variable not set}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
+      - LANGFUSE_SERVER_URL=${LANGFUSE_SERVER_URL}
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
+      - LANGFUSE_PRIVATE_KEY=${LANGFUSE_PRIVATE_KEY}
       - SENTRY_DSN=${SENTRY_DSN}
 
     build:
@@ -133,11 +138,10 @@ services:
     image: ghcr.io/langfuse/langfuse:latest
     restart: always
     networks:
+      - traefik-public
       - default
     depends_on:
       - db
-    ports:
-      - "3000:3000"
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:${POSTGRES_PORT}/${POSTGRES_DB}?schema=prompt
       - NEXTAUTH_SECRET=mysecret
