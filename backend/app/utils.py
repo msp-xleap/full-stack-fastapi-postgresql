@@ -8,7 +8,7 @@ import emails  # type: ignore
 from fastapi import HTTPException
 from jinja2 import Template
 from jose import JWTError, jwt
-from langchain_openai import OpenAI
+from langchain_openai import ChatOpenAI
 from openai import AuthenticationError, APITimeoutError, RateLimitError, \
     NotFoundError
 from starlette import status
@@ -113,7 +113,7 @@ def verify_password_reset_token(token: str) -> str | None:
         return None
 
 
-async def is_api_key_valid(api_key: str, org_id: str, llm_model: str = "gpt-3.5-turbo-instruct") -> \
+async def is_api_key_valid(api_key: str, org_id: str, llm_model: str = "gpt-3.5-turbo") -> \
         None:
     """ Validates API Key asynchronously.
 
@@ -133,10 +133,10 @@ async def is_api_key_valid(api_key: str, org_id: str, llm_model: str = "gpt-3.5-
     """
     try:
         if org_id:
-            llm = OpenAI(openai_api_key=api_key, openai_organization=org_id,
+            llm = ChatOpenAI(openai_api_key=api_key, openai_organization=org_id,
                          model_name=llm_model)
         else:
-            llm = OpenAI(openai_api_key=api_key,
+            llm = ChatOpenAI(openai_api_key=api_key,
                          model_name=llm_model)
 
         langfuse_prompt_obj = langfuse_client.get_prompt("API_KEY_VALIDATION")
