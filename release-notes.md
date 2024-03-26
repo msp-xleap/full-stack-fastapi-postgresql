@@ -5,12 +5,18 @@
 * 🔥 Remove ESLint and Prettier from pre-commit config. PR [#1096](https://github.com/tiangolo/full-stack-fastapi-template/pull/1096) by [@alejsdev](https://github.com/alejsdev).
 * 📝 Update `README.md`. PR [#716](https://github.com/tiangolo/full-stack-fastapi-template/pull/716) by [@alejsdev](https://github.com/alejsdev).
 
+### Features
+
+* ✨ Add support for deploying multiple environments (staging, production) to the same server. PR [#1128](https://github.com/tiangolo/full-stack-fastapi-template/pull/1128) by [@tiangolo](https://github.com/tiangolo).
+* 👷 Update CI GitHub Actions to allow running in private repos. PR [#1125](https://github.com/tiangolo/full-stack-fastapi-template/pull/1125) by [@tiangolo](https://github.com/tiangolo).
+
 ### Fixes
 
 * 🐛 Fix 403 when the frontend has a directory without an index.html. PR [#1094](https://github.com/tiangolo/full-stack-fastapi-template/pull/1094) by [@tiangolo](https://github.com/tiangolo).
 
 ### Refactors
 
+* 🔥 Remove deprecated Docker Compose version key. PR [#1129](https://github.com/tiangolo/full-stack-fastapi-template/pull/1129) by [@tiangolo](https://github.com/tiangolo).
 * 🎨 Format with Biome . PR [#1097](https://github.com/tiangolo/full-stack-fastapi-template/pull/1097) by [@alejsdev](https://github.com/alejsdev).
 * 🎨 Update quote style in biome formatter. PR [#1095](https://github.com/tiangolo/full-stack-fastapi-template/pull/1095) by [@alejsdev](https://github.com/alejsdev).
 * ♻️ Replace ESLint and Prettier with Biome to format and lint frontend. PR [#719](https://github.com/tiangolo/full-stack-fastapi-template/pull/719) by [@santigandolfo](https://github.com/santigandolfo).
@@ -27,6 +33,10 @@
 
 ### Docs
 
+* 📝 Update instructions to clone for a private repo, including updates. PR [#1127](https://github.com/tiangolo/full-stack-fastapi-template/pull/1127) by [@tiangolo](https://github.com/tiangolo).
+* 📝 Add docs about CI keys, LATEST_CHANGES and SMOKESHOW_AUTH_KEY. PR [#1126](https://github.com/tiangolo/full-stack-fastapi-template/pull/1126) by [@tiangolo](https://github.com/tiangolo).
+* ✏️ Fix file path in `backend/README.md` when not wanting to use migrations. PR [#1116](https://github.com/tiangolo/full-stack-fastapi-template/pull/1116) by [@leonlowitzki](https://github.com/leonlowitzki).
+* 📝 Add documentation for pre-commit and code linting. PR [#718](https://github.com/tiangolo/full-stack-fastapi-template/pull/718) by [@estebanx64](https://github.com/estebanx64).
 * 📝 Fix localhost URLs in `development.md`. PR [#1099](https://github.com/tiangolo/full-stack-fastapi-template/pull/1099) by [@efonte](https://github.com/efonte).
 * ✏ Update header titles for consistency. PR [#708](https://github.com/tiangolo/full-stack-fastapi-template/pull/708) by [@codesmith-emmy](https://github.com/codesmith-emmy).
 * 📝 Update `README.md`, dark mode screenshot position. PR [#706](https://github.com/tiangolo/full-stack-fastapi-template/pull/706) by [@alejsdev](https://github.com/alejsdev).
