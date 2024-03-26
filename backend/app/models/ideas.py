@@ -10,10 +10,11 @@ class IdeaBase(SQLModel):
     text: str
     folder_id: str | None = None
     created_by_ai: bool
+    created_by: str | None = None
 
 
 class Idea(IdeaBase, table=True):
-    __tablename__ = "ideas"
+    __tablename__ = "idea"
 
     idea_id: uuid_pkg.UUID = Field(
         default_factory=uuid_pkg.uuid4,
