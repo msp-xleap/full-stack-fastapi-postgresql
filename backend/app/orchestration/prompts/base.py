@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 
 import aiohttp
 
+from app.dns import resolve_server_addr
+
 from app.models import AIAgent
 from app.orchestration.prompts import langfuse_client, langfuse_handler
 
@@ -26,12 +28,17 @@ class BasePrompt(ABC):
         """
         Post idea to the XLeap
         """
+        logging.getLogger().setLevel(logging.DEBUG)
+
         logging.info(f"""
         Agent ({self._agent.id}) is posting new idea to
         XLeap server: {self._agent.server_address}
         XLeap session ID: {self._agent.session_id}
         XLeap workspace ID: {self._agent.workspace_id}
         """)
+
+        # check if we can resolve the server address in DNS
+        resolve_server_addr(self._agent.server_address)
 
         async with (aiohttp.ClientSession() as session):
             session_post = session.post(
