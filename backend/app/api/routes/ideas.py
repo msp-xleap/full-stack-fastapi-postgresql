@@ -1,8 +1,11 @@
+import logging
+
 from fastapi import APIRouter, BackgroundTasks
 
 from app import crud
 from app.api.deps import SessionDep
 from app.models import IdeaBase
+from app.orchestration.prompts.zero_shot import generate_idea_and_post
 from app.utils import get_agent
 
 router = APIRouter()
@@ -18,9 +21,11 @@ async def create_idea(agent_id: str, session: SessionDep, idea: IdeaBase,
     """
     # Check if agent already exists
     agent = get_agent(agent_id, session)
-
     # Create agent if it does not exist
     idea = crud.create_idea(session=session, idea=idea, agent_id=agent_id)
+
+    if idea.idea_count % 5 == 0:
+        background_tasks.add_task(generate_idea_and_post, agent, session)
 
     return
 
