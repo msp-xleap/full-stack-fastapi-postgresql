@@ -37,7 +37,7 @@ async def create_agent(*, session: SessionDep, agent_in: AIAgentCreate,
 
     # Create agent if it does not exist
     agent = crud.create_ai_agent(session=session, ai_agent=agent_in)
-    background_tasks.add_task(get_agent_briefing, agent)
+    # background_tasks.add_task(get_agent_briefing, agent)
 
     return AIAgentIdResponse(agent_id=str(agent.id))
 
