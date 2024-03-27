@@ -48,9 +48,10 @@ services:
       - langfuse-server
     env_file:
       - .env
+    links:
+      - langfuse-server
     extra_hosts:
-      - "hogwarts.xleap.org:192.168.0.88"
-      - "localhost:192.168.0.88"
+      - "host.docker.internal:host-gateway"
     environment:
       - DOMAIN=${DOMAIN}
       - ENVIRONMENT=${ENVIRONMENT}
