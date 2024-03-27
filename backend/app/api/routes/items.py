@@ -11,7 +11,10 @@ router = APIRouter()
 
 @router.get("/", response_model=ItemsOut)
 def read_items(
-    session: SessionDep, current_user: CurrentUser, skip: int = 0, limit: int = 100
+    session: SessionDep,
+    current_user: CurrentUser,
+    skip: int = 0,
+    limit: int = 100,
 ) -> Any:
     """
     Retrieve items.
@@ -69,7 +72,11 @@ def create_item(
 
 @router.put("/{id}", response_model=ItemOut)
 def update_item(
-    *, session: SessionDep, current_user: CurrentUser, id: int, item_in: ItemUpdate
+    *,
+    session: SessionDep,
+    current_user: CurrentUser,
+    id: int,
+    item_in: ItemUpdate,
 ) -> Any:
     """
     Update an item.
@@ -88,7 +95,9 @@ def update_item(
 
 
 @router.delete("/{id}")
-def delete_item(session: SessionDep, current_user: CurrentUser, id: int) -> Message:
+def delete_item(
+    session: SessionDep, current_user: CurrentUser, id: int
+) -> Message:
     """
     Delete an item.
     """

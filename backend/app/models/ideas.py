@@ -1,8 +1,7 @@
 import uuid as uuid_pkg
-
-from sqlalchemy import func
-from sqlmodel import Field, SQLModel
 from datetime import datetime
+
+from sqlmodel import Field, SQLModel
 
 
 class IdeaBase(SQLModel):
@@ -22,8 +21,10 @@ class Idea(IdeaBase, table=True):
         index=True,
         nullable=False,
     )
-    agent_id: uuid_pkg.UUID = Field(default=None, foreign_key="ai_agent.id",
-                          nullable=False)
-    created_at: datetime = Field(default_factory=datetime.utcnow,
-                                 nullable=False)
+    agent_id: uuid_pkg.UUID = Field(
+        default=None, foreign_key="ai_agent.id", nullable=False
+    )
+    created_at: datetime = Field(
+        default_factory=datetime.utcnow, nullable=False
+    )
     idea_count: int = Field(default=None)

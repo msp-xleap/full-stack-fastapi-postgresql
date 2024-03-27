@@ -1,5 +1,6 @@
-import socket
 import re
+import socket
+
 
 def resolve_host(host: str) -> str:
     """
@@ -18,8 +19,9 @@ def resolve_host(host: str) -> str:
     try:
         data = socket.gethostbyname_ex(host)
         return data[2][0]
-    except:
-        raise NameError(f"Name not found: '{host}'")
+    except Exception as e:
+        raise NameError(f"Name not found: '{host}'") from e
+
 
 def resolve_server_addr(server: str) -> str:
     """
@@ -42,4 +44,3 @@ def resolve_server_addr(server: str) -> str:
         raise SyntaxError(f"Invalid server address: '{server}'")
     else:
         return resolve_host(m.group(2))
-

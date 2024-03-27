@@ -8,13 +8,19 @@ from app.utils import is_api_key_valid
 router = APIRouter()
 
 
-@router.post("/", responses={401: {"detail": "Invalid API key"},
-                             404: {"detail": "LLM not found"},
-                             408: {"detail": "Request timed out"},
-                             429: {"detail": "Rate limit exceeded"}},
-             status_code=status.HTTP_204_NO_CONTENT)
-async def validate_api_key(*, session: SessionDep,
-                           agent_config: AIAgentConfigBase) -> None:
+@router.post(
+    "/",
+    responses={
+        401: {"detail": "Invalid API key"},
+        404: {"detail": "LLM not found"},
+        408: {"detail": "Request timed out"},
+        429: {"detail": "Rate limit exceeded"},
+    },
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def validate_api_key(
+    *, session: SessionDep, agent_config: AIAgentConfigBase
+) -> None:
     """
     Validates API Key.
 

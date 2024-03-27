@@ -1,21 +1,28 @@
-import logging
-
 from fastapi import APIRouter, BackgroundTasks
 
 from app import crud
 from app.api.deps import SessionDep
-from app.models import IdeaBase
+from app.models import Idea, IdeaBase
 from app.orchestration.prompts.zero_shot import generate_idea_and_post
 from app.utils import get_agent
 
 router = APIRouter()
 
 
-@router.post("/agents/{agent_id}/ideas",
-             responses={403: {"detail": "Invalid secret"},
-                        404: {"detail": "Agent not found"}}, status_code=202)
-async def create_idea(agent_id: str, session: SessionDep, idea: IdeaBase,
-                      background_tasks: BackgroundTasks) -> None:
+@router.post(
+    "/agents/{agent_id}/ideas",
+    responses={
+        403: {"detail": "Invalid secret"},
+        404: {"detail": "Agent not found"},
+    },
+    status_code=202,
+)
+async def create_idea(
+    agent_id: str,
+    session: SessionDep,
+    idea: IdeaBase,
+    background_tasks: BackgroundTasks,
+) -> None:
     """
     Create a new idea.
     """
@@ -31,19 +38,21 @@ async def create_idea(agent_id: str, session: SessionDep, idea: IdeaBase,
 
 
 @router.post("/agents/{agent_id}/ideas/bulk", status_code=202)
-async def create_ideas(agent_id: str, ideas: list[IdeaBase],
-                       session: SessionDep,
-                       background_tasks: BackgroundTasks, ):
+async def create_ideas(
+    agent_id: str,
+    ideas: list[IdeaBase],
+    session: SessionDep,
+    background_tasks: BackgroundTasks,
+) -> None:
     """
     Create multiple new ideas for an agent.
     """
     # Check if agent already exists
-    agent = get_agent(agent_id, session)
+    get_agent(agent_id, session)
 
     # Create ideas
-    created_ideas: list = []
+    created_ideas: list[Idea] = []
     for idea in ideas:
-        created_idea = crud.create_idea(session=session, idea=idea,
-                                        agent_id=agent_id)
-
-    return
+        created_ideas.append(
+            crud.create_idea(session=session, idea=idea, agent_id=agent_id)
+        )

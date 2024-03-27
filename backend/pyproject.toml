@@ -45,7 +45,7 @@ coverage = "^7.4.3"
 multi_line_output = 3
 include_trailing_comma = true
 force_grid_wrap = 0
-line_length = 88
+line_length = 79
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
@@ -57,6 +57,10 @@ exclude = ["venv", "alembic"]
 [tool.ruff]
 target-version = "py311"
 exclude = ["alembic"]
+# Same as Black
+line-length = 79
+indent-width = 4
+
 
 [tool.ruff.lint]
 select = [
@@ -74,7 +78,20 @@ ignore = [
     "W191",  # indentation contains tabs
     "B904",  # Allow raising exceptions without from e, for HTTPException
 ]
+# Allow fix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+unfixable = []
 
-[tool.ruff.lint.pyupgrade]
-# Preserve types, even if a file imports `from __future__ import annotations`.
-keep-runtime-typing = true
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
+# Like Black, automatically detect the appropriate line ending.
+line-ending = "auto"
+
+#[tool.ruff.back.pyupgrade]
+## Preserve types, even if a file imports `from __future__ import annotations`.
+#keep-runtime-typing = true

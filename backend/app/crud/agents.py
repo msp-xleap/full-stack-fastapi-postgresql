@@ -14,7 +14,10 @@ def create_ai_agent(*, session: Session, ai_agent: AIAgentCreate) -> AIAgent:
         AIAgent: Created AI Agent object
     """
     db_obj = AIAgent.model_validate(
-        {**ai_agent.xleap.model_dump(), **ai_agent.config.model_dump()}#, update={"hashed_password": get_password_hash(ai_agent.xleap.secret)}
+        {
+            **ai_agent.xleap.model_dump(),
+            **ai_agent.config.model_dump(),
+        }  # , update={"hashed_password": get_password_hash(ai_agent.xleap.secret)}
     )
     session.add(db_obj)
     session.commit()
@@ -32,9 +35,7 @@ def activate_ai_agent(*, session: Session, ai_agent: AIAgent) -> AIAgent:
     Returns:
         AIAgent: Activated AI Agent object
     """
-    extra_data = {
-        "is_active": True
-    }
+    extra_data = {"is_active": True}
     ai_agent.sqlmodel_update(ai_agent, update=extra_data)
     session.add(ai_agent)
     session.commit()
@@ -52,9 +53,7 @@ def deactivate_ai_agent(*, session: Session, ai_agent: AIAgent) -> AIAgent:
     Returns:
         AIAgent: Deactivated AI Agent object
     """
-    extra_data = {
-        "is_active": False
-    }
+    extra_data = {"is_active": False}
     ai_agent.sqlmodel_update(ai_agent, update=extra_data)
     session.add(ai_agent)
     session.commit()
