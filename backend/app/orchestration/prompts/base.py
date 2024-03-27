@@ -1,3 +1,4 @@
+import json
 import logging
 from abc import ABC, abstractmethod
 
@@ -15,12 +16,6 @@ class BasePrompt(ABC):
     _langfuse_handler = langfuse_handler
 
     def __init__(self, agent: AIAgent, temperature: float = 0.5):
-        logging.info(f"""
-    
-        {agent}
-        
-        """)
-
         self._agent = agent
         self._api_key = agent.api_key
         self._model = agent.model
@@ -43,11 +38,25 @@ class BasePrompt(ABC):
                 url=f"{self._agent.server_address}/services/api/sessions"
                     f"/{self._agent.session_id}/brainstorms/"
                     f"{self._agent.workspace_id}/ideas",
-                data={"text": self.idea, "folder_id": ""},
-                headers={"Authorization": f"Bearer {self._agent.secret}"}
+                data=json.dumps({
+                    "text": self.idea,
+                    "folder_id": "string"
+                }),
+                headers={"Authorization": f"Bearer {self._agent.secret}",
+                         "content-type": "application/json" }
             )
+
+            logging.info(f"""
+            SECRET: {self._agent.secret}
+            """)
             # Don't await the response
             response = await session_post
+
+            logging.info(f"""
+            
+            RESPONSE {response}
+            
+            """)
 
     @abstractmethod
     async def generate_idea(self) -> str:

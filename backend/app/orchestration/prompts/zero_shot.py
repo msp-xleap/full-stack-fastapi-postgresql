@@ -1,3 +1,5 @@
+import logging
+
 from langchain_core.prompt_values import PromptValue
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
@@ -42,7 +44,7 @@ class ZeroShotPrompt(BasePrompt):
         self.idea = llm.invoke(
             final_prompt,
             config={"callbacks": [langfuse_handler]}
-        )
+        ).content
 
     async def _generate_prompt(self) -> PromptValue:
         """
