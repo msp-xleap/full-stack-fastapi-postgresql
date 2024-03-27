@@ -29,15 +29,17 @@ router = APIRouter()
 
 
 @router.get(
-    "/", dependencies=[Depends(get_current_active_superuser)], response_model=UsersOut
+    "/",
+    dependencies=[Depends(get_current_active_superuser)],
+    response_model=UsersOut,
 )
 def read_users(session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
     """
     Retrieve users.
     """
 
-    statment = select(func.count()).select_from(User)
-    count = session.exec(statment).one()
+    count_statement = select(func.count()).select_from(User)
+    count = session.exec(count_statement).one()
 
     statement = select(User).offset(skip).limit(limit)
     users = session.exec(statement).all()
@@ -46,7 +48,9 @@ def read_users(session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
 
 
 @router.post(
-    "/", dependencies=[Depends(get_current_active_superuser)], response_model=UserOut
+    "/",
+    dependencies=[Depends(get_current_active_superuser)],
+    response_model=UserOut,
 )
 def create_user(*, session: SessionDep, user_in: UserCreate) -> Any:
     """
@@ -56,13 +60,15 @@ def create_user(*, session: SessionDep, user_in: UserCreate) -> Any:
     if user:
         raise HTTPException(
             status_code=400,
-            detail="The user with this username already exists in the system.",
+            detail="The user with this email already exists in the system.",
         )
 
     user = crud.create_user(session=session, user_create=user_in)
     if settings.emails_enabled and user_in.email:
         email_data = generate_new_account_email(
-            email_to=user_in.email, username=user_in.email, password=user_in.password
+            email_to=user_in.email,
+            username=user_in.email,
+            password=user_in.password,
         )
         send_email(
             email_to=user_in.email,
@@ -80,6 +86,14 @@ def update_user_me(
     Update own user.
     """
 
+    if user_in.email:
+        existing_user = crud.get_user_by_email(
+            session=session, email=user_in.email
+        )
+        if existing_user and existing_user.id != current_user.id:
+            raise HTTPException(
+                status_code=409, detail="User with this email already exists"
+            )
     user_data = user_in.model_dump(exclude_unset=True)
     current_user.sqlmodel_update(user_data)
     session.add(current_user)
@@ -95,11 +109,14 @@ def update_password_me(
     """
     Update own password.
     """
-    if not verify_password(body.current_password, current_user.hashed_password):
+    if not verify_password(
+        body.current_password, current_user.hashed_password
+    ):
         raise HTTPException(status_code=400, detail="Incorrect password")
     if body.current_password == body.new_password:
         raise HTTPException(
-            status_code=400, detail="New password cannot be the same as the current one"
+            status_code=400,
+            detail="New password cannot be the same as the current one",
         )
     hashed_password = get_password_hash(body.new_password)
     current_user.hashed_password = hashed_password
@@ -130,7 +147,7 @@ def create_user_open(session: SessionDep, user_in: UserCreateOpen) -> Any:
     if user:
         raise HTTPException(
             status_code=400,
-            detail="The user with this username already exists in the system",
+            detail="The user with this email already exists in the system",
         )
     user_create = UserCreate.from_orm(user_in)
     user = crud.create_user(session=session, user_create=user_create)
@@ -170,12 +187,24 @@ def update_user(
     Update a user.
     """
 
-    db_user = crud.update_user(session=session, user_id=user_id, user_in=user_in)
-    if db_user is None:
+    db_user = session.get(User, user_id)
+    if not db_user:
         raise HTTPException(
             status_code=404,
-            detail="The user with this username does not exist in the system",
+            detail="The user with this id does not exist in the system",
         )
+    if user_in.email:
+        existing_user = crud.get_user_by_email(
+            session=session, email=user_in.email
+        )
+        if existing_user and existing_user.id != user_id:
+            raise HTTPException(
+                status_code=409, detail="User with this email already exists"
+            )
+
+    db_user = crud.update_user(
+        session=session, db_user=db_user, user_in=user_in
+    )
     return db_user
 
 
@@ -195,7 +224,8 @@ def delete_user(
         )
     elif user == current_user and current_user.is_superuser:
         raise HTTPException(
-            status_code=403, detail="Super users are not allowed to delete themselves"
+            status_code=403,
+            detail="Super users are not allowed to delete themselves",
         )
 
     statement = delete(Item).where(col(Item.owner_id) == user_id)
