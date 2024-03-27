@@ -1,5 +1,7 @@
 from sqlmodel import Field, Relationship, SQLModel
 
+from app.models import Item
+
 
 # Shared properties
 # TODO replace email str with EmailStr when sqlmodel supports it

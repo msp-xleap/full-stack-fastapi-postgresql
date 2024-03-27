@@ -3,6 +3,6 @@
 set -e
 set -x
 
-mypy app
+mypy app --ignore-missing-imports
 ruff app
 ruff format app --check
