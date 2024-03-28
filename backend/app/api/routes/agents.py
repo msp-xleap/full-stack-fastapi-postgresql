@@ -6,7 +6,7 @@ from sqlmodel import select
 from app import crud
 from app.api.deps import SessionDep
 from app.models import AIAgent, AIAgentCreate, AIAgentIdResponse, AIAgentsOut
-from app.utils import check_agent_exists_by_instance_id, get_agent
+from app.utils import check_agent_exists_by_instance_id, get_agent_by_id
 
 router = APIRouter()
 
@@ -73,7 +73,7 @@ async def activate_agent(agent_id: str, session: SessionDep) -> None:
         None
     """
     # Find agent by ID
-    agent = get_agent(agent_id, session)
+    agent = get_agent_by_id(agent_id, session)
 
     # Activate agent
     crud.activate_ai_agent(session=session, ai_agent=agent)
@@ -107,7 +107,7 @@ async def deactivate_agent(agent_id: str, session: SessionDep) -> None:
         None
     """
     # Find agent by ID
-    agent = get_agent(agent_id, session)
+    agent = get_agent_by_id(agent_id, session)
 
     # Deactivate agent
     crud.deactivate_ai_agent(session=session, ai_agent=agent)

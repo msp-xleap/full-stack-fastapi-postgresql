@@ -1,4 +1,3 @@
-
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -10,7 +9,6 @@ from jinja2 import Template
 from jose import JWTError, jwt
 
 from app.core.config import settings
-
 
 # Configure logging
 logging.basicConfig(
@@ -26,20 +24,20 @@ class EmailData:
 
 
 def render_email_template(
-        *, template_name: str, context: dict[str, Any]
+    *, template_name: str, context: dict[str, Any]
 ) -> str:
     template_str = (
-            Path(__file__).parent / "email-templates" / "build" / template_name
+        Path(__file__).parent / "email-templates" / "build" / template_name
     ).read_text()
     html_content = Template(template_str).render(context)
     return html_content
 
 
 def send_email(
-        *,
-        email_to: str,
-        subject: str = "",
-        html_content: str = "",
+    *,
+    email_to: str,
+    subject: str = "",
+    html_content: str = "",
 ) -> None:
     assert (
         settings.emails_enabled
@@ -73,7 +71,7 @@ def generate_test_email(email_to: str) -> EmailData:
 
 
 def generate_reset_password_email(
-        email_to: str, email: str, token: str
+    email_to: str, email: str, token: str
 ) -> EmailData:
     project_name = settings.PROJECT_NAME
     subject = f"{project_name} - Password recovery for user {email}"
@@ -92,7 +90,7 @@ def generate_reset_password_email(
 
 
 def generate_new_account_email(
-        email_to: str, username: str, password: str
+    email_to: str, username: str, password: str
 ) -> EmailData:
     project_name = settings.PROJECT_NAME
     subject = f"{project_name} - New account for user {username}"

@@ -20,7 +20,7 @@ logging.basicConfig(
 
 
 async def is_api_key_valid(
-        api_key: str, org_id: str | None, llm_model: str = "gpt-3.5-turbo"
+    api_key: str, org_id: str | None, llm_model: str = "gpt-3.5-turbo"
 ) -> None:
     """Validates API Key asynchronously.
 
