@@ -32,3 +32,25 @@ def create_idea(*, session: Session, idea: IdeaBase, agent_id: str) -> Idea:
     session.commit()
     session.refresh(db_obj)
     return db_obj
+
+
+def update_idea(
+    *, session: Session, idea_db: Idea, idea_new: IdeaBase
+) -> Idea:
+    """
+    Update an existing idea in the database.
+
+    Args:
+        session (Session): Database session
+        idea_db (Idea): Existing idea object
+        idea_new (IdeaBase): New idea object
+
+    Returns:
+        Idea: Updated idea object
+    """
+    idea_data = idea_new.model_dump(exclude_unset=True)
+    idea_db.sqlmodel_update(idea_data)
+    session.add(idea_db)
+    session.commit()
+    session.refresh(idea_db)
+    return idea_db
