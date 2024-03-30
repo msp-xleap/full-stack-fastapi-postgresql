@@ -61,7 +61,7 @@ class BasePrompt(ABC):
             await session_post
 
     @abstractmethod
-    async def generate_idea(self) -> str:
+    async def generate_idea(self, question: str) -> str:
         """
         Generates an idea using prompt and stores it in self.idea
         """
@@ -74,10 +74,10 @@ class BasePrompt(ABC):
         """
         raise NotImplementedError
 
-    async def _get_prompt_from_langfuse(self, prompt_name: str) -> str:
+    async def _get_prompt_from_langfuse(self, prompt_name: str) -> Any:
         """
         Get prompt from langfuse
         """
         prompt_obj = self._langfuse_client.get_prompt(prompt_name)
-        prompt = str(prompt_obj.prompt)
+        prompt = prompt_obj.get_langchain_prompt()
         return prompt
