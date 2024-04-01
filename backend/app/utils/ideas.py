@@ -1,4 +1,4 @@
-from sqlmodel import Session, desc, select
+from sqlmodel import Session, asc, select
 
 from app.models import Idea
 
@@ -33,6 +33,6 @@ def get_last_n_ideas(session: Session, n: int) -> list[Idea]:
     Returns:
         List[Idea]: List of last n ideas.
     """
-    query = session.query(Idea).order_by(desc(Idea.idea_count)).limit(n)
+    query = session.query(Idea).order_by(asc(Idea.idea_count)).limit(n)
     ideas = query.all()
     return ideas
