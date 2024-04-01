@@ -35,12 +35,17 @@ async def create_agent(
 ) -> Any:
     """
     Create new agent.
+
+    To do: Serialize briefings. currently, default values are stored in the
+        database.
     """
     # Check if agent already exists
     check_agent_exists_by_instance_id(agent_in.xleap.instance_id, session)
 
     # Create agent if it does not exist
     agent = crud.create_ai_agent(session=session, ai_agent=agent_in)
+    crud.create_ai_agent_briefing(session=session, ai_agent=agent)
+
     # background_tasks.add_task(get_agent_briefing, agent)
 
     return AIAgentIdResponse(agent_id=str(agent.id))

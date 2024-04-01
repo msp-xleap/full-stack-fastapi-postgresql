@@ -22,6 +22,7 @@ class AIAgentConfigBase(SQLModel):
 class AIAgentCreate(SQLModel):
     xleap: XLeapDetailsBase
     config: AIAgentConfigBase
+    # todo: add briefing object
 
 
 class AIAgentBase(XLeapDetailsBase, AIAgentConfigBase):

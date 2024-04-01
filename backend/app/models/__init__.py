@@ -21,6 +21,7 @@ from .users import (
     UserUpdateMe,
 )  # isort: skip_file
 
+from .briefings import Briefing
 from .ideas import Idea, IdeaBase
 from .items import Item, ItemBase, ItemCreate, ItemOut, ItemsOut, ItemUpdate
 
@@ -46,6 +47,7 @@ __all__ = [
     "UpdatePassword",
     "UserOut",
     "UsersOut",
+    "Briefing",
     "Idea",
     "IdeaBase",
     "Item",

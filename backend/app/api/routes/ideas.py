@@ -1,12 +1,16 @@
-import random
-
 from fastapi import APIRouter, BackgroundTasks
 
 from app import crud
 from app.api.deps import SessionDep
 from app.models import Idea, IdeaBase
-from app.orchestration.prompts.zero_shot import generate_idea_and_post
-from app.utils import check_if_idea_exists, get_agent_by_id
+
+# from app.orchestration.prompts.zero_shot import generate_idea_and_post
+from app.orchestration.prompts.few_shot import generate_idea_and_post
+from app.utils import (
+    check_if_idea_exists,
+    get_agent_by_id,
+    get_briefing_by_agent_id,
+)
 
 router = APIRouter()
 
@@ -45,10 +49,19 @@ async def create_idea(
             session=session, idea_db=idea_old, idea_new=idea
         )
 
+    briefing = get_briefing_by_agent_id(agent_id, session)
+    frequency = briefing.frequency
     # Generate idea and post if agent is active
     # Todo: determine threshold out of agent settings
-    if idea.idea_count >= 5 and random.random() < 0.2 and agent.is_active:
-        background_tasks.add_task(generate_idea_and_post, agent, session)
+    if (
+        idea.idea_count >= frequency
+        # and random.random() < 1/frequency
+        and idea.idea_count % frequency == 0
+        and agent.is_active
+    ):
+        background_tasks.add_task(
+            generate_idea_and_post, agent, briefing, session
+        )
 
     return
 

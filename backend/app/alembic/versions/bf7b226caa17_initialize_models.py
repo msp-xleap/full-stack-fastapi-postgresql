@@ -76,6 +76,20 @@ def upgrade():
     sa.ForeignKeyConstraint(['owner_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+
+    # Create Briefing Table
+    op.create_table('briefing',
+    sa.Column('id', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('frequency', sa.Integer(), nullable=False),
+    sa.Column('question', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('topic', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('briefing_id', sqlmodel.sql.sqltypes.GUID(), nullable=False),
+    sa.Column('agent_id', sqlmodel.sql.sqltypes.GUID(), nullable=False),
+    sa.ForeignKeyConstraint(['agent_id'], ['ai_agent.id'], ),
+    sa.PrimaryKeyConstraint('briefing_id')
+    )
+    op.create_index(op.f('ix_briefing_briefing_id'), 'briefing',
+                    ['briefing_id'], unique=False)
     # ### end Alembic commands ###
 
 
