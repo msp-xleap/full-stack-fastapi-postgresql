@@ -1,4 +1,4 @@
-from sqlmodel import Session, select
+from sqlmodel import Session, desc, select
 
 from app.models import Idea
 
@@ -20,3 +20,19 @@ def check_if_idea_exists(
     query = select(Idea).where(Idea.id == idea_id, Idea.agent_id == agent_id)
     idea = session.exec(query).first()
     return idea
+
+
+def get_last_n_ideas(session: Session, n: int) -> list[Idea]:
+    """
+    Retrieve the last n ideas from the database.
+
+    Args:
+        session (Session): Database session.
+        n (int): Number of last ideas to retrieve.
+
+    Returns:
+        List[Idea]: List of last n ideas.
+    """
+    query = session.query(Idea).order_by(desc(Idea.idea_count)).limit(n)
+    ideas = query.all()
+    return ideas

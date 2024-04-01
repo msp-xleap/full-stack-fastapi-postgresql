@@ -6,7 +6,7 @@ from typing import Any
 import aiohttp
 
 from app.dns import resolve_server_addr
-from app.models import AIAgent
+from app.models import AIAgent, Briefing, Idea
 from app.orchestration.prompts import langfuse_client, langfuse_handler
 
 
@@ -18,12 +18,20 @@ class BasePrompt(ABC):
     _langfuse_client = langfuse_client
     _langfuse_handler = langfuse_handler
 
-    def __init__(self, agent: AIAgent, temperature: float = 0.5):
+    def __init__(
+        self,
+        agent: AIAgent,
+        briefing: Briefing,
+        ideas: list[Idea] | None = None,
+        temperature: float = 0.5,
+    ):
         self._agent = agent
         self._api_key = agent.api_key
         self._model = agent.model
         self._temperature = temperature
-        self.idea: str | list[str | dict[Any, Any]] | None = None
+        self._briefing = briefing
+        self._ideas = ideas
+        self.generated_idea: str | list[str | dict[Any, Any]] | None = None
 
     async def post_idea(self) -> None:
         """
@@ -50,7 +58,9 @@ class BasePrompt(ABC):
                 url=f"{self._agent.server_address}/services/api/sessions"
                 f"/{self._agent.session_id}/brainstorms/"
                 f"{self._agent.workspace_id}/ideas",
-                data=json.dumps({"text": self.idea, "folder_id": "string"}),
+                data=json.dumps(
+                    {"text": self.generated_idea, "folder_id": "string"}
+                ),
                 headers={
                     "Authorization": f"Bearer {self._agent.secret}",
                     "content-type": "application/json",
@@ -61,9 +71,12 @@ class BasePrompt(ABC):
             await session_post
 
     @abstractmethod
-    async def generate_idea(self, question: str) -> str:
+    async def generate_idea(self) -> str:
         """
-        Generates an idea using prompt and stores it in self.idea
+        Generates an idea using prompt and stores it in self.generated_idea
+
+        Returns:
+            str: Generated idea
         """
         raise NotImplementedError
 
