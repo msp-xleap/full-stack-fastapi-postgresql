@@ -34,7 +34,9 @@ def get_last_n_ideas(session: Session, n: int) -> list[Idea] | None:
         List[Idea]: List of last n ideas.
     """
     # Define your subquery to reverse the order
-    subquery = session.query(Idea).order_by(desc(Idea.idea_count)).limit(n).subquery()
+    subquery = (
+        session.query(Idea).order_by(desc(Idea.idea_count)).limit(n).subquery()
+    )
 
     # Use the subquery to fetch the reversed results
     query = session.query(subquery).order_by(subquery.c.idea_count)

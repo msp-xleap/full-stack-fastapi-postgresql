@@ -1,14 +1,12 @@
 import logging
 import re
 
-import asyncio
 from langchain.chains.llm import LLMChain
-from langchain.chains.sequential import SimpleSequentialChain, SequentialChain
+from langchain.chains.sequential import SequentialChain
 from langchain_core.prompts import (
     ChatPromptTemplate,
-    FewShotChatMessagePromptTemplate, PromptTemplate,
 )
-from langchain_openai import ChatOpenAI, OpenAI
+from langchain_openai import ChatOpenAI
 
 from app.api.deps import SessionDep
 from app.models import AIAgent, Briefing
@@ -17,7 +15,7 @@ from app.utils import get_last_n_ideas
 
 
 async def generate_idea_and_post(
-        agent: AIAgent, briefing: Briefing, session: SessionDep
+    agent: AIAgent, briefing: Briefing, session: SessionDep
 ) -> None:
     """
     Generate idea and post it to the XLeap server
@@ -26,7 +24,9 @@ async def generate_idea_and_post(
     """
     attached_agent = session.merge(agent)
     attached_briefing = session.merge(briefing)
-    attached_ideas = get_last_n_ideas(session, n=attached_briefing.frequency*3)
+    attached_ideas = get_last_n_ideas(
+        session, n=attached_briefing.frequency * 3
+    )
     prompt_chaining = ChainingPrompt(
         agent=attached_agent, briefing=attached_briefing, ideas=attached_ideas
     )
@@ -60,28 +60,27 @@ class ChainingPrompt(BasePrompt):
         ss_chain = SequentialChain(
             chains=[idea_generation_chain, idea_selection_chain],
             input_variables=["question", "idea"],
-            output_variables=["selected_idea"]
+            output_variables=["selected_idea"],
         )
 
         idea = await ss_chain.ainvoke(
-            input={"question": self._briefing.question,
-                   "idea": examples},
+            input={"question": self._briefing.question, "idea": examples},
             config={"callbacks": [langfuse_handler]},
         )
 
-        # Introduce a pause of 1 second before calling parsing function
-        await asyncio.sleep(1)
+        # # Introduce a pause of 1 second before calling parsing function
+        # await asyncio.sleep(1)
 
         self.generated_idea = await self._parse_idea(idea["selected_idea"])
 
     async def _generate_multiple_ideas(self, llm) -> LLMChain:
-        idea_generation_prompt = await (
-            self._generate_prompt(
-                question="CHAINING_PROMPT_QUESTION"))
+        idea_generation_prompt = await self._generate_prompt(
+            question="CHAINING_PROMPT_QUESTION"
+        )
         idea_generation_chain: LLMChain = LLMChain(
             llm=llm,
             prompt=idea_generation_prompt,
-            output_key="generated_ideas"
+            output_key="generated_ideas",
         )
         return idea_generation_chain
 
@@ -93,18 +92,15 @@ class ChainingPrompt(BasePrompt):
             str: Generated prompt
 
         """
-        idea_selection_prompt = await (
-            self._generate_prompt(
-                question="CHAINING_PROMPT_SELECTION"))
+        idea_selection_prompt = await self._generate_prompt(
+            question="CHAINING_PROMPT_SELECTION"
+        )
         idea_selection_chain: LLMChain = LLMChain(
-            llm=llm,
-            prompt=idea_selection_prompt,
-            output_key="selected_idea"
+            llm=llm, prompt=idea_selection_prompt, output_key="selected_idea"
         )
         return idea_selection_chain
 
-    async def _generate_prompt(self, question: str) -> (
-            ChatPromptTemplate):  # type: ignore
+    async def _generate_prompt(self, question: str) -> ChatPromptTemplate:  # type: ignore
         """
         Generate prompt for prompt chaining
 
@@ -135,11 +131,9 @@ class ChainingPrompt(BasePrompt):
         return final_prompt
 
     async def _get_examples(
-            self,
+        self,
     ) -> str:
-        """
-
-        """
+        """ """
         idea_examples: str = ""
         for example in self._ideas:
             idea_examples += "- " + example.text + "\n"
@@ -157,14 +151,15 @@ class ChainingPrompt(BasePrompt):
         Returns:
             str: Parsed idea
         """
-        logging.info(f"""
-        
-        
-        
-        
-        
-        
-        
+        logging.info(
+            f"""
+
+
+
+
+
+
+
         Raw idea: {idea}
 
 
@@ -176,14 +171,14 @@ class ChainingPrompt(BasePrompt):
 
 
 
-""")
+"""
+        )
 
         # Remove the tags from the idea
-        pattern = r'<selected_idea[^>]*>(.*?)<\/selected_idea>'
+        pattern = r"<selected_idea[^>]*>(.*?)<\/selected_idea>"
         content = re.search(pattern, idea, re.DOTALL).group(1).strip()
 
         # Remove all occurrences of **
-        content_without_asterisks = content.replace('**', '')
+        content_without_asterisks = content.replace("**", "")
 
         return content_without_asterisks
-
