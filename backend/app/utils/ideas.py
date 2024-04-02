@@ -1,4 +1,4 @@
-from sqlmodel import Session, asc, select
+from sqlmodel import Session, desc, select
 
 from app.models import Idea
 
@@ -22,7 +22,7 @@ def check_if_idea_exists(
     return idea
 
 
-def get_last_n_ideas(session: Session, n: int) -> list[Idea]:
+def get_last_n_ideas(session: Session, n: int) -> list[Idea] | None:
     """
     Retrieve the last n ideas from the database.
 
@@ -33,6 +33,12 @@ def get_last_n_ideas(session: Session, n: int) -> list[Idea]:
     Returns:
         List[Idea]: List of last n ideas.
     """
-    query = session.query(Idea).order_by(asc(Idea.idea_count)).limit(n)
+    # Define your subquery to reverse the order
+    subquery = session.query(Idea).order_by(desc(Idea.idea_count)).limit(n).subquery()
+
+    # Use the subquery to fetch the reversed results
+    query = session.query(subquery).order_by(subquery.c.idea_count)
+
+    # Fetch the ideas
     ideas = query.all()
     return ideas
