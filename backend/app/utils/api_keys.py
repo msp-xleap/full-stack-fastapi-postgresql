@@ -10,6 +10,7 @@ from openai import (
 )
 from starlette import status
 
+from app.core.config import settings
 from app.orchestration.prompts import langfuse_client, langfuse_handler
 
 # Configure logging
@@ -44,11 +45,13 @@ async def is_api_key_valid(
                 openai_api_key=api_key,  # type: ignore
                 openai_organization=org_id,
                 model_name=llm_model,
+                openai_proxy=settings.HTTP_PROXY
             )
         else:
             llm = ChatOpenAI(
                 openai_api_key=api_key,  # type: ignore
                 model_name=llm_model,
+                openai_proxy=settings.HTTP_PROXY
             )
 
         langfuse_prompt_obj = langfuse_client.get_prompt("API_KEY_VALIDATION")

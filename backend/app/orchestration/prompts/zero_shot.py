@@ -1,6 +1,7 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 
+from app.core.config import settings
 from app.orchestration.prompts import BasePrompt, langfuse_handler
 
 # async def generate_idea_and_post(agent: AIAgent, briefing: Briefing, session:
@@ -36,6 +37,7 @@ class ZeroShotPrompt(BasePrompt):
             openai_api_key=self._api_key,  # type: ignore
             model_name=self._model,
             temperature=self._temperature,
+            openai_proxy=settings.HTTP_PROXY
         )
 
         chain = final_prompt | llm

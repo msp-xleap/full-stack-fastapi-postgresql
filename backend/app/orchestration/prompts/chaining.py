@@ -9,6 +9,7 @@ from langchain_core.prompts import (
 from langchain_openai import ChatOpenAI
 
 from app.api.deps import SessionDep
+from app.core.config import settings
 from app.models import AIAgent, Briefing
 from app.orchestration.prompts import BasePrompt, langfuse_handler
 from app.utils import get_last_n_ideas
@@ -50,6 +51,7 @@ class ChainingPrompt(BasePrompt):
             openai_api_key=self._api_key,  # type: ignore
             model_name=self._model,
             temperature=self._temperature,
+            openai_proxy=settings.HTTP_PROXY
         )
         examples = await self._get_examples()
 

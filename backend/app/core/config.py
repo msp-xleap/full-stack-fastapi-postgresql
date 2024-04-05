@@ -55,6 +55,8 @@ class Settings(BaseSettings):
     LANGFUSE_SERVER_URL: str
     LANGFUSE_PUBLIC_KEY: str
     LANGFUSE_SECRET_KEY: str
+    LANGFUSE_USER_ID: str
+    HTTP_PROXY: str | None = None
 
     @computed_field  # type: ignore[misc]
     @property
