@@ -15,12 +15,12 @@ class TextTypeSwapper:
             nearby letters on the keyboard.
     """
 
-    def __init__(self, message, typo_prob=0.025):
+    def __init__(self, text, typo_prob=0.025):
         """
         Initialize the TextTypeSwapper object.
 
         Args:
-            message (str): The input message.
+            text (str): The input message.
             typo_prob (float, optional): The probability of a character
                 becoming a typo (between 0 and 1). Defaults to 0.025.
                 15mistakes / 100 words = 15 mistakes / 600 characters = 0.025
@@ -28,7 +28,7 @@ class TextTypeSwapper:
                 and https://contenthub-static.grammarly.com/blog/wp-content/
                 uploads/2016/09/EarlyBird_NightOwl-Infographic-1.jpg
         """
-        self._message = list(message)
+        self._message = list(text)
         self._typo_prob = typo_prob
         self._capitalization = [False] * len(self._message)
         # Define nearby keys on the keyboard that can be swapped.
@@ -99,7 +99,7 @@ class TextTypeSwapper:
 
         return self
 
-    def get_message(self):
+    def get_text(self):
         """
         Get the modified message.
 
