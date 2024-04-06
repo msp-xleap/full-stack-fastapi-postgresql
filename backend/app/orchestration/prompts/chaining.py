@@ -31,7 +31,10 @@ async def generate_idea_and_post(
     prompt_chaining = ChainingPrompt(
         agent=attached_agent, briefing=attached_briefing, ideas=attached_ideas
     )
-    await prompt_chaining.generate_idea()
+    try:
+        await prompt_chaining.generate_idea()
+    except Exception:
+        await prompt_chaining.generate_idea()
     await prompt_chaining.post_idea()
 
 
@@ -55,12 +58,17 @@ class ChainingPrompt(BasePrompt):
         )
         examples = await self._get_examples()
 
+        tone_in_brainstorming = await self._describe_tone(llm)
         idea_generation_chain = await self._generate_multiple_ideas(llm)
         idea_selection_chain = await self._select_idea(llm)
 
         # creating the simple sequential chain
         ss_chain = SequentialChain(
-            chains=[idea_generation_chain, idea_selection_chain],
+            chains=[
+                tone_in_brainstorming,
+                idea_generation_chain,
+                idea_selection_chain,
+            ],
             input_variables=["question", "idea"],
             output_variables=["selected_idea"],
         )
@@ -101,6 +109,22 @@ class ChainingPrompt(BasePrompt):
             llm=llm, prompt=idea_selection_prompt, output_key="selected_idea"
         )
         return idea_selection_chain
+
+    async def _describe_tone(self, llm) -> LLMChain:
+        """
+        Generate prompt for prompt chaining
+
+        Returns:
+            str: Generated prompt
+
+        """
+        tone_prompt = await self._generate_prompt(
+            question="CHAINING_PROMPT_TONE"
+        )
+        tone_chain: LLMChain = LLMChain(
+            llm=llm, prompt=tone_prompt, output_key="tone"
+        )
+        return tone_chain
 
     async def _generate_prompt(self, question: str) -> ChatPromptTemplate:  # type: ignore
         """
