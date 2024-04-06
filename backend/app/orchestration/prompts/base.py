@@ -5,9 +5,10 @@ from typing import Any
 
 import aiohttp
 
-from app.dns import resolve_server_addr
+from app.orchestration.data import resolve_server_addr
 from app.models import AIAgent, Briefing, Idea
 from app.orchestration.prompts import langfuse_client, langfuse_handler
+from app.utils import TextTypeSwapper
 
 
 class BasePrompt(ABC):
@@ -36,8 +37,6 @@ class BasePrompt(ABC):
     async def post_idea(self) -> None:
         """
         Post idea to the XLeap
-
-        Todo: save generated idea to the database
         """
         logging.getLogger().setLevel(logging.DEBUG)
 
@@ -53,13 +52,17 @@ class BasePrompt(ABC):
         # check if we can resolve the server address in DNS
         resolve_server_addr(self._agent.server_address)
 
+        # Add typos to the generated idea
+        swapper = TextTypeSwapper(self.generated_idea).add_typos()
+        idea_to_post = swapper.get_text()
+
         async with aiohttp.ClientSession() as session:
             session_post = session.post(
                 url=f"{self._agent.server_address}/services/api/sessions"
                 f"/{self._agent.session_id}/brainstorms/"
                 f"{self._agent.workspace_id}/ideas",
                 data=json.dumps(
-                    {"text": self.generated_idea, "folder_id": "string"}
+                    {"text": idea_to_post, "folder_id": "string"}
                 ),
                 headers={
                     "Authorization": f"Bearer {self._agent.secret}",
