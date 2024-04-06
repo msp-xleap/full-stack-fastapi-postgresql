@@ -51,7 +51,7 @@ class ChainingPrompt(BasePrompt):
             openai_api_key=self._api_key,  # type: ignore
             model_name=self._model,
             temperature=self._temperature,
-            openai_proxy=settings.HTTP_PROXY
+            openai_proxy=settings.HTTP_PROXY,
         )
         examples = await self._get_examples()
 

@@ -5,8 +5,8 @@ from typing import Any
 
 import aiohttp
 
-from app.orchestration.data import resolve_server_addr
 from app.models import AIAgent, Briefing, Idea
+from app.orchestration.data import resolve_server_addr
 from app.orchestration.prompts import langfuse_client, langfuse_handler
 from app.utils import TextTypeSwapper
 
@@ -61,9 +61,7 @@ class BasePrompt(ABC):
                 url=f"{self._agent.server_address}/services/api/sessions"
                 f"/{self._agent.session_id}/brainstorms/"
                 f"{self._agent.workspace_id}/ideas",
-                data=json.dumps(
-                    {"text": idea_to_post, "folder_id": "string"}
-                ),
+                data=json.dumps({"text": idea_to_post, "folder_id": "string"}),
                 headers={
                     "Authorization": f"Bearer {self._agent.secret}",
                     "content-type": "application/json",
