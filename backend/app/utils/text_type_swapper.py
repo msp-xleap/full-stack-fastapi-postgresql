@@ -15,15 +15,15 @@ class TextTypeSwapper:
             nearby letters on the keyboard.
     """
 
-    def __init__(self, text, typo_prob=0.025):
+    def __init__(self, text, typo_prob=0.02):
         """
         Initialize the TextTypeSwapper object.
 
         Args:
             text (str): The input message.
             typo_prob (float, optional): The probability of a character
-                becoming a typo (between 0 and 1). Defaults to 0.025.
-                15mistakes / 100 words = 15 mistakes / 600 characters = 0.025
+                becoming a typo (between 0 and 1). Defaults to 0.02.
+                15 mistakes / 100 words = 15 mistakes / 700 characters = ~0.02
                 see https://www.grammarly.com/blog/analysis-shows-we-write-better-day/
                 and https://contenthub-static.grammarly.com/blog/wp-content/
                 uploads/2016/09/EarlyBird_NightOwl-Infographic-1.jpg
@@ -80,7 +80,7 @@ class TextTypeSwapper:
             self._message[i] = self._message[i].lower()
 
         # Add typos
-        n_chars_to_flip = round(len(self._message) * self._typo_prob)
+        n_chars_to_flip = int(len(self._message) * self._typo_prob)
         pos_to_flip = random.sample(range(len(self._message)), n_chars_to_flip)
 
         for pos in pos_to_flip:

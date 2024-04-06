@@ -53,8 +53,8 @@ class BasePrompt(ABC):
         resolve_server_addr(self._agent.server_address)
 
         # Add typos to the generated idea
-        swapper = TextTypeSwapper(text=self.generated_idea).add_typos()
-        idea_to_post = swapper.get_text()
+        swapper = TextTypeSwapper(text=self.generated_idea, typo_prob=0.01)
+        idea_to_post = swapper.add_typos().get_text()
 
         async with aiohttp.ClientSession() as session:
             session_post = session.post(
@@ -96,13 +96,14 @@ class BasePrompt(ABC):
         prompt = prompt_obj.get_langchain_prompt()
         return prompt
 
-    async def add_evaluations(self, trace_id: str | None) -> None:
-        """
-        Add model based evaluations to the generated idea
-
-        Args:
-            trace_id: Trace ID for the request
-
-        Returns:
-
-        """
+    # async def add_evaluations(self, trace_id: str | None) -> None:
+    #     """
+    #     Add model based evaluations to the generated idea
+    #
+    #     Args:
+    #         trace_id: Trace ID for the request
+    #
+    #     Returns:
+    #
+    #     """
+    #     pass
