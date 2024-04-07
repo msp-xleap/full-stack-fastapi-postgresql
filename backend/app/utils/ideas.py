@@ -1,3 +1,4 @@
+import logging
 import uuid as uuid_pkg
 
 from sqlmodel import Session, desc, select
@@ -6,7 +7,7 @@ from app.models import Idea
 
 
 def check_if_idea_exists(
-    session: Session, idea_id: str, agent_id: uuid_pkg.uuid4
+        session: Session, idea_id: str, agent_id: uuid_pkg.uuid4
 ) -> Idea | None:
     """
     Given an idea ID and an agent ID, check if the idea exists in the database.
@@ -24,7 +25,8 @@ def check_if_idea_exists(
     return idea
 
 
-def get_last_n_ideas(session: Session, n: int, agent_id: uuid_pkg.uuid4) -> list[Idea] | None:
+def get_last_n_ideas(session: Session, n: int, agent_id: uuid_pkg.uuid4) -> \
+        list[Idea] | None:
     """
     Retrieve the last n ideas from the database.
 
@@ -39,8 +41,9 @@ def get_last_n_ideas(session: Session, n: int, agent_id: uuid_pkg.uuid4) -> list
     """
     # Define your subquery to reverse the order
     subquery = (
-        session.query(Idea)
-        .filter(Idea.agent_id == agent_id)
+        select(Idea)
+        .where(Idea.agent_id == agent_id,
+               Idea.created_by_ai == False)
         .order_by(desc(Idea.idea_count))
         .limit(n)
         .subquery()
@@ -51,10 +54,20 @@ def get_last_n_ideas(session: Session, n: int, agent_id: uuid_pkg.uuid4) -> list
 
     # Fetch the ideas
     ideas = query.all()
-    return ideas
+
+    ai_query = (
+        select(Idea)
+        .where(Idea.agent_id == agent_id,
+               Idea.created_by_ai == True)
+        .order_by(desc(Idea.idea_count))
+    )
+    ai_ideas = list(session.exec(ai_query))
+
+    return ideas + ai_ideas
 
 
-def get_last_ai_idea(session: Session, agent_id: uuid_pkg.uuid4) -> Idea | None:
+def get_last_ai_idea(session: Session,
+                     agent_id: uuid_pkg.uuid4) -> Idea | None:
     """
     Retrieve the last AI idea from the database.
 
@@ -65,6 +78,11 @@ def get_last_ai_idea(session: Session, agent_id: uuid_pkg.uuid4) -> Idea | None:
     Returns:
         List[Idea]: List of last n ideas.
     """
-    query = select(Idea).where(Idea.agent_id == agent_id).order_by(desc(Idea.idea_count))
+    query = (
+        select(Idea)
+        .where(Idea.agent_id == agent_id,
+               Idea.created_by_ai == True)
+        .order_by(desc(Idea.idea_count))
+    )
     idea = session.exec(query).first()
     return idea
