@@ -1,4 +1,3 @@
-import logging
 from random import random
 
 from fastapi import APIRouter, BackgroundTasks
