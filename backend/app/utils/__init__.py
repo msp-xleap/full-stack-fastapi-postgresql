@@ -12,7 +12,7 @@ from .emails import (
     send_email,
     verify_password_reset_token,
 )
-from .ideas import check_if_idea_exists, get_last_n_ideas
+from .ideas import check_if_idea_exists, get_last_n_ideas, get_last_ai_idea
 
 __all__ = [
     "TextTypeSwapper",
@@ -30,5 +30,6 @@ __all__ = [
     "verify_password_reset_token",
     "check_if_idea_exists",
     "get_last_n_ideas",
+    "get_last_ai_idea",
     "TextTypeSwapper",
 ]

@@ -26,7 +26,7 @@ async def generate_idea_and_post(
     attached_agent = session.merge(agent)
     attached_briefing = session.merge(briefing)
     attached_ideas = get_last_n_ideas(
-        session, n=attached_briefing.frequency * 3
+        session, n=attached_briefing.frequency * 3, agent_id=attached_agent.id
     )
     prompt_chaining = ChainingPrompt(
         agent=attached_agent, briefing=attached_briefing, ideas=attached_ideas

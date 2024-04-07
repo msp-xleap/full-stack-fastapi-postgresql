@@ -1,15 +1,18 @@
+import uuid as uuid_pkg
+
 from sqlalchemy import Column, Select, func
 from sqlmodel import Session, select
 
 from app.models import Idea, IdeaBase
 
 
-def create_idea(*, session: Session, idea: IdeaBase, agent_id: str) -> Idea:
+def create_idea(*, session: Session, idea: IdeaBase, agent_id: uuid_pkg.uuid4) -> Idea:
     """Store new AI Agent in the database
 
     Args:
         session (Session): Database session
-        ai_agent (AIAgent): AI Agent object
+        idea (IdeaBase): Idea object
+        agent_id (uuid_pkg.uuid4): Agent ID
 
     Returns:
         AIAgent: Created AI Agent object

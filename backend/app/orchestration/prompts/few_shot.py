@@ -21,7 +21,7 @@ async def generate_idea_and_post(
     """
     attached_agent = session.merge(agent)
     attached_briefing = session.merge(briefing)
-    attached_ideas = get_last_n_ideas(session, n=attached_briefing.frequency)
+    attached_ideas = get_last_n_ideas(session, n=attached_briefing.frequency, agent_id=attached_agent.id)
     zero_shot_prompt = FewShotPrompt(
         agent=attached_agent, briefing=attached_briefing, ideas=attached_ideas
     )
