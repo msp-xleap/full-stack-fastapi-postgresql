@@ -44,7 +44,10 @@ async def create_agent(
 
     # Create agent if it does not exist
     agent = crud.create_ai_agent(session=session, ai_agent=agent_in)
-    crud.create_ai_agent_briefing(session=session, ai_agent=agent)
+    briefing = crud.create_ai_agent_briefing2(session=session, ai_agent=agent, briefing_base=agent_in.briefing)
+
+    for brie_ref in agent_in.briefing.workspace_info_references:
+        crud.create_ai_agent_briefing2_reference(session=session, briefing=briefing, briefing_ref_base=brie_ref)
 
     # background_tasks.add_task(get_agent_briefing, agent)
 

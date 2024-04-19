@@ -21,7 +21,13 @@ from .users import (
     UserUpdateMe,
 )  # isort: skip_file
 
-from .briefings import Briefing
+from .briefings import (
+    AIBriefing2Base,
+    AIBriefing2ReferenceBase,
+    Briefing,
+    Briefing2,
+    Briefing2Reference,
+)
 from .ideas import Idea, IdeaBase
 from .items import Item, ItemBase, ItemCreate, ItemOut, ItemsOut, ItemUpdate
 
@@ -36,6 +42,8 @@ __all__ = [
     "AIAgentCreate",
     "AIAgentsOut",
     "AIAgentIdResponse",
+    "AIBriefing2Base",
+    "AIBriefing2ReferenceBase",
     "XLeapDetailsBase",
     "AIAgentConfigBase",
     "User",
@@ -48,6 +56,8 @@ __all__ = [
     "UserOut",
     "UsersOut",
     "Briefing",
+    "Briefing2",
+    "Briefing2Reference",
     "Idea",
     "IdeaBase",
     "Item",

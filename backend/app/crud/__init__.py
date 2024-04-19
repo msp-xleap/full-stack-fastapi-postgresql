@@ -1,5 +1,5 @@
 from .agents import activate_ai_agent, create_ai_agent, deactivate_ai_agent
-from .briefings import create_ai_agent_briefing
+from .briefings import create_ai_agent_briefing, create_ai_agent_briefing2, create_ai_agent_briefing2_reference
 from .ideas import create_idea, update_idea
 from .items import create_item
 from .users import authenticate, create_user, get_user_by_email, update_user
@@ -9,6 +9,8 @@ __all__ = [
     "activate_ai_agent",
     "deactivate_ai_agent",
     "create_ai_agent_briefing",
+    "create_ai_agent_briefing2",
+    "create_ai_agent_briefing2_reference",
     "create_idea",
     "update_idea",
     "create_item",
