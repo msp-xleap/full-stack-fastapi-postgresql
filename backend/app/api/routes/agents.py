@@ -5,7 +5,13 @@ from sqlmodel import select
 
 from app import crud
 from app.api.deps import SessionDep
-from app.models import AIAgent, AIAgentCreate, AIAgentIdResponse, AIAgentsOut
+from app.models import (
+    AIAgent,
+    AIAgentCreate,
+    AIAgentIdResponse,
+    AIAgentsOut,
+    AIBriefing2Base
+)
 from app.utils import check_agent_exists_by_instance_id, get_agent_by_id
 
 router = APIRouter()
@@ -119,3 +125,49 @@ async def deactivate_agent(agent_id: str, session: SessionDep) -> None:
 
     # Deactivate agent
     crud.deactivate_ai_agent(session=session, ai_agent=agent)
+
+
+@router.put(
+    "/{agent_id}/briefing/",
+    responses={
+        403: {"detail": "Invalid secret"},
+        404: {"detail": "Agent not found"},
+    },
+    status_code=200,
+)
+
+
+async def update_agent_briefing(
+        *,
+        agent_id: str,
+        briefing_in: AIBriefing2Base,
+        session: SessionDep) -> Any:
+    """
+    Updates the briefing of an existing agent.
+
+    To do:
+        - Add/validate secret to the request body or in header.
+
+    Args:
+        agent_id (str): UUID of the agent to be activated
+        briefing_in (AIBriefing2Base) the latest briefing
+        session (SessionDep): Database session
+
+    Raises:
+        HTTPException - 403: If the secret is invalid.
+        HTTPException - 404: If the agent is not found.
+
+    Returns:
+        None
+    """
+    # Find agent by ID
+    agent = get_agent_by_id(agent_id, session)
+
+    briefing = crud.create_or_update_ai_agent_briefing2(session=session, ai_agent=agent, briefing_base=briefing_in)
+
+    crud.replace_briefing2_references(
+        session=session,
+        agent_id=str(agent.id),
+        briefing_refs=briefing_in.workspace_info_references
+    )
+    return None;

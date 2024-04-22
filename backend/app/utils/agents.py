@@ -1,10 +1,11 @@
+import logging
 from fastapi import HTTPException
 
-from app.api.deps import SessionDep
+from sqlmodel import Session, select
 from app.models import AIAgent
 
 
-def get_agent_by_id(agent_id: str, session: SessionDep) -> AIAgent:
+def get_agent_by_id(agent_id: str, session: Session) -> AIAgent:
     """Get agent by ID
 
     Args:
@@ -18,8 +19,10 @@ def get_agent_by_id(agent_id: str, session: SessionDep) -> AIAgent:
         AIAgent: Agent object
     """
     # Find agent by ID
-    agent = session.get(AIAgent, agent_id)
+    query = select(AIAgent).where(AIAgent.id == agent_id)
+    agent = session.exec(query).first()
     if agent is None:
+        logging.info(f"The requested agent does not exist {agent_id}")
         # If agent is not found, raise HTTPException
         raise HTTPException(
             status_code=404,
@@ -29,7 +32,7 @@ def get_agent_by_id(agent_id: str, session: SessionDep) -> AIAgent:
 
 
 def check_agent_exists_by_instance_id(
-    instance_id: str, session: SessionDep
+    instance_id: str, session: Session
 ) -> None:
     """Check if an agent with the given an instance ID already exists.
 

@@ -1,7 +1,11 @@
 from .text_type_swapper import TextTypeSwapper  # isort: skip  # noqa
 from .agents import check_agent_exists_by_instance_id, get_agent_by_id
 from .api_keys import is_api_key_valid
-from .briefings import get_briefing_by_agent_id
+from .briefings import (
+    get_briefing_by_agent_id,
+    get_briefing2_by_agent,
+    get_briefing2_references_by_agent,
+)
 from .emails import (
     EmailData,
     generate_new_account_email,
@@ -20,6 +24,8 @@ __all__ = [
     "get_agent_by_id",
     "is_api_key_valid",
     "get_briefing_by_agent_id",
+    "get_briefing2_by_agent",
+    "get_briefing2_references_by_agent",
     "EmailData",
     "render_email_template",
     "send_email",

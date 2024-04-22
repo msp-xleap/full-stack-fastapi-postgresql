@@ -1,6 +1,6 @@
 import uuid as uuid_pkg
 
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, SQLModel, PrimaryKeyConstraint
 
 # ToDo: Change JSON object of Briefing. Currently, it is unncessarily nested
 #  and can be simplified.
@@ -60,6 +60,7 @@ class Briefing(SQLModel, table=True):
     briefing_id: uuid_pkg.UUID = Field(
         default_factory=uuid_pkg.uuid4,
         primary_key=True,
+        unique=True,
         index=True,
         nullable=False,
     )
@@ -69,19 +70,30 @@ class Briefing(SQLModel, table=True):
     topic: str = "MY TOPIC"
 
     agent_id: uuid_pkg.UUID = (
-        Field(default=None, foreign_key="ai_agent.id", nullable=False),
+        Field(default=None,
+              foreign_key="ai_agent.id",
+              nullable=False,
+              unique=True,
+              index=True,
+       ),
     )
 
 
 class Briefing2(SQLModel, table=True):
     __tablename__ = "briefing2"
-
-    briefing_id: uuid_pkg.UUID = Field(
-        default_factory=uuid_pkg.uuid4,
-        primary_key=True,
-        index=True,
-        nullable=False,
+    __table_args__ = (
+        PrimaryKeyConstraint("agent_id", name="briefing_pk"),
     )
+
+    agent_id: uuid_pkg.UUID = (
+        Field(default=None,
+              foreign_key="ai_agent.id",
+              primary_key=True,
+              unique=True,
+              index=True,
+              nullable=False),
+    )
+
     instance_id: str
     frequency: int = 7
     response_length: int = 3
@@ -108,29 +120,27 @@ class Briefing2(SQLModel, table=True):
     workspace_info_text: str = ""
     workspace_info_template: str = ""
 
-    agent_id: uuid_pkg.UUID = (
-        Field(default=None, foreign_key="ai_agent.id", nullable=False),
-    )
-
 
 class Briefing2Reference(SQLModel, table=True):
     __tablename__ = "briefing2_reference"
+    __table_args__ = (
+        PrimaryKeyConstraint("agent_id", "ref_id", name="briefing_ref_pk"),
+    )
 
-    reference_id: uuid_pkg.UUID = Field(
-        default_factory=uuid_pkg.uuid4,
-        primary_key=True,
+    agent_id: uuid_pkg.UUID = (
+        Field(default=None,
+              foreign_key="ai_agent.id",
+              unique=True,
+              nullable=False),
+    )
+
+    ref_id: str = Field (
         index=True,
         nullable=False,
     )
-
-    ref_id: str
     type: str
     text: str
     template: str
     url: str
     url_expires_at: str
     filename: str
-
-    briefing_id: uuid_pkg.UUID = (
-        Field(default=None, foreign_key="briefing2.id", nullable=False),
-    )
