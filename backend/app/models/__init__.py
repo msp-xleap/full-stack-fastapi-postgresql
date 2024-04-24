@@ -22,11 +22,16 @@ from .users import (
 )  # isort: skip_file
 
 from .briefings import (
-    AIBriefing2Base,
-    AIBriefing2ReferenceBase,
+    BriefingCategory,
+    BriefingSubCategory,
+    AIBriefing3Base,
+    AIBriefing3ReferenceBase,
     Briefing,
-    Briefing2,
-    Briefing2Reference,
+    Briefing3,
+    Briefing3Reference,
+    AIBriefing3LangfuseBase,
+    AIBriefing3ReferenceLangfuseBase,
+    XLeapBriefingPrompt,
 )
 from .ideas import Idea, IdeaBase
 from .items import Item, ItemBase, ItemCreate, ItemOut, ItemsOut, ItemUpdate
@@ -42,8 +47,8 @@ __all__ = [
     "AIAgentCreate",
     "AIAgentsOut",
     "AIAgentIdResponse",
-    "AIBriefing2Base",
-    "AIBriefing2ReferenceBase",
+    "AIBriefing3Base",
+    "AIBriefing3ReferenceBase",
     "XLeapDetailsBase",
     "AIAgentConfigBase",
     "User",
@@ -55,9 +60,13 @@ __all__ = [
     "UpdatePassword",
     "UserOut",
     "UsersOut",
+    "BriefingCategory",
+    "BriefingSubCategory",
     "Briefing",
-    "Briefing2",
-    "Briefing2Reference",
+    "Briefing3",
+    "Briefing3Reference",
+    "AIBriefing3LangfuseBase",
+    "AIBriefing3ReferenceLangfuseBase",
     "Idea",
     "IdeaBase",
     "Item",
@@ -70,4 +79,5 @@ __all__ = [
     "NewPassword",
     "Token",
     "TokenPayload",
+    "XLeapBriefingPrompt"
 ]

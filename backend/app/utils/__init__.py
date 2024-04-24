@@ -3,8 +3,10 @@ from .agents import check_agent_exists_by_instance_id, get_agent_by_id
 from .api_keys import is_api_key_valid
 from .briefings import (
     get_briefing_by_agent_id,
-    get_briefing2_by_agent,
-    get_briefing2_references_by_agent,
+    get_briefing3_by_agent,
+    get_briefing3_references_by_agent,
+    langfuse_base_from_briefing_base,
+    langfuse_base_from_briefing_reference_base
 )
 from .emails import (
     EmailData,
@@ -24,8 +26,10 @@ __all__ = [
     "get_agent_by_id",
     "is_api_key_valid",
     "get_briefing_by_agent_id",
-    "get_briefing2_by_agent",
-    "get_briefing2_references_by_agent",
+    "get_briefing3_by_agent",
+    "get_briefing3_references_by_agent",
+    "langfuse_base_from_briefing_base",
+    "langfuse_base_from_briefing_reference_base",
     "EmailData",
     "render_email_template",
     "send_email",

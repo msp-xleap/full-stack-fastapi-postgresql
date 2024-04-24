@@ -13,6 +13,13 @@ services:
 
   backend:
     restart: "no"
+    depends_on:
+      - db
+      - langfuse-server
+    links:
+        - langfuse-server:langfuse.msp.internal
+    extra_hosts:
+        - "host.docker.internal:host-gateway"
     ports:
       - "80:80"
     volumes:

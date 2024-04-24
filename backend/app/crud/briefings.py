@@ -4,15 +4,20 @@ from fastapi import HTTPException
 from app.models import (
     AIAgent,
     Briefing,
-    Briefing2,
-    Briefing2Reference,
-    AIBriefing2ReferenceBase,
-    AIBriefing2Base,
+    Briefing3,
+    Briefing3Reference,
+    AIBriefing3ReferenceBase,
+    AIBriefing3Base,
+    BriefingCategory,
+    BriefingSubCategory,
+    AIBriefing3LangfuseBase,
 )
 
 from app.utils import (
-    get_briefing2_by_agent,
-    get_briefing2_references_by_agent,
+    get_briefing3_by_agent,
+    get_briefing3_references_by_agent,
+    langfuse_base_from_briefing_base,
+    langfuse_base_from_briefing_reference_base,
 )
 
 def create_ai_agent_briefing(
@@ -33,22 +38,26 @@ def create_ai_agent_briefing(
     session.refresh(db_obj)
     return db_obj
 
-def create_ai_agent_briefing2(
-        *, session: Session, ai_agent: AIAgent, briefing_base: AIBriefing2Base,
-) -> Briefing2:
+def create_ai_agent_briefing3(
+        *, session: Session, ai_agent: AIAgent, briefing_base: AIBriefing3Base,
+) -> Briefing3:
     """Stores the briefing of a new AI Agent in the database
 
     Args:
         session (Session): Database session
         ai_agent (AIAgent): AI Agent object
-        briefing_base (AIBriefing2Base): The briefing data
+        briefing_base (AIBriefing3Base): The briefing data
 
     Returns:
-        Briefing2: Created Briefing2 object
+        Briefing3: Created Briefing3 object
     """
-    db_obj = Briefing2.model_validate(
+
+    langfuse_base = langfuse_base_from_briefing_base(session, briefing_base)
+
+    db_obj = Briefing3.model_validate(
         {
             **briefing_base.model_dump(),
+            **langfuse_base.model_dump(),
             "agent_id": ai_agent.id
         })
     session.add(db_obj)
@@ -56,21 +65,26 @@ def create_ai_agent_briefing2(
     session.refresh(db_obj)
     return db_obj
 
-def create_ai_agent_briefing2_reference(
-        *, session: Session, briefing: Briefing2, briefing_ref_base: AIBriefing2ReferenceBase,
-) -> Briefing2Reference:
+
+def create_ai_agent_briefing3_reference(
+        *, session: Session, briefing: Briefing3, briefing_ref_base: AIBriefing3ReferenceBase,
+) -> Briefing3Reference:
     """Stores the briefing references of a briefing in the database
 
     Args:
         session (Session): Database session
-        briefing (Briefing2): Briefing2 object
-        briefing_ref_base (AIBriefing2ReferenceBase): The briefing reference data
+        briefing (Briefing3): Briefing3 object
+        briefing_ref_base (AIBriefing3ReferenceBase): The briefing reference data
 
     Returns:
-        Briefing2Reference: Created Briefing2 Reference object
+        Briefing3Reference: Created Briefing3 Reference object
     """
-    db_obj = Briefing2Reference.model_validate({
+
+    langfuse_ref_base = langfuse_base_from_briefing_reference_base(session, briefing_ref_base)
+
+    db_obj = Briefing3Reference.model_validate({
         **briefing_ref_base.model_dump(),
+        **langfuse_ref_base.model_dump(),
         "briefing_id": briefing.id
     })
     session.add(db_obj)
@@ -78,38 +92,42 @@ def create_ai_agent_briefing2_reference(
     session.refresh(db_obj)
     return db_obj
 
-def create_or_update_ai_agent_briefing2(
-        *, session: Session, ai_agent: AIAgent, briefing_base: AIBriefing2Base,
-) -> Briefing2:
+
+def create_or_update_ai_agent_briefing3(
+        *, session: Session, ai_agent: AIAgent, briefing_base: AIBriefing3Base,
+) -> Briefing3:
     """Replaces (e.g. update or creates) the briefing of an existing agent
 
     Args:
         session (Session): Database session
         ai_agent (AIAgent): AI Agent object
-        briefing_base (AIBriefing2Base): The briefing data
+        briefing_base (AIBriefing3Base): The briefing data
 
     Returns:
-        Briefing2: Created Briefing2 object
+        Briefing3: Created Briefing3 object
     """
 
     try:
-        briefing = get_briefing2_by_agent(str(ai_agent.id), session)
+        briefing = get_briefing3_by_agent(str(ai_agent.id), session)
 
-        db_obj = Briefing2.model_validate(
+        langfuse_base = langfuse_base_from_briefing_base(session, briefing_base)
+
+        db_obj = Briefing3.model_validate(
         {
             **briefing_base.model_dump(),
+            **langfuse_base.model_dump(),
             "agent_id": str(ai_agent.id)
         })
         session.merge(db_obj)
         session.commit()
         return briefing
     except HTTPException as e:
-        briefing = create_ai_agent_briefing2(session=session, ai_agent=ai_agent, briefing_base=briefing_base)
+        briefing = create_ai_agent_briefing3(session=session, ai_agent=ai_agent, briefing_base=briefing_base)
         return briefing
 
 
-def replace_briefing2_references(
-    *, session: Session, agent_id:str, briefing_refs: list[AIBriefing2ReferenceBase],
+def replace_briefing3_references(
+    *, session: Session, agent_id:str, briefing_refs: list[AIBriefing3ReferenceBase],
 ) -> None:
     """Replaces the references of the specified briefing with the specified references.
 
@@ -119,12 +137,12 @@ def replace_briefing2_references(
     Args:
         session (Session): Database session
         agent_id (src): ID of Agent
-        briefing_refs (list[AIBriefing2ReferenceBase]): New briefing references
+        briefing_refs (list[AIBriefing3ReferenceBase]): New briefing references
 
     Returns:
         None
     """
-    existing = get_briefing2_references_by_agent(agent_id, session)
+    existing = get_briefing3_references_by_agent(agent_id, session)
 
     new_map = {briefing_ref_base.ref_id: briefing_ref_base for briefing_ref_base in briefing_refs}
     existing_map = {ref.ref_id: ref for ref in existing}
@@ -135,8 +153,12 @@ def replace_briefing2_references(
     for existing_id in existing_map:
         if existing_id in new_map:
             new_ref = new_map.get(existing_id)
-            db_obj = Briefing2Reference.model_validate({
+
+            langfuse_ref_base = langfuse_base_from_briefing_reference_base(session, new_ref)
+
+            db_obj = Briefing3Reference.model_validate({
                 **new_ref.model_dump(),
+                **langfuse_ref_base.model_dump(),
                 "agent_id": agent_id
             })
             session.merge(db_obj)
@@ -147,9 +169,11 @@ def replace_briefing2_references(
     for new_id in new_map:
         if not new_id in existing_map:
             new_ref = new_map.get(new_id)
-            db_obj = Briefing2Reference.model_validate(
+            langfuse_ref_base = langfuse_base_from_briefing_reference_base(session, new_ref)
+            db_obj = Briefing3Reference.model_validate(
                 {
                     **new_ref.model_dump(),
+                    **langfuse_ref_base.model_dump(),
                     "agent_id": agent_id
                 })
             session.add(db_obj)

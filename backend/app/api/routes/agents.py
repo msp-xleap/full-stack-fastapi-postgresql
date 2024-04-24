@@ -10,7 +10,7 @@ from app.models import (
     AIAgentCreate,
     AIAgentIdResponse,
     AIAgentsOut,
-    AIBriefing2Base
+    AIBriefing3Base
 )
 from app.utils import check_agent_exists_by_instance_id, get_agent_by_id
 
@@ -50,10 +50,13 @@ async def create_agent(
 
     # Create agent if it does not exist
     agent = crud.create_ai_agent(session=session, ai_agent=agent_in)
-    briefing = crud.create_ai_agent_briefing2(session=session, ai_agent=agent, briefing_base=agent_in.briefing)
+    briefing = crud.create_ai_agent_briefing3(session=session, ai_agent=agent, briefing_base=agent_in.briefing)
 
     for brie_ref in agent_in.briefing.workspace_info_references:
-        crud.create_ai_agent_briefing2_reference(session=session, briefing=briefing, briefing_ref_base=brie_ref)
+        crud.create_ai_agent_briefing3_reference(session=session, briefing=briefing, briefing_ref_base=brie_ref)
+
+    for exemplar in agent_in.briefing.exemplar_references:
+        crud.create_ai_agent_briefing3_reference(session=session, briefing=briefing, briefing_ref_base=exemplar)
 
     # background_tasks.add_task(get_agent_briefing, agent)
 
@@ -140,7 +143,7 @@ async def deactivate_agent(agent_id: str, session: SessionDep) -> None:
 async def update_agent_briefing(
         *,
         agent_id: str,
-        briefing_in: AIBriefing2Base,
+        briefing_in: AIBriefing3Base,
         session: SessionDep) -> Any:
     """
     Updates the briefing of an existing agent.
@@ -150,7 +153,7 @@ async def update_agent_briefing(
 
     Args:
         agent_id (str): UUID of the agent to be activated
-        briefing_in (AIBriefing2Base) the latest briefing
+        briefing_in (AIBriefing3Base) the latest briefing
         session (SessionDep): Database session
 
     Raises:
@@ -163,11 +166,11 @@ async def update_agent_briefing(
     # Find agent by ID
     agent = get_agent_by_id(agent_id, session)
 
-    briefing = crud.create_or_update_ai_agent_briefing2(session=session, ai_agent=agent, briefing_base=briefing_in)
+    briefing = crud.create_or_update_ai_agent_briefing3(session=session, ai_agent=agent, briefing_base=briefing_in)
 
-    crud.replace_briefing2_references(
+    crud.replace_briefing3_references(
         session=session,
         agent_id=str(agent.id),
         briefing_refs=briefing_in.workspace_info_references
     )
-    return None;
+    return None
