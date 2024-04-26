@@ -1,8 +1,26 @@
 import enum
 import uuid as uuid_pkg
 
-from sqlmodel import Field, SQLModel, PrimaryKeyConstraint, Column, ForeignKeyConstraint, String, Text, Index
+from sqlmodel import Field, SQLModel, PrimaryKeyConstraint, Column, ForeignKeyConstraint, String, Text
 
+
+class Briefing(SQLModel, table=True):
+    __tablename__ = "briefing"
+
+    briefing_id: uuid_pkg.UUID = Field(
+        default_factory=uuid_pkg.uuid4,
+        primary_key=True,
+        index=True,
+        nullable=False,
+    )
+
+    frequency: int = 7
+    question: str = "MY QUESTION"
+    topic: str = "MY TOPIC"
+
+    agent_id: uuid_pkg.UUID = (
+        Field(default=None, foreign_key="ai_agent.id", nullable=False),
+    )
 
 
 class BriefingCategory(enum.StrEnum):
@@ -47,6 +65,15 @@ class BriefingCategory(enum.StrEnum):
         workspaces.
         This type uses the workspace subtypes WS_* 
     """
+    CONTEXT_INTRO = "context_intro"
+    """ The generic info for the following context prompt parts 
+        This type uses the workspace subtypes WS_*     
+    """
+    WORKSPACE_INSTRUCTION = "workspace_instruction"
+    """ The instruction for the workspace 
+        This type uses the workspace subtypes WS_* 
+    """
+
 
 class BriefingSubCategory(enum.StrEnum):
     """
@@ -105,6 +132,7 @@ class BriefingSubCategory(enum.StrEnum):
      PromptType.WORKSPACE_CONTENT 
     """
 
+
 class XLeapBriefingPrompt(SQLModel, table=True):
     """
         The XLeapPrompt table provides a mapping between an
@@ -118,76 +146,87 @@ class XLeapBriefingPrompt(SQLModel, table=True):
     __table_args__ = (
         PrimaryKeyConstraint("category", "sub_category", "template", name="xleap_briefing_prompt_pk"),
     )
-
-    category: BriefingCategory = Column(String(50))
-    sub_category: BriefingSubCategory = Column(String(50))
+    # store BriefingCategory and BriefingSubCategory as string because alembic does not update
+    # these correctly when we add or remove types
+    category: str = Column(String(50))
+    sub_category: str = Column(String(50))
     template: str = Column(Text)
     """ The prompt template """
     langfuse_prompt: str
     """ The name of the prompt in langfuse """
 
 
-class AIBriefing3ReferenceBase(SQLModel):
+class AIBriefing2ReferenceBase(SQLModel):
     ref_id: str
+    ref_number: int
     type: str
-    workspace_type: str = Field(None)
+    workspace_type: str = Field(None, nullable=True)
     text: str
     template: str
     url: str
     url_expires_at: str
     filename: str
 
-class AIBriefing3Base(SQLModel):
+
+class AIBriefing2Base(SQLModel):
     instance_id: str
     frequency: int = 7
     workspace_type: str = ""
     response_length: int = 3
     response_length_template: str = ""
+    context_intro_template: str = ""
     with_additional_info: bool = False
-    additional_info_text: str = ""
+    additional_info: str = ""
     additional_info_template: str = ""
     with_persona: bool = False
-    persona_text: str = ""
+    persona: str = ""
     persona_template: str = ""
     with_tone: bool = False
-    tone_text: str = ""
+    tone: str = ""
     tone_template: str = ""
     with_session_info: bool = False
-    session_info_text: str = ""
+    session_info: str = ""
     session_info_template: str = ""
     with_host_info: bool = False
-    host_info_text: str = ""
+    host_info: str = ""
     host_info_template: str = ""
     with_participant_info: bool = False
-    participant_info_text: str = ""
+    participant_info: str = ""
     participant_info_template: str = ""
     with_workspace_info: bool = False
-    workspace_info_text: str = ""
+    workspace_info: str = ""
     workspace_info_template: str = ""
-    workspace_info_references: list[AIBriefing3ReferenceBase] = Field(None)
+    workspace_info_references: list[AIBriefing2ReferenceBase] = Field(None)
+    with_workspace_instruction: bool = False
+    workspace_instruction: str = ""
+    workspace_instruction_template: str = ""
     with_num_exemplar: int = 0
     exemplar_template: str = ""
-    exemplar_references: list[AIBriefing3ReferenceBase] = Field(None)
-
-class AIBriefing3LangfuseBase(SQLModel):
-    response_length_langfuse: str = ""
-    additional_info_langfuse: str = ""
-    persona_langfuse: str = ""
-    tone_langfuse: str = ""
-    session_info_langfuse: str = ""
-    host_info_langfuse: str = ""
-    participant_info_langfuse: str = ""
-    workspace_info_langfuse: str = ""
-    exemplar_langfuse: str = ""
-
-class AIBriefing3ReferenceLangfuseBase(SQLModel):
-    template_langfuse: str = ""
+    exemplar_references: list[AIBriefing2ReferenceBase] = Field(None)
 
 
-class Briefing3(SQLModel, table=True):
-    __tablename__ = "briefing3"
+class AIBriefing2LangfuseBase(SQLModel):
+    response_length_langfuse_name: str = ""
+    context_intro_langfuse_name: str = ""
+    additional_info_langfuse_name: str = ""
+    persona_langfuse_name: str = ""
+    tone_langfuse_name: str = ""
+    session_info_langfuse_name: str = ""
+    host_info_langfuse_name: str = ""
+    participant_info_langfuse_name: str = ""
+    workspace_info_langfuse_name: str = ""
+    workspace_instruction_langfuse_name: str = ""
+    exemplar_langfuse_name: str = ""
+
+
+class AIBriefing2ReferenceLangfuseBase(SQLModel):
+    langfuse_name: str = ""
+
+
+class Briefing2(SQLModel, table=True):
+    __tablename__ = "briefing2"
     __table_args__ = (
-        PrimaryKeyConstraint("agent_id", name="briefing3_pk"),
+        PrimaryKeyConstraint("agent_id", name="briefing2_pk"),
         ForeignKeyConstraint(["agent_id"], ["ai_agent.id"])
     )
 
@@ -204,37 +243,41 @@ class Briefing3(SQLModel, table=True):
     frequency: int = 7
     response_length: int = 3
     response_length_langfuse_name: str = ""
+    context_intro_langfuse_name: str = ""
     with_additional_info: bool = False
-    additional_info_text: str = ""
+    additional_info: str = ""
     additional_info_langfuse_name: str = ""
     with_persona: bool = False
-    persona_text: str = ""
+    persona: str = ""
     persona_langfuse_name: str = ""
     workspace_type: str = ""
     with_tone: bool = False
-    tone_text: str = ""
-    tone_langfuse: str = ""
+    tone: str = ""
+    tone_langfuse_name: str = ""
     with_session_info: bool = False
-    session_info_text: str = ""
+    session_info: str = ""
     session_info_langfuse_name: str = ""
     with_host_info: bool = False
-    host_info_text: str = ""
+    host_info: str = ""
     host_info_langfuse_name: str = ""
     with_participant_info: bool = False
-    participant_info_text: str = ""
+    participant_info: str = ""
     participant_info_langfuse_name: str = ""
     with_workspace_info: bool = False
-    workspace_info_text: str = ""
+    workspace_info: str = ""
     workspace_info_langfuse_name: str = ""
-    with_exemplar: bool = False
-    exemplar_text: str = ""
-    exemplar_langfuse: str = ""
+    with_workspace_instruction: bool = False
+    workspace_instruction: str = ""
+    workspace_instruction_langfuse_name: str = ""
+    with_num_exemplar: int = 0
+    exemplar: str = ""
+    exemplar_langfuse_name: str = ""
 
 
-class Briefing3Reference(SQLModel, table=True):
-    __tablename__ = "briefing3_reference"
+class Briefing2Reference(SQLModel, table=True):
+    __tablename__ = "briefing2_reference"
     __table_args__ = (
-        PrimaryKeyConstraint("agent_id", "ref_id", name="briefing3_ref_pk"),
+        PrimaryKeyConstraint("agent_id", "ref_id", name="briefing2_ref_pk"),
         ForeignKeyConstraint(["agent_id"], ["ai_agent.id"])
     )
 
@@ -245,12 +288,13 @@ class Briefing3Reference(SQLModel, table=True):
               nullable=False),
     )
 
-    ref_id: str = Field (
+    ref_id: str = Field(
         index=True,
         nullable=False,
     )
+    ref_number: int = 0
     type: str
-    workspace_type: str = ""
+    workspace_type: str = Field(None, nullable=True)
     text: str
     langfuse_name: str
     url: str
@@ -258,27 +302,5 @@ class Briefing3Reference(SQLModel, table=True):
     filename: str
 
 
-class Briefing(SQLModel, table=True):
-    """ Deprecated """
-    __tablename__ = "briefing"
-
-    briefing_id: uuid_pkg.UUID = Field(
-        default_factory=uuid_pkg.uuid4,
-        primary_key=True,
-        unique=True,
-        index=True,
-        nullable=False,
-    )
-
-    frequency: int = 7
-    question: str = "MY QUESTION"
-    topic: str = "MY TOPIC"
-
-    agent_id: uuid_pkg.UUID = (
-        Field(default=None,
-              foreign_key="ai_agent.id",
-              nullable=False,
-              unique=True,
-              index=True,
-              ),
-    )
+class BriefingTextResponse(SQLModel):
+    text: str

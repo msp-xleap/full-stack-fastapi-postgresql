@@ -14,6 +14,10 @@ from app.models import AIAgent, Briefing
 from app.orchestration.prompts import BasePrompt, langfuse_handler
 from app.utils import get_last_n_ideas
 
+##
+# Currently using briefing.additional_info as the only instruction (previously briefing.question)
+# briefing.participant_info instead of briefing.topic
+##
 
 async def generate_idea_and_post(
     agent: AIAgent, briefing: Briefing, session: SessionDep

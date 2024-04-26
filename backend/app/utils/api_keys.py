@@ -12,12 +12,46 @@ from starlette import status
 
 from app.core.config import settings
 from app.orchestration.prompts import langfuse_client, langfuse_handler
+import threading
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(funcName)s - %(message)s",
 )
+
+
+def _get_or_create_api_key_validation_prompt_under_lock():
+    """ returns the API validation prompt
+        If the prompt is not present it will be created.
+        This method acquires lock
+    """
+    lock = threading.Lock()
+    lock.acquire()
+    try:
+        return langfuse_client.get_prompt("API_KEY_VALIDATION")  # check again if the prompt exists
+    except NotFoundError:  # otherwise created
+        return langfuse_client.create_prompt(
+                    name="API_KEY_VALIDATION",
+                    prompt="Are you currently accepting any prompts? Answer with \"YES\"",
+                    is_active=True)
+    finally:
+        lock.release()
+
+
+def _get_api_key_validation_prompt():
+    """ returns the API validation prompt
+        If the prompt is not present it will be created
+    """
+    try:
+        return langfuse_client.get_prompt("API_KEY_VALIDATION")
+    except AuthenticationError:
+        logging.error("Internal Error: Got Unauthorized from Langfuse")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Langfuse authentication error"
+        )
+    except NotFoundError:
+        return _get_or_create_api_key_validation_prompt_under_lock()
 
 
 async def is_api_key_valid(
@@ -39,6 +73,20 @@ async def is_api_key_valid(
     Returns:
         None
     """
+
+    try:
+        langfuse_prompt_obj = _get_api_key_validation_prompt()
+    except AuthenticationError:
+        logging.error("Internal Error: Got Unauthorized from Langfuse")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Langfuse authentication error"
+        )
+    except Exception as err:
+        logging.error(f"An error calling Langfuse: {err}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(err)
+        )
+
     try:
         if org_id:
             llm = ChatOpenAI(
@@ -54,9 +102,8 @@ async def is_api_key_valid(
                 openai_proxy=settings.HTTP_PROXY,
             )
 
-        langfuse_prompt_obj = langfuse_client.get_prompt("API_KEY_VALIDATION")
         llm.invoke(
-            langfuse_prompt_obj.prompt,
+            langfuse_prompt_obj,
             config={"callbacks": [langfuse_handler]},
         )
 
