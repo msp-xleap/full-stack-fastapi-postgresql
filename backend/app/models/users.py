@@ -1,4 +1,4 @@
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, SQLModel
 
 
 # Shared properties
@@ -16,7 +16,7 @@ class UserCreate(UserBase):
 
 
 # TODO replace email str with EmailStr when sqlmodel supports it
-class UserCreateOpen(SQLModel):
+class UserRegister(SQLModel):
     email: str
     password: str
     full_name: str | None = None
@@ -44,14 +44,13 @@ class UpdatePassword(SQLModel):
 class User(UserBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     hashed_password: str
-    items: list["Item"] = Relationship(back_populates="owner")  # type: ignore  # noqa: F821
 
 
 # Properties to return via API, id is always required
-class UserOut(UserBase):
+class UserPublic(UserBase):
     id: int
 
 
-class UsersOut(SQLModel):
-    data: list[UserOut]
+class UsersPublic(SQLModel):
+    data: list[UserPublic]
     count: int

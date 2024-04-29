@@ -12,7 +12,7 @@ async def get_agent_briefing(
     Get briefing for the agent from XLeap server and store it in the database.
 
     Args:
-        agent_id (str): Agent of which the briefing is to be fetched
+        agent (AIAgent): Agent of which the briefing is to be fetched
 
     Returns
         None

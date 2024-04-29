@@ -1,15 +1,20 @@
+import uuid as uuid_pkg
+
 from sqlalchemy import Column, Select, func
 from sqlmodel import Session, select
 
 from app.models import Idea, IdeaBase
 
 
-def create_idea(*, session: Session, idea: IdeaBase, agent_id: str) -> Idea:
+def create_idea(
+    *, session: Session, idea: IdeaBase, agent_id: uuid_pkg.uuid4
+) -> Idea:
     """Store new AI Agent in the database
 
     Args:
         session (Session): Database session
-        ai_agent (AIAgent): AI Agent object
+        idea (IdeaBase): Idea object
+        agent_id (uuid_pkg.uuid4): Agent ID
 
     Returns:
         AIAgent: Created AI Agent object
@@ -32,3 +37,25 @@ def create_idea(*, session: Session, idea: IdeaBase, agent_id: str) -> Idea:
     session.commit()
     session.refresh(db_obj)
     return db_obj
+
+
+def update_idea(
+    *, session: Session, idea_db: Idea, idea_new: IdeaBase
+) -> Idea:
+    """
+    Update an existing idea in the database.
+
+    Args:
+        session (Session): Database session
+        idea_db (Idea): Existing idea object
+        idea_new (IdeaBase): New idea object
+
+    Returns:
+        Idea: Updated idea object
+    """
+    idea_data = idea_new.model_dump(exclude_unset=True)
+    idea_db.sqlmodel_update(idea_data)
+    session.add(idea_db)
+    session.commit()
+    session.refresh(idea_db)
+    return idea_db

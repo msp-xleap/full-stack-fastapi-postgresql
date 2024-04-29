@@ -26,3 +26,7 @@ COPY ./prestart.sh /app/
 COPY ./tests-start.sh /app/
 
 COPY ./app /app/app
+
+COPY ./prestart.sh /app/app/
+
+COPY ./start.sh /start.sh

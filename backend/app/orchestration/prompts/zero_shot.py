@@ -1,21 +1,22 @@
-from langchain_core.prompt_values import PromptValue
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 
-from app.api.deps import SessionDep
-from app.models import AIAgent
+from app.core.config import settings
 from app.orchestration.prompts import BasePrompt, langfuse_handler
 
-
-async def generate_idea_and_post(agent: AIAgent, session: SessionDep) -> None:
-    """
-    Generate idea and post it to the XLeap server
-    """
-    attached_agent = session.merge(agent)
-
-    zero_shot_prompt = ZeroShotPrompt(agent=attached_agent)
-    await zero_shot_prompt.generate_idea()
-    await zero_shot_prompt.post_idea()
+# async def generate_idea_and_post(agent: AIAgent, briefing: Briefing2, session:
+# SessionDep) -> None:
+#     """
+#     Generate idea and post it to the XLeap server
+#
+#     Todo: get question from the agent settings
+#     """
+#     attached_agent = session.merge(agent)
+#     attached_briefing = session.merge(briefing)
+#     attached_ideas = get_last_n_ideas(session, 5)
+#     zero_shot_prompt = ZeroShotPrompt(agent=attached_agent, briefing=attached_briefing)
+#     await zero_shot_prompt.generate_idea()
+#     await zero_shot_prompt.post_idea()
 
 
 class ZeroShotPrompt(BasePrompt):
@@ -36,14 +37,18 @@ class ZeroShotPrompt(BasePrompt):
             openai_api_key=self._api_key,  # type: ignore
             model_name=self._model,
             temperature=self._temperature,
+            openai_proxy=settings.HTTP_PROXY,
         )
 
-        idea = llm.invoke(
-            final_prompt, config={"callbacks": [langfuse_handler]}
-        )
-        self.idea = idea.content
+        chain = final_prompt | llm
 
-    async def _generate_prompt(self) -> PromptValue:  # type: ignore
+        idea = chain.invoke(
+            input={"question": self._briefing.additional_info},
+            config={"callbacks": [langfuse_handler]},
+        )
+        self.generated_idea = idea.content
+
+    async def _generate_prompt(self) -> ChatPromptTemplate:
         """
         Generate prompt for zero-shot
 
@@ -55,15 +60,16 @@ class ZeroShotPrompt(BasePrompt):
             prompt_name="SYSTEM_PROMPT"
         )
         context_prompt = await self._get_prompt_from_langfuse(
-            prompt_name="CONTEXT_ICU"
+            prompt_name=f"CONTEXT_PROMPT_{self._briefing.participant_info.upper()}"
         )
-        brainstorm_prompt = await self._get_prompt_from_langfuse(
-            prompt_name="BRAINSTORM_ICU"
+        zero_shot_prompt = await self._get_prompt_from_langfuse(
+            prompt_name="ZERO_SHOT_PROMPT"
         )
+
         final_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", system_prompt + context_prompt),
-                ("human", brainstorm_prompt),
+                ("human", zero_shot_prompt),
             ]
         )
-        return final_prompt.format_prompt()
+        return final_prompt

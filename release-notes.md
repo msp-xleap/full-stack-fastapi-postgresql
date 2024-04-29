@@ -2,8 +2,7 @@
 
 ## Latest Changes
 
-* 🔥 Remove ESLint and Prettier from pre-commit config. PR [#1096](https://github.com/tiangolo/full-stack-fastapi-template/pull/1096) by [@alejsdev](https://github.com/alejsdev).
-* 📝 Update `README.md`. PR [#716](https://github.com/tiangolo/full-stack-fastapi-template/pull/716) by [@alejsdev](https://github.com/alejsdev).
+* 🔧 Ignore `src/routeTree.gen.ts` in biome. PR [#1175](https://github.com/tiangolo/full-stack-fastapi-template/pull/1175) by [@patrick91](https://github.com/patrick91).
 
 ### Features
 
@@ -12,10 +11,33 @@
 
 ### Fixes
 
+* 🐛 Fix local Traefik proxy network config to fix Gateway Timeouts. PR [#1184](https://github.com/tiangolo/full-stack-fastapi-template/pull/1184) by [@JoelGotsch](https://github.com/JoelGotsch).
+* ♻️ Fix tests when first superuser password is changed in .env. PR [#1165](https://github.com/tiangolo/full-stack-fastapi-template/pull/1165) by [@billzhong](https://github.com/billzhong).
+* 🐛 Fix bug when resetting password. PR [#1171](https://github.com/tiangolo/full-stack-fastapi-template/pull/1171) by [@alejsdev](https://github.com/alejsdev).
 * 🐛 Fix 403 when the frontend has a directory without an index.html. PR [#1094](https://github.com/tiangolo/full-stack-fastapi-template/pull/1094) by [@tiangolo](https://github.com/tiangolo).
 
 ### Refactors
 
+* 🔥 Remove duplicated code. PR [#1185](https://github.com/tiangolo/full-stack-fastapi-template/pull/1185) by [@alejsdev](https://github.com/alejsdev).
+* ♻️ Add delete_user_me endpoint and corresponding test cases. PR [#1179](https://github.com/tiangolo/full-stack-fastapi-template/pull/1179) by [@alejsdev](https://github.com/alejsdev).
+* ✅ Update test to add verification database records. PR [#1178](https://github.com/tiangolo/full-stack-fastapi-template/pull/1178) by [@estebanx64](https://github.com/estebanx64).
+* 🚸 Use `useSuspenseQuery` to fetch members and show skeleton. PR [#1174](https://github.com/tiangolo/full-stack-fastapi-template/pull/1174) by [@patrick91](https://github.com/patrick91).
+* 🎨 Format Utils. PR [#1173](https://github.com/tiangolo/full-stack-fastapi-template/pull/1173) by [@alejsdev](https://github.com/alejsdev).
+* ✨ Use suspense for items page. PR [#1167](https://github.com/tiangolo/full-stack-fastapi-template/pull/1167) by [@patrick91](https://github.com/patrick91).
+* 🚸 Mark login field as required. PR [#1166](https://github.com/tiangolo/full-stack-fastapi-template/pull/1166) by [@patrick91](https://github.com/patrick91).
+* 🚸 Improve login. PR [#1163](https://github.com/tiangolo/full-stack-fastapi-template/pull/1163) by [@patrick91](https://github.com/patrick91).
+* 🥅 Handle AxiosErrors in Login page. PR [#1162](https://github.com/tiangolo/full-stack-fastapi-template/pull/1162) by [@patrick91](https://github.com/patrick91).
+* 🎨 Format frontend. PR [#1161](https://github.com/tiangolo/full-stack-fastapi-template/pull/1161) by [@alejsdev](https://github.com/alejsdev).
+* ♻️ Regenerate frontend client. PR [#1156](https://github.com/tiangolo/full-stack-fastapi-template/pull/1156) by [@alejsdev](https://github.com/alejsdev).
+* ♻️ Refactor rename ModelsOut to ModelsPublic. PR [#1154](https://github.com/tiangolo/full-stack-fastapi-template/pull/1154) by [@estebanx64](https://github.com/estebanx64).
+* ♻️ Migrate frontend client generation from `openapi-typescript-codegen` to `@hey-api/openapi-ts`. PR [#1151](https://github.com/tiangolo/full-stack-fastapi-template/pull/1151) by [@alejsdev](https://github.com/alejsdev).
+* 🔥 Remove unused exports and update dependencies. PR [#1146](https://github.com/tiangolo/full-stack-fastapi-template/pull/1146) by [@alejsdev](https://github.com/alejsdev).
+* 🔧 Update sentry dns initialization following the environment settings. PR [#1145](https://github.com/tiangolo/full-stack-fastapi-template/pull/1145) by [@estebanx64](https://github.com/estebanx64).
+* ♻️ Refactor and tweaks, rename `UserCreateOpen` to `UserRegister` and others. PR [#1143](https://github.com/tiangolo/full-stack-fastapi-template/pull/1143) by [@alejsdev](https://github.com/alejsdev).
+* 🎨 Format imports. PR [#1140](https://github.com/tiangolo/full-stack-fastapi-template/pull/1140) by [@alejsdev](https://github.com/alejsdev).
+* ♻️ Refactor and remove `React.FC`. PR [#1139](https://github.com/tiangolo/full-stack-fastapi-template/pull/1139) by [@alejsdev](https://github.com/alejsdev).
+* ♻️ Add email pattern and refactor in frontend. PR [#1138](https://github.com/tiangolo/full-stack-fastapi-template/pull/1138) by [@alejsdev](https://github.com/alejsdev).
+* 🥅 Set up Sentry for FastAPI applications. PR [#1136](https://github.com/tiangolo/full-stack-fastapi-template/pull/1136) by [@estebanx64](https://github.com/estebanx64).
 * 🔥 Remove deprecated Docker Compose version key. PR [#1129](https://github.com/tiangolo/full-stack-fastapi-template/pull/1129) by [@tiangolo](https://github.com/tiangolo).
 * 🎨 Format with Biome . PR [#1097](https://github.com/tiangolo/full-stack-fastapi-template/pull/1097) by [@alejsdev](https://github.com/alejsdev).
 * 🎨 Update quote style in biome formatter. PR [#1095](https://github.com/tiangolo/full-stack-fastapi-template/pull/1095) by [@alejsdev](https://github.com/alejsdev).
@@ -29,10 +51,16 @@
 
 ### Upgrades
 
+* Bump gunicorn from 21.2.0 to 22.0.0 in /backend. PR [#1176](https://github.com/tiangolo/full-stack-fastapi-template/pull/1176) by [@dependabot[bot]](https://github.com/apps/dependabot).
+* Bump idna from 3.6 to 3.7 in /backend. PR [#1168](https://github.com/tiangolo/full-stack-fastapi-template/pull/1168) by [@dependabot[bot]](https://github.com/apps/dependabot).
+* 🆙 Update React Query to TanStack Query. PR [#1153](https://github.com/tiangolo/full-stack-fastapi-template/pull/1153) by [@patrick91](https://github.com/patrick91).
+* Bump vite from 5.0.12 to 5.0.13 in /frontend. PR [#1149](https://github.com/tiangolo/full-stack-fastapi-template/pull/1149) by [@dependabot[bot]](https://github.com/apps/dependabot).
 * Bump follow-redirects from 1.15.5 to 1.15.6 in /frontend. PR [#734](https://github.com/tiangolo/full-stack-fastapi-template/pull/734) by [@dependabot[bot]](https://github.com/apps/dependabot).
 
 ### Docs
 
+* 📝 Update release-notes.md. PR [#1164](https://github.com/tiangolo/full-stack-fastapi-template/pull/1164) by [@alejsdev](https://github.com/alejsdev).
+* 📝 Update `README.md`. PR [#716](https://github.com/tiangolo/full-stack-fastapi-template/pull/716) by [@alejsdev](https://github.com/alejsdev).
 * 📝 Update instructions to clone for a private repo, including updates. PR [#1127](https://github.com/tiangolo/full-stack-fastapi-template/pull/1127) by [@tiangolo](https://github.com/tiangolo).
 * 📝 Add docs about CI keys, LATEST_CHANGES and SMOKESHOW_AUTH_KEY. PR [#1126](https://github.com/tiangolo/full-stack-fastapi-template/pull/1126) by [@tiangolo](https://github.com/tiangolo).
 * ✏️ Fix file path in `backend/README.md` when not wanting to use migrations. PR [#1116](https://github.com/tiangolo/full-stack-fastapi-template/pull/1116) by [@leonlowitzki](https://github.com/leonlowitzki).
@@ -43,6 +71,12 @@
 
 ### Internal
 
+* 🔥 Remove ESLint and Prettier from pre-commit config. PR [#1096](https://github.com/tiangolo/full-stack-fastapi-template/pull/1096) by [@alejsdev](https://github.com/alejsdev).
+* 🔧 Update mypy config to ignore .venv directories. PR [#1155](https://github.com/tiangolo/full-stack-fastapi-template/pull/1155) by [@tiangolo](https://github.com/tiangolo).
+* 🚨 Enable `ARG001` to prevent unused arguments. PR [#1152](https://github.com/tiangolo/full-stack-fastapi-template/pull/1152) by [@patrick91](https://github.com/patrick91).
+* 🔥 Remove isort configuration, since we use Ruff now. PR [#1144](https://github.com/tiangolo/full-stack-fastapi-template/pull/1144) by [@patrick91](https://github.com/patrick91).
+* 🔧 Update pre-commit config to exclude generated client folder. PR [#1150](https://github.com/tiangolo/full-stack-fastapi-template/pull/1150) by [@alejsdev](https://github.com/alejsdev).
+* 🔧 Change `.nvmrc` format. PR [#1148](https://github.com/tiangolo/full-stack-fastapi-template/pull/1148) by [@patrick91](https://github.com/patrick91).
 * 🎨 Ignore alembic from ruff lint and format. PR [#1131](https://github.com/tiangolo/full-stack-fastapi-template/pull/1131) by [@estebanx64](https://github.com/estebanx64).
 * 🔧 Add GitHub templates for discussions and issues, and security policy. PR [#1105](https://github.com/tiangolo/full-stack-fastapi-template/pull/1105) by [@alejsdev](https://github.com/alejsdev).
 * ⬆ Bump dawidd6/action-download-artifact from 3.1.2 to 3.1.4. PR [#1103](https://github.com/tiangolo/full-stack-fastapi-template/pull/1103) by [@dependabot[bot]](https://github.com/apps/dependabot).
