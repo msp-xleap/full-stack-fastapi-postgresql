@@ -19,8 +19,9 @@ from app.utils import get_last_n_ideas
 # briefing.participant_info instead of briefing.topic
 ##
 
+
 async def generate_idea_and_post(
-    agent: AIAgent, briefing: Briefing, session: SessionDep
+        agent: AIAgent, briefing: Briefing, session: SessionDep
 ) -> None:
     """
     Generate idea and post it to the XLeap server
@@ -35,10 +36,7 @@ async def generate_idea_and_post(
     prompt_chaining = ChainingPrompt(
         agent=attached_agent, briefing=attached_briefing, ideas=attached_ideas
     )
-    try:
-        await prompt_chaining.generate_idea()
-    except Exception:
-        await prompt_chaining.generate_idea()
+    await prompt_chaining.generate_idea()
     await prompt_chaining.post_idea()
 
 
