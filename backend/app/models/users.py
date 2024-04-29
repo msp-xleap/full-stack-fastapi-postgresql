@@ -16,7 +16,7 @@ class UserCreate(UserBase):
 
 
 # TODO replace email str with EmailStr when sqlmodel supports it
-class UserCreateOpen(SQLModel):
+class UserRegister(SQLModel):
     email: str
     password: str
     full_name: str | None = None
@@ -48,10 +48,10 @@ class User(UserBase, table=True):
 
 
 # Properties to return via API, id is always required
-class UserOut(UserBase):
+class UserPublic(UserBase):
     id: int
 
 
-class UsersOut(SQLModel):
-    data: list[UserOut]
+class UsersPublic(SQLModel):
+    data: list[UserPublic]
     count: int
