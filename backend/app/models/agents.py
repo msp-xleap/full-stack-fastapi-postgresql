@@ -4,6 +4,7 @@ from sqlmodel import Field, SQLModel
 
 from .briefings import AIBriefing2Base
 
+
 class XLeapDetailsBase(SQLModel):
     server_address: str
     session_id: str
@@ -18,6 +19,7 @@ class AIAgentConfigBase(SQLModel):
     api_url: str | None = None
     api_key: str
     org_id: str | None = None
+
 
 class AIAgentCreate(SQLModel):
     xleap: XLeapDetailsBase

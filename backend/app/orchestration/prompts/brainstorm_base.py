@@ -4,11 +4,11 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 import aiohttp
+from langchain_core.prompts import ChatPromptTemplate
 
 from app.models import AIAgent, Idea
 from app.orchestration.data import resolve_server_addr
 from app.orchestration.prompts import langfuse_client, langfuse_handler
-from langchain_core.prompts import ChatPromptTemplate
 
 
 class BrainstormBasePrompt(ABC):
@@ -23,10 +23,10 @@ class BrainstormBasePrompt(ABC):
     _ideas: list[Idea] | None
 
     def __init__(
-            self,
-            agent: AIAgent,
-            ideas: list[Idea] | None = None,
-            temperature: float = 0.5,
+        self,
+        agent: AIAgent,
+        ideas: list[Idea] | None = None,
+        temperature: float = 0.5,
     ):
         self._agent = agent
         self._api_key = agent.api_key
@@ -69,8 +69,8 @@ class BrainstormBasePrompt(ABC):
         async with aiohttp.ClientSession() as session:
             session_post = session.post(
                 url=f"{self._agent.server_address}/services/api/sessions"
-                    f"/{self._agent.session_id}/brainstorms/"
-                    f"{self._agent.workspace_id}/ideas",
+                f"/{self._agent.session_id}/brainstorms/"
+                f"{self._agent.workspace_id}/ideas",
                 data=json.dumps({"text": idea_to_post, "folder_id": "string"}),
                 headers={
                     "Authorization": f"Bearer {self._agent.secret}",

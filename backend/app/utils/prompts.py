@@ -1,10 +1,10 @@
 from sqlmodel import Session, select
 
-from app.models import PromptStrategy, PromptStrategyType, AIAgent
+from app.models import AIAgent, PromptStrategy, PromptStrategyType
 
 
 def get_prompt_strategy(*, session: Session, agent: AIAgent) -> PromptStrategy:
-    """ returns the prompt strategy to use """
+    """returns the prompt strategy to use"""
     agent_id = agent.id
     query = select(PromptStrategy).where(PromptStrategy.agent_id == agent_id)
     strategy = session.exec(query).first()
@@ -16,4 +16,6 @@ def get_prompt_strategy(*, session: Session, agent: AIAgent) -> PromptStrategy:
     if strategy is not None:
         return strategy
 
-    return PromptStrategy(strategy=PromptStrategyType.XLEAP_ZERO_SHOT, version=0)
+    return PromptStrategy(
+        strategy=PromptStrategyType.XLEAP_ZERO_SHOT, version=0
+    )

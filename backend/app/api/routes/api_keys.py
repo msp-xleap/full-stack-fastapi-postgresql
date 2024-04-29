@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from starlette import status
 
-from app.api.deps import SessionDep
 from app.models import AIAgentConfigBase
 from app.utils import is_api_key_valid
 
@@ -18,9 +17,7 @@ router = APIRouter()
     },
     status_code=status.HTTP_204_NO_CONTENT,
 )
-async def validate_api_key(
-    *, session: SessionDep, agent_config: AIAgentConfigBase
-) -> None:
+async def validate_api_key(*, agent_config: AIAgentConfigBase) -> None:
     """
     Validates API Key.
 

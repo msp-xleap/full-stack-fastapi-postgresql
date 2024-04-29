@@ -3,9 +3,7 @@ import re
 
 from langchain.chains.llm import LLMChain
 from langchain.chains.sequential import SequentialChain
-from langchain_core.prompts import (
-    ChatPromptTemplate,
-)
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 
 from app.api.deps import SessionDep
@@ -21,7 +19,7 @@ from app.utils import get_last_n_ideas
 
 
 async def generate_idea_and_post(
-        agent: AIAgent, briefing: Briefing, session: SessionDep
+    agent: AIAgent, briefing: Briefing, session: SessionDep
 ) -> None:
     """
     Generate idea and post it to the XLeap server

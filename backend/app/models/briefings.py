@@ -1,7 +1,15 @@
 import enum
 import uuid as uuid_pkg
 
-from sqlmodel import Field, SQLModel, PrimaryKeyConstraint, Column, ForeignKeyConstraint, String, Text
+from sqlmodel import (
+    Column,
+    Field,
+    ForeignKeyConstraint,
+    PrimaryKeyConstraint,
+    SQLModel,
+    String,
+    Text,
+)
 
 
 class Briefing(SQLModel, table=True):
@@ -25,12 +33,13 @@ class Briefing(SQLModel, table=True):
 
 class BriefingCategory(enum.StrEnum):
     """
-      Defines the primary information conveyed by a briefing item.
-      A briefing categories transport target specific information.
+    Defines the primary information conveyed by a briefing item.
+    A briefing categories transport target specific information.
 
-      The string value of this type corresponds to the Java enum type
-      com.meetingsphere.util.constants.AIBriefingCategory
+    The string value of this type corresponds to the Java enum type
+    com.meetingsphere.util.constants.AIBriefingCategory
     """
+
     RESPONSE_LENGTH = "response_length"
     """ Prompts the AI about the expected lengthiness of it answers.
         This type uses the subtypes SHORT, MEDIUM and LONG.
@@ -47,12 +56,12 @@ class BriefingCategory(enum.StrEnum):
     """ Tells the AI about who the participants are. """
     SESSION_INFO = "session_info"
     """ Give the AI context about the XLeap session
-        This type uses the workspace subtypes WS_* 
+        This type uses the workspace subtypes WS_*
     """
     WORKSPACE_PURPOSE_INFO = "workspace_purpose_info"
     """ Give the AI context about the particular workspace it is about
         to contribute to.
-        This type uses the workspace subtypes WS_* 
+        This type uses the workspace subtypes WS_*
     """
     EXEMPLAR = "exemplar"
     """ Gives the AI examples of good contributions """
@@ -63,91 +72,98 @@ class BriefingCategory(enum.StrEnum):
     WORKSPACE_CONTENT = "workspace_content"
     """ Provides the AI additional inform of content from other XLeap
         workspaces.
-        This type uses the workspace subtypes WS_* 
+        This type uses the workspace subtypes WS_*
     """
     CONTEXT_INTRO = "context_intro"
-    """ The generic info for the following context prompt parts 
-        This type uses the workspace subtypes WS_*     
+    """ The generic info for the following context prompt parts
+        This type uses the workspace subtypes WS_*
     """
     WORKSPACE_INSTRUCTION = "workspace_instruction"
-    """ The instruction for the workspace 
-        This type uses the workspace subtypes WS_* 
+    """ The instruction for the workspace
+        This type uses the workspace subtypes WS_*
     """
 
 
 class BriefingSubCategory(enum.StrEnum):
     """
-       Defines a sub category of a category
-       E.g. a WORKSPACE_PURPOSE_INFO can be specific to a workspace.
+    Defines a sub category of a category
+    E.g. a WORKSPACE_PURPOSE_INFO can be specific to a workspace.
 
-       The string value of this type corresponds to the Java enum type
-       net.xleap.ai.services.micro.constants.PromptSubtype
+    The string value of this type corresponds to the Java enum type
+    net.xleap.ai.services.micro.constants.PromptSubtype
     """
+
     NONE = "none"
     """ For PromptTypes without a subtype """
     BRIEF = "brief"
-    """ Used as subtype of 
-      PromptType.RESPONSE_LENGTH 
+    """ Used as subtype of
+      PromptType.RESPONSE_LENGTH
       (not called SHORT = 'shot' because shot is a reserved keyword in java)
     """
     MEDIUM = "medium"
-    """ Used as subtype of 
+    """ Used as subtype of
       PromptType.RESPONSE_LENGTH
     """
     DETAILED = "detailed"
-    """ Used as subtype of 
-      PromptType.RESPONSE_LENGTH 
+    """ Used as subtype of
+      PromptType.RESPONSE_LENGTH
       (not called LONG = 'long' because long is a reserved keyword in java)
     """
     EXEMPLAR = "exemplar"
     """ Used as subtype for concreate an exemplar """
     WS_BRAINSTORM = "ws_brainstorm"
-    """ Used as subtype of 
+    """ Used as subtype of
      PromptType.SESSION_INFO,
      PromptType.WORKSPACE_PURPOSE_INFO,
-     PromptType.WORKSPACE_CONTENT 
+     PromptType.WORKSPACE_CONTENT
     """
     WS_DEEPDIVE = "ws_deepdive"
-    """ Used as subtype of 
+    """ Used as subtype of
       PromptType.SESSION_INFO,
       PromptType.WORKSPACE_PURPOSE_INFO ,
-      PromptType.WORKSPACE_CONTENT 
+      PromptType.WORKSPACE_CONTENT
     """
     WS_PRESENTATION = "ws_presentation"
-    """ Used as subtype of 
+    """ Used as subtype of
      PromptType.SESSION_INFO,
      PromptType.WORKSPACE_PURPOSE_INFO,
-     PromptType.WORKSPACE_CONTENT 
+     PromptType.WORKSPACE_CONTENT
     """
     WS_RESULTS = "ws_results"
-    """ Used as subtype of 
+    """ Used as subtype of
      PromptType.SESSION_INFO,
      PromptType.WORKSPACE_PURPOSE_INFO,
-     PromptType.WORKSPACE_CONTENT 
+     PromptType.WORKSPACE_CONTENT
     """
     WS_MULTI_RESULTS = "ws_multi_results"
-    """ Used as subtype of 
+    """ Used as subtype of
      PromptType.SESSION_INFO,
      PromptType.WORKSPACE_PURPOSE_INFO,
-     PromptType.WORKSPACE_CONTENT 
+     PromptType.WORKSPACE_CONTENT
     """
 
 
 class XLeapBriefingPrompt(SQLModel, table=True):
     """
-        The XLeapPrompt table provides a mapping between an
-        XLeap's language keys, its usage and the prompt created
-        in Langfuse.
-        Because a language key may change over time and the microservice
-        can potentially be used by multiple XLeap applications the mapping
-        occurs purly on the text
+    The XLeapPrompt table provides a mapping between an
+    XLeap's language keys, its usage and the prompt created
+    in Langfuse.
+    Because a language key may change over time and the microservice
+    can potentially be used by multiple XLeap applications the mapping
+    occurs purly on the text
     """
+
     __tablename__ = "xleap_briefing_prompt"
     __table_args__ = (
-        PrimaryKeyConstraint("category", "sub_category", "template", name="xleap_briefing_prompt_pk"),
+        PrimaryKeyConstraint(
+            "category",
+            "sub_category",
+            "template",
+            name="xleap_briefing_prompt_pk",
+        ),
     )
-    # store BriefingCategory and BriefingSubCategory as string because alembic does not update
-    # these correctly when we add or remove types
+    # store BriefingCategory and BriefingSubCategory as string because alembic
+    # does not update these correctly when we add or remove types
     category: str = Column(String(50))
     sub_category: str = Column(String(50))
     template: str = Column(Text)
@@ -227,16 +243,18 @@ class Briefing2(SQLModel, table=True):
     __tablename__ = "briefing2"
     __table_args__ = (
         PrimaryKeyConstraint("agent_id", name="briefing2_pk"),
-        ForeignKeyConstraint(["agent_id"], ["ai_agent.id"])
+        ForeignKeyConstraint(["agent_id"], ["ai_agent.id"]),
     )
 
     agent_id: uuid_pkg.UUID = (
-        Field(default=None,
-              foreign_key="ai_agent.id",
-              primary_key=True,
-              unique=True,
-              index=True,
-              nullable=False),
+        Field(
+            default=None,
+            foreign_key="ai_agent.id",
+            primary_key=True,
+            unique=True,
+            index=True,
+            nullable=False,
+        ),
     )
 
     instance_id: str
@@ -278,14 +296,16 @@ class Briefing2Reference(SQLModel, table=True):
     __tablename__ = "briefing2_reference"
     __table_args__ = (
         PrimaryKeyConstraint("agent_id", "ref_id", name="briefing2_ref_pk"),
-        ForeignKeyConstraint(["agent_id"], ["ai_agent.id"])
+        ForeignKeyConstraint(["agent_id"], ["ai_agent.id"]),
     )
 
     agent_id: uuid_pkg.UUID = (
-        Field(default=None,
-              foreign_key="ai_agent.id",
-              unique=True,
-              nullable=False),
+        Field(
+            default=None,
+            foreign_key="ai_agent.id",
+            unique=True,
+            nullable=False,
+        ),
     )
 
     ref_id: str = Field(

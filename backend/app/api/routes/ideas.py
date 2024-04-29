@@ -29,10 +29,10 @@ router = APIRouter()
     status_code=202,
 )
 async def create_idea(
-        agent_id: str,
-        session: SessionDep,
-        idea: IdeaBase,
-        background_tasks: BackgroundTasks,
+    agent_id: str,
+    session: SessionDep,
+    idea: IdeaBase,
+    background_tasks: BackgroundTasks,
 ) -> None:
     """
     Create a new idea. If idea for a given agent already exists, update the
@@ -62,13 +62,18 @@ async def create_idea(
     # Generate idea and post if agent is active
     # Todo: determine threshold out of agent settings
     if (
-            agent.is_active
-            and idea.idea_count >= frequency // 2
-            and (random() < 1 / frequency
-                 or (frequency // 2 <= idea.idea_count - last_ai_idea_count >=
-                     frequency))
-            # and idea.idea_count % frequency == 0  # as an alternative to the
-            # line above
+        agent.is_active
+        and idea.idea_count >= frequency // 2
+        and (
+            random() < 1 / frequency
+            or (
+                frequency // 2
+                <= idea.idea_count - last_ai_idea_count
+                >= frequency
+            )
+        )
+        # and idea.idea_count % frequency == 0  # as an alternative to the
+        # line above
     ):
         background_tasks.add_task(
             generate_idea_and_post, agent, briefing, session
@@ -79,10 +84,9 @@ async def create_idea(
 
 @router.post("/agents/{agent_id}/ideas/bulk", status_code=202)
 async def create_ideas(
-        agent_id: str,
-        ideas: list[IdeaBase],
-        session: SessionDep,
-        background_tasks: BackgroundTasks,
+    agent_id: str,
+    ideas: list[IdeaBase],
+    session: SessionDep,
 ) -> None:
     """
     Create multiple new ideas for an agent.

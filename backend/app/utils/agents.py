@@ -1,7 +1,8 @@
 import logging
-from fastapi import HTTPException
 
+from fastapi import HTTPException
 from sqlmodel import Session, select
+
 from app.models import AIAgent
 
 

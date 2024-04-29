@@ -6,7 +6,9 @@ from sqlmodel import Session, select
 from app.models import Idea, IdeaBase
 
 
-def create_idea(*, session: Session, idea: IdeaBase, agent_id: uuid_pkg.uuid4) -> Idea:
+def create_idea(
+    *, session: Session, idea: IdeaBase, agent_id: uuid_pkg.uuid4
+) -> Idea:
     """Store new AI Agent in the database
 
     Args:

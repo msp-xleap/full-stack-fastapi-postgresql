@@ -4,7 +4,6 @@ from langchain_openai import ChatOpenAI
 from app.core.config import settings
 from app.orchestration.prompts import BasePrompt, langfuse_handler
 
-
 # async def generate_idea_and_post(agent: AIAgent, briefing: Briefing2, session:
 # SessionDep) -> None:
 #     """

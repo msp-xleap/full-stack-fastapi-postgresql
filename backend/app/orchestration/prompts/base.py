@@ -1,16 +1,17 @@
 from abc import abstractmethod
 
+from langchain_core.prompts import ChatPromptTemplate
 
 from app.models import AIAgent, Briefing, Idea
 from app.orchestration.prompts import BrainstormBasePrompt
 from app.utils import TextTypeSwapper
-from langchain_core.prompts import ChatPromptTemplate
 
 
 class BasePrompt(BrainstormBasePrompt):
     """
     Abstract class for generating prompts
     """
+
     _briefing: Briefing
 
     def __init__(

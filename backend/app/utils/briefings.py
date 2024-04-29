@@ -1,22 +1,21 @@
+from collections.abc import Sequence
 from datetime import datetime
 
 from fastapi import HTTPException
 from sqlmodel import Session, select
 
-from typing import Sequence
 from app.models import (
+    AIBriefing2Base,
+    AIBriefing2LangfuseBase,
+    AIBriefing2ReferenceBase,
+    AIBriefing2ReferenceLangfuseBase,
     Briefing,
     Briefing2,
     Briefing2Reference,
     BriefingCategory,
     BriefingSubCategory,
-    AIBriefing2Base,
-    AIBriefing2LangfuseBase,
-    AIBriefing2ReferenceLangfuseBase,
     XLeapBriefingPrompt,
-    AIBriefing2ReferenceBase,
 )
-
 from app.orchestration.prompts import langfuse_client
 
 
@@ -98,7 +97,9 @@ def get_briefing2_by_agent(agent_id: str, session: Session) -> Briefing2:
     return briefing
 
 
-def get_briefing2_references_by_agent(agent_id: str, session: Session) -> Sequence[Briefing2Reference]:
+def get_briefing2_references_by_agent(
+    agent_id: str, session: Session
+) -> Sequence[Briefing2Reference]:
     """Returns the references of a briefing
 
     Args:
@@ -113,18 +114,26 @@ def get_briefing2_references_by_agent(agent_id: str, session: Session) -> Sequen
     """
 
     # Find references by briefing ID
-    query = select(Briefing2Reference).where(Briefing2Reference.agent_id == agent_id)
+    query = select(Briefing2Reference).where(
+        Briefing2Reference.agent_id == agent_id
+    )
     return session.exec(query).all()
 
 
-def _create_xleap_prompt(*,
-                         session: Session,
-                         cat: BriefingCategory,
-                         sub_category: BriefingSubCategory,
-                         template: str,
-                         langfuse_prompt: str) -> None:
+def _create_xleap_prompt(
+    *,
+    session: Session,
+    cat: BriefingCategory,
+    sub_category: BriefingSubCategory,
+    template: str,
+    langfuse_prompt: str,
+) -> None:
     db_prompt = XLeapBriefingPrompt(
-        category=cat, sub_category=sub_category, template=template, langfuse_prompt=langfuse_prompt)
+        category=cat,
+        sub_category=sub_category,
+        template=template,
+        langfuse_prompt=langfuse_prompt,
+    )
     session.add(db_prompt)
     session.commit()
     session.refresh(db_prompt)
@@ -138,26 +147,28 @@ def _workspace_name_2_sub_category(name: str) -> BriefingSubCategory:
     :raise ValueError if the workspace type is unknown
     """
     match name:
-        case 'brainstorm':
+        case "brainstorm":
             return BriefingSubCategory.WS_BRAINSTORM
-        case 'deepdive':
+        case "deepdive":
             return BriefingSubCategory.WS_DEEPDIVE
-        case 'presentation':
+        case "presentation":
             return BriefingSubCategory.WS_PRESENTATION
-        case 'resulttable':
+        case "resulttable":
             return BriefingSubCategory.WS_RESULTS
-        case 'resultmultitable':
+        case "resultmultitable":
             return BriefingSubCategory.WS_MULTI_RESULTS
 
     raise ValueError(f"Unhandled workspace name: '{name}'")
 
 
-def _get_langfuse_prompt_name(*,
-                              session: Session,
-                              cat: BriefingCategory,
-                              sub_category: BriefingSubCategory,
-                              template: str,
-                              ref_number: int = 0) -> str:
+def _get_langfuse_prompt_name(
+    *,
+    session: Session,
+    cat: BriefingCategory,
+    sub_category: BriefingSubCategory,
+    template: str,
+    ref_number: int = 0,
+) -> str:
     """
     Gets the name of a Prompt from an XLeap template string
     :param session: the SQL session
@@ -169,14 +180,14 @@ def _get_langfuse_prompt_name(*,
     query = select(XLeapBriefingPrompt).where(
         XLeapBriefingPrompt.category == cat,
         XLeapBriefingPrompt.sub_category == sub_category,
-        XLeapBriefingPrompt.template == template
+        XLeapBriefingPrompt.template == template,
     )
     briefing_prompt = session.exec(query).first()
 
     if briefing_prompt is not None:
         return briefing_prompt.langfuse_prompt
 
-    date_str = datetime.utcnow().strftime('%Y-%m-%d_%H-%M-%S')
+    date_str = datetime.utcnow().strftime("%Y-%m-%d_%H-%M-%S")
 
     if BriefingSubCategory.NONE == sub_category:
         if ref_number == 0:
@@ -189,20 +200,23 @@ def _get_langfuse_prompt_name(*,
         name = f"xleap-{cat}-{sub_category}-{ref_number}-{date_str}"
 
     langfuse_prompt = langfuse_client.create_prompt(
-        name=name,
-        prompt=template,
-        is_active=True)
+        name=name, prompt=template, is_active=True
+    )
 
-    _create_xleap_prompt(session=session,
-                         cat=cat,
-                         sub_category=sub_category,
-                         template=template,
-                         langfuse_prompt=langfuse_prompt.name)
+    _create_xleap_prompt(
+        session=session,
+        cat=cat,
+        sub_category=sub_category,
+        template=template,
+        langfuse_prompt=langfuse_prompt.name,
+    )
 
     return langfuse_prompt.name
 
 
-def langfuse_base_from_briefing_base(session: Session, briefing_base: AIBriefing2Base) -> AIBriefing2LangfuseBase:
+def langfuse_base_from_briefing_base(
+    session: Session, briefing_base: AIBriefing2Base
+) -> AIBriefing2LangfuseBase:
     """Converts templates from AIBriefing2Base to prompts in Langfuse and returns an object
        with all Langfuse prompt names that are used in the briefing
 
@@ -220,28 +234,32 @@ def langfuse_base_from_briefing_base(session: Session, briefing_base: AIBriefing
     elif briefing_base == 3:
         sub_category = BriefingSubCategory.DETAILED
 
-    workspace_sub_category = _workspace_name_2_sub_category(briefing_base.workspace_type)
+    workspace_sub_category = _workspace_name_2_sub_category(
+        briefing_base.workspace_type
+    )
 
     langfuse_base.response_length_langfuse_name = _get_langfuse_prompt_name(
         session=session,
         cat=BriefingCategory.RESPONSE_LENGTH,
         sub_category=sub_category,
-        template=briefing_base.response_length_template
+        template=briefing_base.response_length_template,
     )
 
     langfuse_base.context_intro_langfuse_name = _get_langfuse_prompt_name(
         session=session,
         cat=BriefingCategory.CONTEXT_INTRO,
         sub_category=workspace_sub_category,
-        template=briefing_base.context_intro_template
+        template=briefing_base.context_intro_template,
     )
 
     if briefing_base.with_additional_info:
-        langfuse_base.additional_info_langfuse_name = _get_langfuse_prompt_name(
-            session=session,
-            cat=BriefingCategory.ADDITIONAL_INFO,
-            sub_category=BriefingSubCategory.NONE,
-            template=briefing_base.additional_info_template
+        langfuse_base.additional_info_langfuse_name = (
+            _get_langfuse_prompt_name(
+                session=session,
+                cat=BriefingCategory.ADDITIONAL_INFO,
+                sub_category=BriefingSubCategory.NONE,
+                template=briefing_base.additional_info_template,
+            )
         )
 
     if briefing_base.with_persona:
@@ -249,7 +267,7 @@ def langfuse_base_from_briefing_base(session: Session, briefing_base: AIBriefing
             session=session,
             cat=BriefingCategory.PERSONA,
             sub_category=BriefingSubCategory.NONE,
-            template=briefing_base.persona_template
+            template=briefing_base.persona_template,
         )
 
     if briefing_base.with_tone:
@@ -257,7 +275,7 @@ def langfuse_base_from_briefing_base(session: Session, briefing_base: AIBriefing
             session=session,
             cat=BriefingCategory.TONE,
             sub_category=BriefingSubCategory.NONE,
-            template=briefing_base.tone_template
+            template=briefing_base.tone_template,
         )
 
     if briefing_base.with_host_info:
@@ -265,15 +283,17 @@ def langfuse_base_from_briefing_base(session: Session, briefing_base: AIBriefing
             session=session,
             cat=BriefingCategory.HOST_INFO,
             sub_category=workspace_sub_category,
-            template=briefing_base.host_info_template
+            template=briefing_base.host_info_template,
         )
 
     if briefing_base.with_participant_info:
-        langfuse_base.participant_info_langfuse_name = _get_langfuse_prompt_name(
-            session=session,
-            cat=BriefingCategory.PARTICIPANT_INFO,
-            sub_category=BriefingSubCategory.NONE,
-            template=briefing_base.participant_info_template
+        langfuse_base.participant_info_langfuse_name = (
+            _get_langfuse_prompt_name(
+                session=session,
+                cat=BriefingCategory.PARTICIPANT_INFO,
+                sub_category=BriefingSubCategory.NONE,
+                template=briefing_base.participant_info_template,
+            )
         )
 
     if briefing_base.with_session_info:
@@ -281,7 +301,7 @@ def langfuse_base_from_briefing_base(session: Session, briefing_base: AIBriefing
             session=session,
             cat=BriefingCategory.SESSION_INFO,
             sub_category=workspace_sub_category,
-            template=briefing_base.session_info_template
+            template=briefing_base.session_info_template,
         )
 
     if briefing_base.with_workspace_info:
@@ -289,15 +309,17 @@ def langfuse_base_from_briefing_base(session: Session, briefing_base: AIBriefing
             session=session,
             cat=BriefingCategory.WORKSPACE_PURPOSE_INFO,
             sub_category=workspace_sub_category,
-            template=briefing_base.workspace_info_template
+            template=briefing_base.workspace_info_template,
         )
 
     if briefing_base.with_workspace_instruction:
-        langfuse_base.workspace_instruction_langfuse_name = _get_langfuse_prompt_name(
-            session=session,
-            cat=BriefingCategory.WORKSPACE_INSTRUCTION,
-            sub_category=workspace_sub_category,
-            template=briefing_base.workspace_instruction_template
+        langfuse_base.workspace_instruction_langfuse_name = (
+            _get_langfuse_prompt_name(
+                session=session,
+                cat=BriefingCategory.WORKSPACE_INSTRUCTION,
+                sub_category=workspace_sub_category,
+                template=briefing_base.workspace_instruction_template,
+            )
         )
 
     if briefing_base.with_num_exemplar > 0:
@@ -305,15 +327,15 @@ def langfuse_base_from_briefing_base(session: Session, briefing_base: AIBriefing
             session=session,
             cat=BriefingCategory.EXEMPLAR,
             sub_category=workspace_sub_category,
-            template=briefing_base.exemplar_template
+            template=briefing_base.exemplar_template,
         )
 
     return langfuse_base
 
 
 def langfuse_base_from_briefing_reference_base(
-        session: Session,
-        briefing_ref_base:AIBriefing2ReferenceBase) -> AIBriefing2ReferenceLangfuseBase:
+    session: Session, briefing_ref_base: AIBriefing2ReferenceBase
+) -> AIBriefing2ReferenceLangfuseBase:
     """Converts the template of a AIBriefing2ReferenceBase to a prompt in Langfuse and returns an object
        with the name of that prompt
 
@@ -324,7 +346,7 @@ def langfuse_base_from_briefing_reference_base(
     langfuse_base = AIBriefing2ReferenceLangfuseBase()
 
     match briefing_ref_base.type:
-        case 'link':
+        case "link":
             langfuse_base.langfuse_name = _get_langfuse_prompt_name(
                 session=session,
                 cat=BriefingCategory.LINK,
@@ -332,7 +354,7 @@ def langfuse_base_from_briefing_reference_base(
                 template=briefing_ref_base.template,
                 ref_number=briefing_ref_base.ref_number,
             )
-        case 'file':
+        case "file":
             langfuse_base.langfuse_name = _get_langfuse_prompt_name(
                 session=session,
                 cat=BriefingCategory.FILE,
@@ -340,8 +362,10 @@ def langfuse_base_from_briefing_reference_base(
                 template=briefing_ref_base.template,
                 ref_number=briefing_ref_base.ref_number,
             )
-        case 'xleap':
-            workspace_sub_category = _workspace_name_2_sub_category(briefing_ref_base.workspace_type)
+        case "xleap":
+            workspace_sub_category = _workspace_name_2_sub_category(
+                briefing_ref_base.workspace_type
+            )
             langfuse_base.langfuse_name = _get_langfuse_prompt_name(
                 session=session,
                 cat=BriefingCategory.WORKSPACE_CONTENT,
@@ -349,7 +373,7 @@ def langfuse_base_from_briefing_reference_base(
                 template=briefing_ref_base.template,
                 ref_number=briefing_ref_base.ref_number,
             )
-        case 'exemplar':
+        case "exemplar":
             langfuse_base.langfuse_name = _get_langfuse_prompt_name(
                 session=session,
                 cat=BriefingCategory.EXEMPLAR,
@@ -358,6 +382,8 @@ def langfuse_base_from_briefing_reference_base(
                 ref_number=briefing_ref_base.ref_number,
             )
         case _:
-            raise ValueError(f"Unhandled reference type: '{briefing_ref_base.type}'")
+            raise ValueError(
+                f"Unhandled reference type: '{briefing_ref_base.type}'"
+            )
 
     return langfuse_base
