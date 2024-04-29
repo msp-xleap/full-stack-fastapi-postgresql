@@ -2,6 +2,7 @@ import uuid as uuid_pkg
 
 from sqlmodel import Field, SQLModel
 
+from .briefings import AIBriefing2Base
 
 class XLeapDetailsBase(SQLModel):
     server_address: str
@@ -18,11 +19,10 @@ class AIAgentConfigBase(SQLModel):
     api_key: str
     org_id: str | None = None
 
-
 class AIAgentCreate(SQLModel):
     xleap: XLeapDetailsBase
     config: AIAgentConfigBase
-    # todo: add briefing object
+    briefing: AIBriefing2Base
 
 
 class AIAgentBase(XLeapDetailsBase, AIAgentConfigBase):

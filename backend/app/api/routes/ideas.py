@@ -8,11 +8,12 @@ from app.models import Idea, IdeaBase
 
 # from app.orchestration.prompts.zero_shot import generate_idea_and_post
 # from app.orchestration.prompts.few_shot import generate_idea_and_post
-from app.orchestration.prompts.chaining import generate_idea_and_post
+# from app.orchestration.prompts.chaining import generate_idea_and_post
+from app.orchestration.prompts.dynamic import generate_idea_and_post
 from app.utils import (
     check_if_idea_exists,
     get_agent_by_id,
-    get_briefing_by_agent_id,
+    get_briefing2_by_agent_id,
     get_last_ai_idea,
 )
 
@@ -53,7 +54,7 @@ async def create_idea(
             session=session, idea_db=idea_old, idea_new=idea
         )
 
-    briefing = get_briefing_by_agent_id(agent_id, session)
+    briefing = get_briefing2_by_agent_id(agent_id, session)
     frequency = briefing.frequency + 1
     last_ai_idea = get_last_ai_idea(session, agent_id)
     last_ai_idea_count = last_ai_idea.idea_count if last_ai_idea else 0

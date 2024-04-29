@@ -4,7 +4,8 @@ from langchain_openai import ChatOpenAI
 from app.core.config import settings
 from app.orchestration.prompts import BasePrompt, langfuse_handler
 
-# async def generate_idea_and_post(agent: AIAgent, briefing: Briefing, session:
+
+# async def generate_idea_and_post(agent: AIAgent, briefing: Briefing2, session:
 # SessionDep) -> None:
 #     """
 #     Generate idea and post it to the XLeap server
@@ -43,12 +44,12 @@ class ZeroShotPrompt(BasePrompt):
         chain = final_prompt | llm
 
         idea = chain.invoke(
-            input={"question": self._briefing.question},
+            input={"question": self._briefing.additional_info},
             config={"callbacks": [langfuse_handler]},
         )
         self.generated_idea = idea.content
 
-    async def _generate_prompt(self) -> ChatPromptTemplate:  # type: ignore
+    async def _generate_prompt(self) -> ChatPromptTemplate:
         """
         Generate prompt for zero-shot
 
@@ -60,7 +61,7 @@ class ZeroShotPrompt(BasePrompt):
             prompt_name="SYSTEM_PROMPT"
         )
         context_prompt = await self._get_prompt_from_langfuse(
-            prompt_name=f"CONTEXT_PROMPT_{self._briefing.topic.upper()}"
+            prompt_name=f"CONTEXT_PROMPT_{self._briefing.participant_info.upper()}"
         )
         zero_shot_prompt = await self._get_prompt_from_langfuse(
             prompt_name="ZERO_SHOT_PROMPT"

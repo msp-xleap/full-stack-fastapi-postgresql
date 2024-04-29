@@ -58,7 +58,7 @@ class FewShotPrompt(BasePrompt):
         )
         self.generated_idea = idea.content
 
-    async def _generate_prompt(self) -> ChatPromptTemplate:  # type: ignore
+    async def _generate_prompt(self, question: str = None) -> ChatPromptTemplate:  # type: ignore
         """
         Generate prompt for zero-shot
 
