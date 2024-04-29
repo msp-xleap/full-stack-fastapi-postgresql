@@ -185,7 +185,7 @@ async def update_agent_briefing(
     },
     status_code=200,
 )
-async def update_agent_briefing(
+async def get_briefing_as_text(
         *,
         agent_id: str,
         session: SessionDep) -> Any:
