@@ -5,8 +5,12 @@ from langchain_openai import ChatOpenAI
 from openai import (
     APITimeoutError,
     AuthenticationError,
-    NotFoundError,
     RateLimitError,
+    NotFoundError
+)
+from langfuse.api.resources.commons.errors import (
+ NotFoundError as PromptNotFoundError,
+ UnauthorizedError as PromptAuthenticationError
 )
 from starlette import status
 
@@ -30,7 +34,7 @@ def _get_or_create_api_key_validation_prompt_under_lock():
     lock.acquire()
     try:
         return langfuse_client.get_prompt("API_KEY_VALIDATION")  # check again if the prompt exists
-    except NotFoundError:  # otherwise created
+    except PromptNotFoundError:  # otherwise created
         return langfuse_client.create_prompt(
                     name="API_KEY_VALIDATION",
                     prompt="Are you currently accepting any prompts? Answer with \"YES\"",
@@ -45,12 +49,12 @@ def _get_api_key_validation_prompt():
     """
     try:
         return langfuse_client.get_prompt("API_KEY_VALIDATION")
-    except AuthenticationError:
+    except PromptAuthenticationError:
         logging.error("Internal Error: Got Unauthorized from Langfuse")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Langfuse authentication error"
         )
-    except NotFoundError:
+    except PromptNotFoundError:
         return _get_or_create_api_key_validation_prompt_under_lock()
 
 
@@ -76,7 +80,7 @@ async def is_api_key_valid(
 
     try:
         langfuse_prompt_obj = _get_api_key_validation_prompt()
-    except AuthenticationError:
+    except PromptAuthenticationError:
         logging.error("Internal Error: Got Unauthorized from Langfuse")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Langfuse authentication error"
@@ -103,7 +107,7 @@ async def is_api_key_valid(
             )
 
         llm.invoke(
-            langfuse_prompt_obj,
+            langfuse_prompt_obj.prompt,
             config={"callbacks": [langfuse_handler]},
         )
 

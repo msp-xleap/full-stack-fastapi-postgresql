@@ -23,6 +23,8 @@ from .ideas import check_if_idea_exists, get_last_n_ideas, get_last_ai_idea
 
 from .prompts import get_prompt_strategy
 
+from .agent_manager import agent_manager, AgentLock
+
 __all__ = [
     "check_agent_exists_by_instance_id",
     "check_if_idea_exists",
@@ -47,4 +49,6 @@ __all__ = [
     "TextTypeSwapper",
     "TextTypeSwapper",
     "verify_password_reset_token",
+    "agent_manager",
+    "AgentLock",
 ]

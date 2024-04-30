@@ -73,6 +73,12 @@ class BriefingCategory(enum.StrEnum):
     """ The instruction for the workspace 
         This type uses the workspace subtypes WS_* 
     """
+    TASK_TEMPLATE = "task_template"
+    """ The template used to instruct the agent to contribute more ideas based on participants contributions 
+    """
+    TEST_BRIEFING_TEMPLATE = "test_briefing_template"
+    """ The template used to generate N-ideas only based on the briefing
+    """
 
 
 class BriefingSubCategory(enum.StrEnum):
@@ -203,6 +209,8 @@ class AIBriefing2Base(SQLModel):
     with_num_exemplar: int = 0
     exemplar_template: str = ""
     exemplar_references: list[AIBriefing2ReferenceBase] = Field(None)
+    task_template: str = ""
+    test_briefing_template: str = ""
 
 
 class AIBriefing2LangfuseBase(SQLModel):
@@ -217,6 +225,8 @@ class AIBriefing2LangfuseBase(SQLModel):
     workspace_info_langfuse_name: str = ""
     workspace_instruction_langfuse_name: str = ""
     exemplar_langfuse_name: str = ""
+    task_langfuse_name: str = ""
+    test_briefing_langfuse_name: str = ""
 
 
 class AIBriefing2ReferenceLangfuseBase(SQLModel):
@@ -272,6 +282,8 @@ class Briefing2(SQLModel, table=True):
     with_num_exemplar: int = 0
     exemplar: str = ""
     exemplar_langfuse_name: str = ""
+    task_langfuse_name: str = ""
+    test_briefing_langfuse_name: str = ""
 
 
 class Briefing2Reference(SQLModel, table=True):

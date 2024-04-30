@@ -15,6 +15,7 @@ from app.utils import (
     get_agent_by_id,
     get_briefing2_by_agent_id,
     get_last_ai_idea,
+    agent_manager
 )
 
 router = APIRouter()
@@ -54,25 +55,33 @@ async def create_idea(
             session=session, idea_db=idea_old, idea_new=idea
         )
 
-    briefing = get_briefing2_by_agent_id(agent_id, session)
-    frequency = briefing.frequency + 1
-    last_ai_idea = get_last_ai_idea(session, agent_id)
-    last_ai_idea_count = last_ai_idea.idea_count if last_ai_idea else 0
+    lock = agent_manager.try_acquire_lock(agent.id)
+    if lock.acquired:
+        was_tasked = False
+        try:
+            briefing = get_briefing2_by_agent_id(agent_id, session)
+            frequency = briefing.frequency + 1
+            last_ai_idea = get_last_ai_idea(session, agent_id)
+            last_ai_idea_count = last_ai_idea.idea_count if last_ai_idea else 0
 
-    # Generate idea and post if agent is active
-    # Todo: determine threshold out of agent settings
-    if (
-            agent.is_active
-            and idea.idea_count >= frequency // 2
-            and (random() < 1 / frequency
-                 or (frequency // 2 <= idea.idea_count - last_ai_idea_count >=
-                     frequency))
-            # and idea.idea_count % frequency == 0  # as an alternative to the
-            # line above
-    ):
-        background_tasks.add_task(
-            generate_idea_and_post, agent, briefing, session
-        )
+            # Generate idea and post if agent is active
+            # Todo: determine threshold out of agent settings
+            if (
+                    agent.is_active
+                    and idea.idea_count >= frequency // 2
+                    and (random() < 1 / frequency
+                         or (frequency // 2 <= idea.idea_count - last_ai_idea_count >=
+                             frequency))
+                    # and idea.idea_count % frequency == 0  # as an alternative to the
+                    # line above
+            ):
+                was_tasked = True
+                background_tasks.add_task(
+                    generate_idea_and_post, agent, briefing, session, lock
+                )
+        finally:
+            if not was_tasked:
+                lock.release()
 
     return
 
