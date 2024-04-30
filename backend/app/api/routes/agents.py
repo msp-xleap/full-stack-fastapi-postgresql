@@ -197,7 +197,6 @@ async def update_agent_briefing(
     status_code=200,
 )
 async def get_briefing_as_text(*, agent_id: str, session: SessionDep) -> Any:
-
     # Check if agent exists
     agent = get_agent_by_id(agent_id, session)
     briefing = get_briefing2_by_agent_id(agent_id, session)

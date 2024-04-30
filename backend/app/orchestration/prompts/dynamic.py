@@ -5,7 +5,7 @@ from app.models import AIAgent, Briefing2, PromptStrategyType
 from app.utils import (
     AgentGenerationLock,
     get_briefing_by_agent_id,
-    get_prompt_strategy
+    get_prompt_strategy,
 )
 
 from .chaining import generate_idea_and_post as chaining_generate_idea_and_post
@@ -16,7 +16,10 @@ from .xleap_few_shot import (
 
 
 async def generate_idea_and_post(
-    agent: AIAgent, briefing: Briefing2, session: SessionDep, lock: AgentGenerationLock
+    agent: AIAgent,
+    briefing: Briefing2,
+    session: SessionDep,
+    lock: AgentGenerationLock,
 ) -> None:
     """
     Dynamically switches the prompt strategy for the specified agent
@@ -26,17 +29,24 @@ async def generate_idea_and_post(
         strategy = get_prompt_strategy(agent=agent, session=session)
 
         logging.info(
-            f"""Using prompt strategy {strategy.type} (version {strategy.version}) for agent {agent.id}""")
+            f"""Using prompt strategy {strategy.type} (version {strategy.version}) for agent {agent.id}"""
+        )
 
         match strategy.type:
             case PromptStrategyType.CHAINING:
                 briefing1 = get_briefing_by_agent_id(str(agent.id), session)
-                await chaining_generate_idea_and_post(agent, briefing1, session)
+                await chaining_generate_idea_and_post(
+                    agent, briefing1, session
+                )
             case PromptStrategyType.FEW_SHOT:
                 briefing1 = get_briefing_by_agent_id(str(agent.id), session)
-                await few_shot_generate_idea_and_post(agent, briefing1, session)
+                await few_shot_generate_idea_and_post(
+                    agent, briefing1, session
+                )
             case PromptStrategyType.XLEAP_ZERO_SHOT:
-                await xleap_generate_idea_and_post(agent, briefing, session)  # same as few shot deprecated
+                await xleap_generate_idea_and_post(
+                    agent, briefing, session
+                )  # same as few shot deprecated
             case PromptStrategyType.XLEAP_FEW_SHOT:
                 await xleap_generate_idea_and_post(agent, briefing, session)
             case _:

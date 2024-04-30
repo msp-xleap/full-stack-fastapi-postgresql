@@ -334,14 +334,14 @@ def langfuse_base_from_briefing_base(
         session=session,
         cat=BriefingCategory.TASK_TEMPLATE,
         sub_category=workspace_sub_category,
-        template=briefing_base.task_template
+        template=briefing_base.task_template,
     )
 
     langfuse_base.test_briefing_langfuse_name = _get_langfuse_prompt_name(
         session=session,
         cat=BriefingCategory.TEST_BRIEFING_TEMPLATE,
         sub_category=workspace_sub_category,
-        template=briefing_base.test_briefing_template
+        template=briefing_base.test_briefing_template,
     )
 
     return langfuse_base

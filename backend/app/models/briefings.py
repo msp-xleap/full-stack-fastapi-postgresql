@@ -83,7 +83,8 @@ class BriefingCategory(enum.StrEnum):
         This type uses the workspace subtypes WS_*
     """
     TASK_TEMPLATE = "task_template"
-    """ The template used to instruct the agent to contribute more ideas based on participants contributions 
+    """ The template used to instruct the agent to contribute more ideas
+    based on participants contributions
     """
     TEST_BRIEFING_TEMPLATE = "test_briefing_template"
     """ The template used to generate N-ideas only based on the briefing

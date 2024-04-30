@@ -11,11 +11,11 @@ from app.models import Idea, IdeaBase
 # from app.orchestration.prompts.chaining import generate_idea_and_post
 from app.orchestration.prompts.dynamic import generate_idea_and_post
 from app.utils import (
+    agent_manager,
     check_if_idea_exists,
     get_agent_by_id,
     get_briefing2_by_agent_id,
     get_last_ai_idea,
-    agent_manager
 )
 
 router = APIRouter()
@@ -67,15 +67,19 @@ async def create_idea(
             # Generate idea and post if agent is active
             # Todo: determine threshold based on share
             if (
-                    agent.is_active
-                    and (lock.last_id is None
-                         or lock.last_id != last_ai_idea.id)
-                    and idea.idea_count >= frequency // 2
-                    and (random() < 1 / frequency
-                         or (frequency // 2 <= idea.idea_count - last_ai_idea_count >=
-                             frequency))
-                    # and idea.idea_count % frequency == 0  # as an alternative to the
-                    # line above
+                agent.is_active
+                and (lock.last_id is None or lock.last_id != last_ai_idea.id)
+                and idea.idea_count >= frequency // 2
+                and (
+                    random() < 1 / frequency
+                    or (
+                        frequency // 2
+                        <= idea.idea_count - last_ai_idea_count
+                        >= frequency
+                    )
+                )
+                # and idea.idea_count % frequency == 0  # as an alternative to the
+                # line above
             ):
                 was_tasked = True
                 lock.last_id = last_ai_idea.id

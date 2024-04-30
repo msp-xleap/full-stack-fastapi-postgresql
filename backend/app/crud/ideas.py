@@ -4,7 +4,6 @@ from sqlalchemy import Column, Select, func
 from sqlmodel import Session, select
 
 from app.models import Idea, IdeaBase
-
 from app.utils import agent_manager
 
 
@@ -45,7 +44,6 @@ def create_idea(
         return db_obj
     finally:
         lock.release()
-
 
 
 def update_idea(
