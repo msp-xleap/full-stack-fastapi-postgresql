@@ -105,6 +105,8 @@ class XLeapBasicPrompt(BrainstormBasePrompt, XLeapSystemPromptBase):
 
         system_prompt = await self.generate_system_prompt(briefing=self._briefing, references=self._references)
 
+        participant_prompts = await self.generate_idea_prompts(ideas=self._ideas)
+
         task_prompt = await self.generate_task_prompt(briefing=self._briefing, ideas=self._ideas)
 
         self._lang_chain_input = {
@@ -112,12 +114,9 @@ class XLeapBasicPrompt(BrainstormBasePrompt, XLeapSystemPromptBase):
             **task_prompt.lang_chain_input
         }
 
-        final_prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", system_prompt.prompt),
-                ("human", task_prompt.prompt),
-            ]
-        )
+        messages = [("system", system_prompt.prompt)] + participant_prompts + [("human", task_prompt.prompt)]
+
+        final_prompt = ChatPromptTemplate.from_messages(messages)
         return final_prompt
 
     async def _get_examples(

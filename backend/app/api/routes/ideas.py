@@ -1,4 +1,5 @@
 from random import random
+import logging
 
 from fastapi import APIRouter, BackgroundTasks
 
@@ -55,7 +56,7 @@ async def create_idea(
             session=session, idea_db=idea_old, idea_new=idea
         )
 
-    lock = agent_manager.try_acquire_lock(agent.id)
+    lock = agent_manager.try_acquire_generation_lock(agent.id)
     if lock.acquired:
         was_tasked = False
         try:
@@ -64,10 +65,14 @@ async def create_idea(
             last_ai_idea = get_last_ai_idea(session, agent_id)
             last_ai_idea_count = last_ai_idea.idea_count if last_ai_idea else 0
 
+            logging.info(f"previous last id was {lock.previous_last_id}")
+
             # Generate idea and post if agent is active
             # Todo: determine threshold out of agent settings
             if (
                     agent.is_active
+                    and (lock.previous_last_id is None
+                         or lock.previous_last_id != last_ai_idea.id)
                     and idea.idea_count >= frequency // 2
                     and (random() < 1 / frequency
                          or (frequency // 2 <= idea.idea_count - last_ai_idea_count >=
@@ -76,6 +81,7 @@ async def create_idea(
                     # line above
             ):
                 was_tasked = True
+                lock.previous_last_id = last_ai_idea.id
                 background_tasks.add_task(
                     generate_idea_and_post, agent, briefing, session, lock
                 )

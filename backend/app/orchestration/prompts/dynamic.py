@@ -4,7 +4,7 @@ from app.api.deps import SessionDep
 
 from app.models import AIAgent, Briefing2, PromptStrategyType
 
-from app.utils import get_prompt_strategy, get_briefing_by_agent_id, AgentLock
+from app.utils import get_prompt_strategy, get_briefing_by_agent_id, AgentGenerationLock
 
 from .chaining import generate_idea_and_post as chaining_generate_idea_and_post
 from .few_shot import generate_idea_and_post as few_shot_generate_idea_and_post
@@ -12,7 +12,7 @@ from .xleap_few_shot import generate_idea_and_post as xleap_generate_idea_and_po
 
 
 async def generate_idea_and_post(
-        agent: AIAgent, briefing: Briefing2, session: SessionDep, lock: AgentLock
+        agent: AIAgent, briefing: Briefing2, session: SessionDep, lock: AgentGenerationLock
 ) -> None:
     """
     Dynamically switches the prompt strategy for the specified agent

@@ -237,6 +237,17 @@ class XLeapSystemPromptBase(ABC):
 
         return GeneratedPrompt(prompt=system_prompt, lang_chain_input=lang_chain_input)
 
+    async def generate_idea_prompts(self,
+                                   ideas: list[Idea] | None) -> list[tuple[str, str]]:
+        result: list[tuple[str, str]] = list()
+        for idea in ideas:
+            if idea.created_by_ai:
+                result.append(("assistant", idea.text))
+            else:
+                result.append(("human", idea.text))
+        return result
+
+
     async def generate_task_prompt(self,
                                    briefing: Briefing2,
                                    ideas: list[Idea] | None) -> GeneratedPrompt:
@@ -254,6 +265,6 @@ class XLeapSystemPromptBase(ABC):
             list_elements.append(f"\n<li>{escape(idea.text)}</li>")
 
         lang_chain_input = dict()
-        lang_chain_input["idea-list-items"] = "".join(list_elements)
+        lang_chain_input["idea-list-items"] = ""  #.join(list_elements)
 
         return GeneratedPrompt(prompt=prompt, lang_chain_input=lang_chain_input)
