@@ -1,42 +1,38 @@
+import json
 import logging
 import re
 
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.prompts import (
+    ChatPromptTemplate,
+)
+from langchain.chains.llm import LLMChain
 from langchain_openai import ChatOpenAI
 
 from app.api.deps import SessionDep
 from app.core.config import settings
-from app.crud import get_ai_agent_references
 from app.models import AIAgent, Briefing2, Briefing2Reference, Idea
 from app.orchestration.prompts import BrainstormBasePrompt, langfuse_handler
 from app.utils import get_last_n_ideas
-
-from .xleap_system_prompt_base import (
-    GeneratedSystemPrompt,
-    XLeapSystemPromptBase,
-)
+from app.crud import get_ai_agent_references
+from .xleap_system_prompt_base import XLeapSystemPromptBase, GeneratedPrompt
 
 
 async def describe_system_prompt(
-    agent: AIAgent, briefing: Briefing2, session: SessionDep
-) -> GeneratedSystemPrompt:
+        agent: AIAgent, briefing: Briefing2, session: SessionDep
+) -> GeneratedPrompt:
     references = get_ai_agent_references(session=session, agent=agent)
     xleap_prompt = XLeapBasicPrompt(
         agent=agent, briefing=briefing, ideas=[], references=references
     )
-    system_prompt = await xleap_prompt.generate_system_prompt(
-        briefing=briefing, references=references
-    )
+    system_prompt = await xleap_prompt.generate_system_prompt(briefing=briefing, references=references)
     return system_prompt
 
 
 async def generate_idea_and_post(
-    agent: AIAgent, briefing: Briefing2, session: SessionDep
+        agent: AIAgent, briefing: Briefing2, session: SessionDep
 ) -> None:
     """
     Generate idea and post it to the XLeap server
-
-    Todo: get question from the agent settings
     """
     attached_agent = session.merge(agent)
     attached_briefing = session.merge(briefing)
@@ -46,10 +42,7 @@ async def generate_idea_and_post(
     references = get_ai_agent_references(session=session, agent=agent)
 
     xleap_prompt = XLeapBasicPrompt(
-        agent=attached_agent,
-        briefing=attached_briefing,
-        ideas=attached_ideas,
-        references=references,
+        agent=attached_agent, briefing=attached_briefing, ideas=attached_ideas, references=references
     )
     # noinspection PyBroadException
     try:
@@ -61,19 +54,17 @@ async def generate_idea_and_post(
 
 class XLeapBasicPrompt(BrainstormBasePrompt, XLeapSystemPromptBase):
     """
-    Class using basic XLeap prompting and Langchain API to generate ideas
+        Class using basic XLeap prompting and Langchain API to generate ideas
     """
 
     _lang_chain_input: dict
 
-    def __init__(
-        self,
-        agent: AIAgent,
-        briefing: Briefing2,
-        references: list[Briefing2Reference],
-        ideas: list[Idea] | None = None,
-        temperature: float = 0.5,
-    ):
+    def __init__(self,
+                 agent: AIAgent,
+                 briefing: Briefing2,
+                 references: list[Briefing2Reference],
+                 ideas: list[Idea] | None = None,
+                 temperature: float = 0.5):
         super().__init__(agent=agent, ideas=ideas, temperature=temperature)
         self._briefing = briefing
         self._references = references
@@ -97,7 +88,7 @@ class XLeapBasicPrompt(BrainstormBasePrompt, XLeapSystemPromptBase):
         chain = final_prompt | llm
 
         idea = chain.invoke(
-            input={**self._lang_chain_input},
+            input=self._lang_chain_input,
             config={"callbacks": [langfuse_handler]},
         )
 
@@ -112,22 +103,24 @@ class XLeapBasicPrompt(BrainstormBasePrompt, XLeapSystemPromptBase):
 
         """
 
-        system_prompt = await self.generate_system_prompt(
-            briefing=self._briefing, references=self._references
-        )
+        system_prompt = await self.generate_system_prompt(briefing=self._briefing, references=self._references)
 
-        self._lang_chain_input = system_prompt.lang_chain_input
+        participant_prompts = await self.generate_idea_prompts(ideas=self._ideas)
 
-        final_prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", system_prompt.prompt),
-                ("human", "Can you come up with another idea?"),  # FIXME
-            ]
-        )
+        task_prompt = await self.generate_task_prompt(briefing=self._briefing, ideas=self._ideas)
+
+        self._lang_chain_input = {
+            **system_prompt.lang_chain_input,
+            **task_prompt.lang_chain_input
+        }
+
+        messages = [("system", system_prompt.prompt)] + participant_prompts + [("human", task_prompt.prompt)]
+
+        final_prompt = ChatPromptTemplate.from_messages(messages)
         return final_prompt
 
     async def _get_examples(
-        self,
+            self,
     ) -> str:
         """ """
         idea_examples: str = ""

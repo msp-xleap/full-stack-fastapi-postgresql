@@ -1,24 +1,22 @@
 import logging
-import threading
 
 from fastapi import HTTPException
 from langchain_openai import ChatOpenAI
-from langfuse.api.resources.commons.errors import (
-    NotFoundError as PromptNotFoundError,
-)
-from langfuse.api.resources.commons.errors import (
-    UnauthorizedError as PromptAuthenticationError,
-)
 from openai import (
     APITimeoutError,
     AuthenticationError,
-    NotFoundError,
     RateLimitError,
+    NotFoundError
+)
+from langfuse.api.resources.commons.errors import (
+ NotFoundError as PromptNotFoundError,
+ UnauthorizedError as PromptAuthenticationError
 )
 from starlette import status
 
 from app.core.config import settings
 from app.orchestration.prompts import langfuse_client, langfuse_handler
+import threading
 
 # Configure logging
 logging.basicConfig(
@@ -28,38 +26,33 @@ logging.basicConfig(
 
 
 def _get_or_create_api_key_validation_prompt_under_lock():
-    """returns the API validation prompt
-    If the prompt is not present it will be created.
-    This method acquires lock
+    """ returns the API validation prompt
+        If the prompt is not present it will be created.
+        This method acquires lock
     """
     lock = threading.Lock()
     lock.acquire()
     try:
-        return langfuse_client.get_prompt(
-            "API_KEY_VALIDATION"
-        )  # check again if the prompt exists
+        return langfuse_client.get_prompt("API_KEY_VALIDATION")  # check again if the prompt exists
     except PromptNotFoundError:  # otherwise created
         return langfuse_client.create_prompt(
-            name="API_KEY_VALIDATION",
-            prompt="Are you currently accepting any prompts? Answer with "
-            '"YES"',
-            is_active=True,
-        )
+                    name="API_KEY_VALIDATION",
+                    prompt="Are you currently accepting any prompts? Answer with \"YES\"",
+                    is_active=True)
     finally:
         lock.release()
 
 
 def _get_api_key_validation_prompt():
-    """returns the API validation prompt
-    If the prompt is not present it will be created
+    """ returns the API validation prompt
+        If the prompt is not present it will be created
     """
     try:
         return langfuse_client.get_prompt("API_KEY_VALIDATION")
     except PromptAuthenticationError:
         logging.error("Internal Error: Got Unauthorized from Langfuse")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Langfuse authentication error",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Langfuse authentication error"
         )
     except PromptNotFoundError:
         return _get_or_create_api_key_validation_prompt_under_lock()
@@ -78,21 +71,19 @@ async def is_api_key_valid(
 
     Raises:
         HTTPException - 401: If the API key is invalid.
-        HTTPException - 404: If the large language model is not found.
         HTTPException - 408: If the request timed out.
         HTTPException - 429: If the rate limit is exceeded.
-        HTTPException - 500: If an error occurred.
 
     Returns:
         None
     """
+
     try:
         langfuse_prompt_obj = _get_api_key_validation_prompt()
-    except AuthenticationError:
+    except PromptAuthenticationError:
         logging.error("Internal Error: Got Unauthorized from Langfuse")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Langfuse authentication error",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Langfuse authentication error"
         )
     except Exception as err:
         logging.error(f"An error calling Langfuse: {err}")

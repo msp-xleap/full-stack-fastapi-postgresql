@@ -1,13 +1,12 @@
+from app.models import Briefing2, Briefing2Reference, Idea
 from abc import ABC, abstractmethod
+from html import escape
 
-from app.models import Briefing2, Briefing2Reference
 
-
-class GeneratedSystemPrompt:
+class GeneratedPrompt:
     """
-    Describes the prompt and variables of the XLeap prompt
+        Describes the prompt and variables of the XLeap prompt
     """
-
     prompt: str
     lang_chain_input: dict
 
@@ -26,23 +25,19 @@ class XLeapSystemPromptBase(ABC):
         raise NotImplementedError
 
     @staticmethod
-    def _get_file_references(
-        references: list[Briefing2Reference],
-    ) -> list[Briefing2Reference]:
+    def _get_file_references(references: list[Briefing2Reference]) -> list[Briefing2Reference]:
         """
         Returns all files for retrieval
         :param references: the list of all references (e.g. links, files, xleap content and exemplar)
         :return: the list of all file references
         """
-        return filter(lambda ref: ref.type == "file", references)
+        return filter(lambda ref: ref.type == 'file', references)
 
-    async def _append_reference_templates(
-        self,
-        ref_type: str,
-        references: list[Briefing2Reference],
-        prompt_parts: list[str],
-        lang_chain_input: dict,
-    ) -> None:
+    async def _append_reference_templates(self,
+                                          ref_type: str,
+                                          references: list[Briefing2Reference],
+                                          prompt_parts: list[str],
+                                          lang_chain_input: dict) -> None:
         """
         Collects all templates for the given type to prompt_parts and
         put the corresponding variables to lang_chain_input
@@ -58,39 +53,23 @@ class XLeapSystemPromptBase(ABC):
                 prompt_parts.append(prompt)
 
                 match ref_type:
-                    case "link":
-                        lang_chain_input[
-                            f"link_info_{ref.ref_number}"
-                        ] = ref.text
-                        lang_chain_input[
-                            f"link_url_{ref.ref_number}"
-                        ] = ref.url
-                    case "file":
-                        lang_chain_input[
-                            f"file_info_{ref.ref_number}"
-                        ] = ref.text
-                        lang_chain_input[
-                            f"filename_{ref.ref_number}"
-                        ] = ref.filename
-                        lang_chain_input[
-                            f"file_url_{ref.ref_number}"
-                        ] = ref.url
-                    case "xleap":
-                        lang_chain_input[
-                            f"xleap_info_{ref.ref_number}"
-                        ] = ref.text
-                        lang_chain_input[
-                            f"xleap_url_{ref.ref_number}"
-                        ] = ref.url
-                    case "exemplar":
-                        lang_chain_input[
-                            f"exemplar_{ref.ref_number}"
-                        ] = ref.text
+                    case 'link':
+                        lang_chain_input[f"link_info_{ref.ref_number}"] = ref.text
+                        lang_chain_input[f"link_url_{ref.ref_number}"] = ref.url
+                    case 'file':
+                        lang_chain_input[f"file_info_{ref.ref_number}"] = ref.text
+                        lang_chain_input[f"filename_{ref.ref_number}"] = ref.filename
+                        lang_chain_input[f"file_url_{ref.ref_number}"] = ref.url
+                    case 'xleap':
+                        lang_chain_input[f"xleap_info_{ref.ref_number}"] = ref.text
+                        lang_chain_input[f"xleap_url_{ref.ref_number}"] = ref.url
+                    case 'exemplar':
+                        lang_chain_input[f"exemplar_{ref.ref_number}"] = ref.text
 
     # noinspection DuplicatedCode
-    async def generate_system_prompt(
-        self, briefing: Briefing2, references: list[Briefing2Reference]
-    ) -> GeneratedSystemPrompt:
+    async def generate_system_prompt(self,
+                                     briefing: Briefing2,
+                                     references: list[Briefing2Reference]) -> GeneratedPrompt:
         """
         Generate prompt for prompt chaining
 
@@ -198,9 +177,7 @@ class XLeapSystemPromptBase(ABC):
             prompt_parts.append(prompt)
             lang_chain_input["workspace_info"] = briefing.workspace_info
 
-            await self._append_reference_templates(
-                "link", references, prompt_parts, lang_chain_input
-            )
+            await self._append_reference_templates('link', references, prompt_parts, lang_chain_input)
 
             # TODO handle file content
             # await self._append_reference_templates('file', references, prompt_parts, lang_chain_input)
@@ -214,9 +191,7 @@ class XLeapSystemPromptBase(ABC):
                 prompt_name=briefing.workspace_instruction_langfuse_name
             )
             prompt_parts.append(prompt)
-            lang_chain_input[
-                "workspace_instruction"
-            ] = briefing.workspace_instruction
+            lang_chain_input["workspace_instruction"] = briefing.workspace_instruction
 
         # 7. additional info
         if briefing.with_additional_info:
@@ -250,9 +225,7 @@ class XLeapSystemPromptBase(ABC):
             prompt_parts.append(prompt)
             lang_chain_input["num_exemplar"] = briefing.with_num_exemplar
 
-            await self._append_reference_templates(
-                "exemplar", references, prompt_parts, lang_chain_input
-            )
+            await self._append_reference_templates('exemplar', references, prompt_parts, lang_chain_input)
 
         # 11. response length
         prompt = await self._get_prompt_from_langfuse(
@@ -262,6 +235,36 @@ class XLeapSystemPromptBase(ABC):
 
         system_prompt = "\n".join(prompt_parts)
 
-        return GeneratedSystemPrompt(
-            prompt=system_prompt, lang_chain_input=lang_chain_input
+        return GeneratedPrompt(prompt=system_prompt, lang_chain_input=lang_chain_input)
+
+    async def generate_idea_prompts(self,
+                                   ideas: list[Idea] | None) -> list[tuple[str, str]]:
+        result: list[tuple[str, str]] = list()
+        for idea in ideas:
+            if idea.created_by_ai:
+                result.append(("assistant", idea.text))
+            else:
+                result.append(("human", idea.text))
+        return result
+
+
+    async def generate_task_prompt(self,
+                                   briefing: Briefing2,
+                                   ideas: list[Idea] | None) -> GeneratedPrompt:
+        """
+        Generates the task for the agent to generate an own idea
+        :param briefing: the briefing
+        :param ideas: the participant ideas
+        :return: the prompt for the AI
+        """
+        prompt = await self._get_prompt_from_langfuse(
+            prompt_name=briefing.task_langfuse_name
         )
+        list_elements = []
+        for idea in ideas:
+            list_elements.append(f"\n<li>{escape(idea.text)}</li>")
+
+        lang_chain_input = dict()
+        lang_chain_input["idea-list-items"] = ""  #.join(list_elements)
+
+        return GeneratedPrompt(prompt=prompt, lang_chain_input=lang_chain_input)
