@@ -5,6 +5,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from app.api.main import api_router
 from app.core.config import settings
+from app.utils.task_broker import broker
 
 
 def custom_generate_unique_id(route: APIRoute) -> str:
@@ -33,3 +34,21 @@ if settings.BACKEND_CORS_ORIGINS:
     )
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
+
+
+@app.on_event("startup")
+async def app_startup():
+    """
+    Start broker on app startup
+    """
+    if not broker.is_worker_process:
+        await broker.startup()
+
+
+@app.on_event("shutdown")
+async def app_shutdown():
+    """
+    Shutdown broker on app shutdown
+    """
+    if not broker.is_worker_process:
+        await broker.shutdown()

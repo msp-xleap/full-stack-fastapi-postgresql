@@ -16,6 +16,7 @@ from app.utils import (
     get_briefing2_by_agent_id,
     get_last_ai_idea,
 )
+from app.utils.task_broker import broker
 
 router = APIRouter()
 
@@ -63,6 +64,7 @@ async def create_idea(
     # Todo: determine threshold out of agent settings
     if (
         agent.is_active
+        # and not agent.is_generating
         and idea.idea_count >= frequency // 2
         and (
             random() < 1 / frequency
@@ -75,9 +77,21 @@ async def create_idea(
         # and idea.idea_count % frequency == 0  # as an alternative to the
         # line above
     ):
-        background_tasks.add_task(
-            generate_idea_and_post, agent, briefing, session
-        )
+        # background_tasks.add_task(
+        #     generate_idea_and_post, agent, briefing, session
+        # )
+
+        print(f"""
+s
+        BROKER TASKS:
+        {broker.get_all_tasks()}
+
+
+""")
+
+
+        await generate_idea_and_post.kicker().with_broker(broker).kiq(agent,
+                                                                 briefing)
 
     return
 

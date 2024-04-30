@@ -1,8 +1,11 @@
 import logging
 
+from taskiq import async_shared_broker
+
 from app.api.deps import SessionDep
 from app.models import AIAgent, Briefing2, PromptStrategyType
 from app.utils import get_briefing_by_agent_id, get_prompt_strategy
+from app.utils.task_broker import broker
 
 from .chaining import generate_idea_and_post as chaining_generate_idea_and_post
 from .few_shot import generate_idea_and_post as few_shot_generate_idea_and_post
@@ -11,8 +14,9 @@ from .xleap_zero_shot import (
 )
 
 
+@async_shared_broker.task
 async def generate_idea_and_post(
-    agent: AIAgent, briefing: Briefing2, session: SessionDep
+    agent: AIAgent, briefing: Briefing2, session: SessionDep = SessionDep
 ) -> None:
     """
     Dynamically switches the prompt strategy for the specified agent

@@ -59,3 +59,4 @@ def deactivate_ai_agent(*, session: Session, ai_agent: AIAgent) -> AIAgent:
     session.commit()
     session.refresh(ai_agent)
     return ai_agent
+
