@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
+from html import escape
 
-from app.models import Briefing2, Briefing2Reference
+from app.models import Briefing2, Briefing2Reference, Idea
 
 
-class GeneratedSystemPrompt:
+class GeneratedPrompt:
     """
     Describes the prompt and variables of the XLeap prompt
     """
@@ -90,7 +91,7 @@ class XLeapSystemPromptBase(ABC):
     # noinspection DuplicatedCode
     async def generate_system_prompt(
         self, briefing: Briefing2, references: list[Briefing2Reference]
-    ) -> GeneratedSystemPrompt:
+    ) -> GeneratedPrompt:
         """
         Generate prompt for prompt chaining
 
@@ -262,6 +263,39 @@ class XLeapSystemPromptBase(ABC):
 
         system_prompt = "\n".join(prompt_parts)
 
-        return GeneratedSystemPrompt(
+        return GeneratedPrompt(
             prompt=system_prompt, lang_chain_input=lang_chain_input
+        )
+
+    async def generate_idea_prompts(
+        self, ideas: list[Idea] | None
+    ) -> list[tuple[str, str]]:
+        result: list[tuple[str, str]] = []
+        for idea in ideas:
+            if idea.created_by_ai:
+                result.append(("assistant", idea.text))
+            else:
+                result.append(("human", idea.text))
+        return result
+
+    async def generate_task_prompt(
+        self, briefing: Briefing2, ideas: list[Idea] | None
+    ) -> GeneratedPrompt:
+        """
+        Generates the task for the agent to generate an own idea
+        :param briefing: the briefing
+        :param ideas: the participant ideas
+        :return: the prompt for the AI
+        """
+        prompt = await self._get_prompt_from_langfuse(
+            prompt_name=briefing.task_langfuse_name
+        )
+        list_elements: list = []
+        for idea in ideas:
+            list_elements.append(f"\n<li>{escape(idea.text)}</li>")
+
+        lang_chain_input: dict = {"idea-list-items": ""}
+
+        return GeneratedPrompt(
+            prompt=prompt, lang_chain_input=lang_chain_input
         )

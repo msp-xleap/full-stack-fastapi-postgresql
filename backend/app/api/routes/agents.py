@@ -15,6 +15,9 @@ from app.models import (
     AIBriefing2Base,
     BriefingTextResponse,
 )
+from app.orchestration.prompts.xleap_few_shot import (
+    describe_system_prompt,
+)
 from app.utils import (
     check_agent_exists_by_instance_id,
     get_agent_by_id,
@@ -194,10 +197,6 @@ async def update_agent_briefing(
     status_code=200,
 )
 async def get_briefing_as_text(*, agent_id: str, session: SessionDep) -> Any:
-    from app.orchestration.prompts.xleap_zero_shot import (
-        describe_system_prompt,
-    )
-
     # Check if agent exists
     agent = get_agent_by_id(agent_id, session)
     briefing = get_briefing2_by_agent_id(agent_id, session)

@@ -41,8 +41,7 @@ def _get_or_create_api_key_validation_prompt_under_lock():
     except PromptNotFoundError:  # otherwise created
         return langfuse_client.create_prompt(
             name="API_KEY_VALIDATION",
-            prompt="Are you currently accepting any prompts? Answer with "
-            '"YES"',
+            prompt='Are you currently accepting any prompts? Answer with "YES"',
             is_active=True,
         )
     finally:
@@ -78,17 +77,16 @@ async def is_api_key_valid(
 
     Raises:
         HTTPException - 401: If the API key is invalid.
-        HTTPException - 404: If the large language model is not found.
         HTTPException - 408: If the request timed out.
         HTTPException - 429: If the rate limit is exceeded.
-        HTTPException - 500: If an error occurred.
 
     Returns:
         None
     """
+
     try:
         langfuse_prompt_obj = _get_api_key_validation_prompt()
-    except AuthenticationError:
+    except PromptAuthenticationError:
         logging.error("Internal Error: Got Unauthorized from Langfuse")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
