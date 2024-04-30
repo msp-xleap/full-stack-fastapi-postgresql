@@ -102,10 +102,10 @@ class AgentManager:
 
         if lock.acquire(blocking=False):
             logging.info(f"AgentManager.lock SUCCESSFULLY acquired generation lock for agent: {agent_id}")
-            return AgentGenerationLock(acquired=True, lock=lock, agent_id=agent_id, previous_last_id=last_uuid)
+            return AgentGenerationLock(acquired=True, lock=lock, agent_id=agent_id, last_id=last_uuid)
         else:
             logging.info(f"AgentManager.lock UNSUCCESSFULLY generation lock not acquired for agent: {agent_id}")
-            return AgentGenerationLock(acquired=False, agent_id=agent_id, previous_last_id=last_uuid)
+            return AgentGenerationLock(acquired=False, agent_id=agent_id, last_id=last_uuid)
 
     def release_contribution_lock(self, agent_id: uuid_pkg.uuid4, lock: threading.Lock):
         """ Only to be called from AgentLock.release() """

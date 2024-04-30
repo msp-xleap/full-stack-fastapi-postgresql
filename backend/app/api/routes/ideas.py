@@ -1,5 +1,4 @@
 from random import random
-import logging
 
 from fastapi import APIRouter, BackgroundTasks
 
@@ -64,8 +63,6 @@ async def create_idea(
             frequency = briefing.frequency + 1
             last_ai_idea = get_last_ai_idea(session, agent_id)
             last_ai_idea_count = last_ai_idea.idea_count if last_ai_idea else 0
-
-            logging.info(f"previous last id was {lock.previous_last_id}")
 
             # Generate idea and post if agent is active
             # Todo: determine threshold out of agent settings
