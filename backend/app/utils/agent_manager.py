@@ -11,17 +11,18 @@ class AgentGenerationLock:
     """
     def __init__(self, acquired: bool,
                  agent_id: uuid_pkg.uuid4,
-                 previous_last_id: uuid_pkg.uuid4,
+                 last_id: uuid_pkg.uuid4,
                  lock: threading.Lock = None):
         self.acquired = acquired
         self.agent_id = agent_id
         self._lock = lock
-        self.previous_last_id = previous_last_id
+        self.last_id = last_id
 
     def release(self):
         """ release the lock held be the agent"""
         if self._lock is not None:
-            agent_manager.release_generation_lock(lock=self._lock, agent_id=self.agent_id, last_id=self.previous_last_id)
+            agent_manager.release_generation_lock(lock=self._lock, agent_id=self.agent_id, last_id=self.last_id)
+
 
 class AgentContributionLock:
     """ Represents the result of a AgentManager.acquire_contribution_lock method

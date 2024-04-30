@@ -37,5 +37,8 @@ async def generate_idea_and_post(
                 await xleap_generate_idea_and_post(agent, briefing, session)
             case _:
                 raise ValueError(f"Unhandled strategy type: '{strategy.type}'")
+    except Exception as e:
+        lock.last_id = None
+        raise e
     finally:
         lock.release()

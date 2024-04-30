@@ -71,8 +71,8 @@ async def create_idea(
             # Todo: determine threshold out of agent settings
             if (
                     agent.is_active
-                    and (lock.previous_last_id is None
-                         or lock.previous_last_id != last_ai_idea.id)
+                    and (lock.last_id is None
+                         or lock.last_id != last_ai_idea.id)
                     and idea.idea_count >= frequency // 2
                     and (random() < 1 / frequency
                          or (frequency // 2 <= idea.idea_count - last_ai_idea_count >=
@@ -81,7 +81,7 @@ async def create_idea(
                     # line above
             ):
                 was_tasked = True
-                lock.previous_last_id = last_ai_idea.id
+                lock.last_id = last_ai_idea.id
                 background_tasks.add_task(
                     generate_idea_and_post, agent, briefing, session, lock
                 )
