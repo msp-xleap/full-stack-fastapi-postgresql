@@ -13,7 +13,8 @@ from app.models import (
     AIAgentIdResponse,
     AIAgentsOut,
     AIBriefing2Base,
-    BriefingTextResponse
+    BriefingTextResponse,
+    AIBriefingTest,
 )
 from app.utils import check_agent_exists_by_instance_id, get_agent_by_id, get_briefing2_by_agent_id
 
@@ -176,6 +177,7 @@ async def update_agent_briefing(
     )
     return None
 
+
 @router.get(
     "/{agent_id}/briefing/",
     response_model=BriefingTextResponse,
@@ -199,4 +201,39 @@ async def get_briefing_as_text(
 
     return BriefingTextResponse(
         text=prompt.prompt.format(**prompt.lang_chain_input)
+    )
+
+
+@router.post("/{agent_id}/test",
+             responses={
+                 403: {"detail": "Invalid secret"},
+                 404: {"detail": "Agent not found"},
+             },
+             status_code=202)
+async def test_briefing(
+        agent_id: str,
+        config: AIBriefingTest,
+        session: SessionDep,
+        background_tasks: BackgroundTasks) -> None:
+    """
+    Tests the briefing for an agent.
+    This test can be run at any time meaning, unlike create_idea
+      1. the agent does not need to be active
+      2. the agent might already be creating ideas with 'create_idea'
+      3. this method does not account existing ideas it just feeds
+         the briefing to the AI and directly asks it to generate one or more ideas
+
+    :param agent_id:
+    :param config:
+    :param session:
+    :return:
+    """
+    from app.orchestration.prompts.xleap_briefing_test import generate_ideas_and_post
+    # Check if agent already exists
+    agent = get_agent_by_id(agent_id, session)
+
+    briefing = get_briefing2_by_agent_id(agent_id, session)
+
+    background_tasks.add_task(
+        generate_ideas_and_post, agent, briefing, config.num_samples, session,
     )

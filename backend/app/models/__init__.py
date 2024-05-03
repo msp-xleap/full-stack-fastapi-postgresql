@@ -8,6 +8,7 @@ from .agents import (
     AIAgentIdResponse,
     AIAgentsOut,
     XLeapDetailsBase,
+    AIBriefingTest,
 )
 from .users import (
     UpdatePassword,
@@ -85,5 +86,6 @@ __all__ = [
     "UserUpdate",
     "UserUpdateMe",
     "XLeapBriefingPrompt",
-    "XLeapDetailsBase"
+    "XLeapDetailsBase",
+    "AIBriefingTest",
 ]

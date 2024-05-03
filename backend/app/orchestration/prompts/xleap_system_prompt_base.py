@@ -247,7 +247,6 @@ class XLeapSystemPromptBase(ABC):
                 result.append(("human", idea.text))
         return result
 
-
     async def generate_task_prompt(self,
                                    briefing: Briefing2,
                                    ideas: list[Idea] | None) -> GeneratedPrompt:

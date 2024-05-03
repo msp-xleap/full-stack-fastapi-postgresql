@@ -1,11 +1,9 @@
-import json
 import logging
 import re
 
 from langchain_core.prompts import (
     ChatPromptTemplate,
 )
-from langchain.chains.llm import LLMChain
 from langchain_openai import ChatOpenAI
 
 from app.api.deps import SessionDep

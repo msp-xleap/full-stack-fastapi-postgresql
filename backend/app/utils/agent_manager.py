@@ -2,6 +2,15 @@ from datetime import datetime, timezone
 import logging
 import threading
 import uuid as uuid_pkg
+from app.models import Idea
+import json
+import copy
+
+
+class AgentContext:
+
+    def __init__(self, idea: Idea):
+        self.last_idea = idea
 
 
 class AgentGenerationLock:
@@ -11,17 +20,30 @@ class AgentGenerationLock:
     """
     def __init__(self, acquired: bool,
                  agent_id: uuid_pkg.uuid4,
-                 last_id: uuid_pkg.uuid4,
+                 context: AgentContext | None = None,
                  lock: threading.Lock = None):
         self.acquired = acquired
         self.agent_id = agent_id
         self._lock = lock
-        self.last_id = last_id
+        self._context = context
+
+    def get_last_idea(self) -> Idea | None:
+        if self._context is not None and self._context.last_idea is not None:
+            return self._context.last_idea
+        return None
+
+    def set_last_idea(self, idea: Idea | None):
+        self._context = AgentContext(idea)
+
+    def get_last_id(self) -> uuid_pkg.uuid4:
+        if self._context is not None and self._context.last_idea is not None:
+            return self._context.last_idea.id
+        return None
 
     def release(self):
         """ release the lock held be the agent"""
         if self._lock is not None:
-            agent_manager.release_generation_lock(lock=self._lock, agent_id=self.agent_id, last_id=self.last_id)
+            agent_manager.release_generation_lock(lock=self._lock, agent_id=self.agent_id, next_context=self._context)
 
 
 class AgentContributionLock:
@@ -51,7 +73,7 @@ class AgentManager:
     """ map from Agent uuid to lock for that agent """
     _last_generation: dict[uuid_pkg.uuid4] = dict()
     """ the last time the _generation_lock for an agent was returned """
-    _generation_context: dict[uuid_pkg.uuid4, uuid_pkg.uuid4] = dict()
+    _generation_context: dict[uuid_pkg.uuid4, AgentContext] = dict()
     """ map from Agent uuid to lock to the last uuid the agent contribution was triggered for """
 
     _internalLock = threading.Lock()
@@ -96,16 +118,18 @@ class AgentManager:
         """
         # Acquiring the lock for the specific agent
         lock = self._find_generation_lock(agent_id=agent_id)
-        last_uuid = None
+        last_context = None
         if agent_id in self._generation_context:
-            last_uuid = self._generation_locks[agent_id]
+            last_context = self._generation_locks[agent_id]
 
         if lock.acquire(blocking=False):
             logging.info(f"AgentManager.lock SUCCESSFULLY acquired generation lock for agent: {agent_id}")
-            return AgentGenerationLock(acquired=True, lock=lock, agent_id=agent_id, last_id=last_uuid)
+            if last_context is not None:
+                last_context = copy.copy(last_context)
+            return AgentGenerationLock(acquired=True, lock=lock, agent_id=agent_id, context=last_context)
         else:
             logging.info(f"AgentManager.lock UNSUCCESSFULLY generation lock not acquired for agent: {agent_id}")
-            return AgentGenerationLock(acquired=False, agent_id=agent_id, last_id=last_uuid)
+            return AgentGenerationLock(acquired=False, agent_id=agent_id, context=None)
 
     def release_contribution_lock(self, agent_id: uuid_pkg.uuid4, lock: threading.Lock):
         """ Only to be called from AgentLock.release() """
@@ -116,17 +140,20 @@ class AgentManager:
         else:
             logging.info(f"AgentManager.release contribution  lock was not released: {agent_id}")
 
-    def release_generation_lock(self, agent_id: uuid_pkg.uuid4, lock: threading.Lock, last_id: uuid_pkg.uuid4 = None):
+    def release_generation_lock(self,
+                                agent_id: uuid_pkg.uuid4,
+                                lock: threading.Lock,
+                                next_context: AgentContext | None = None):
         """ Only to be called from AgentLock.release() """
         if (agent_id in self._generation_locks
                 and lock == self._generation_locks[agent_id]):
             self._last_generation[agent_id] = datetime.now(timezone.utc)
 
-            if last_id is not None:
-                self._generation_context[agent_id] = last_id
+            if next_context is not None:
+                self._generation_context[agent_id] = next_context
 
             lock.release()
-            logging.info(f"AgentManager.release generation lock was released: {agent_id}, {self._last_generation[agent_id]}")
+            logging.info(f"AgentManager.release generation lock was released: {agent_id}, {json.dumps(next_context)}")
         else:
             logging.info(f"AgentManager.release generation  lock was not released: {agent_id}")
 
