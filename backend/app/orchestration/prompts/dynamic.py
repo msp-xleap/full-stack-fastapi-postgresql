@@ -52,7 +52,7 @@ async def generate_idea_and_post(
             case _:
                 raise ValueError(f"Unhandled strategy type: '{strategy.type}'")
     except Exception as e:
-        lock.last_id = None
+        lock.set_last_idea(None)
         raise e
     finally:
         lock.release()

@@ -190,7 +190,6 @@ class AIBriefing2ReferenceBase(SQLModel):
     url_expires_at: str
     filename: str
 
-
 class AIBriefing2Base(SQLModel):
     instance_id: str
     frequency: int = 7

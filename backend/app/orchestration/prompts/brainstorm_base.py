@@ -45,11 +45,15 @@ class BrainstormBasePrompt(ABC):
         """
         return idea_to_post
 
-    async def post_idea(self) -> None:
+    async def post_idea(self, idea: str | None = None) -> None:
         """
         Post idea to the XLeap
+        :param idea (optional), default self.generated_idea
         """
         logging.getLogger().setLevel(logging.DEBUG)
+
+        if idea is None:
+            idea = self.generated_idea
 
         logging.info(
             f"""
@@ -64,7 +68,7 @@ class BrainstormBasePrompt(ABC):
         resolve_server_addr(self._agent.server_address)
 
         # Maybe alter generated Idea before sending it
-        idea_to_post = self._alter_generated_idea(self.generated_idea)
+        idea_to_post = self._alter_generated_idea(idea)
 
         async with aiohttp.ClientSession() as session:
             session_post = session.post(

@@ -1,6 +1,6 @@
 from sqlmodel import Session, select
-
 from app.models import AIAgent, PromptStrategy, PromptStrategyType
+
 
 
 def get_prompt_strategy(*, session: Session, agent: AIAgent) -> PromptStrategy:
@@ -21,8 +21,8 @@ def get_prompt_strategy(*, session: Session, agent: AIAgent) -> PromptStrategy:
     strategy = session.exec(query).first()
 
     if strategy is None:
-        query = select(PromptStrategy).where(PromptStrategy.agent_id is None)
         # ignore, alchemy cannot handle "is None"
+        query = select(PromptStrategy).where(PromptStrategy.agent_id == None)  # noqa
         strategy = session.exec(query).first()
 
     if strategy is not None:
