@@ -15,7 +15,7 @@ from app.utils import (
     check_if_idea_exists,
     get_agent_by_id,
     get_briefing2_by_agent_id,
-    get_last_ai_idea,
+    get_last_ai_idea, get_ai_idea_share, should_ai_post_new_idea,
 )
 
 router = APIRouter()
@@ -62,27 +62,22 @@ async def create_idea(
             briefing = get_briefing2_by_agent_id(agent_id, session)
             frequency = briefing.frequency + 1
             last_ai_idea = get_last_ai_idea(session, agent_id)
-            last_ai_idea_count = last_ai_idea.idea_count if last_ai_idea else 0
+            ai_share = get_ai_idea_share(session, agent_id)
 
+            # Post the idea if specific conditions are met. These include:
+            # the agent being active, no current lock preventing posting,
+            # and criteria indicating the need for more visibility of
+            # AI-generated ideas—such as AI ideas being underrepresented,
+            # a favorable random chance outcome, or a significant increase
+            # in idea count.
+            should_post = should_ai_post_new_idea(
+                agent=agent, lock=lock, last_ai_idea=last_ai_idea,
+                idea=idea, frequency=frequency, ai_idea_share=ai_share
+            )
             # Generate idea and post if agent is active
-            # Todo: determine threshold based on share
-            if (
-                agent.is_active
-                and (lock.last_id is None or lock.last_id != last_ai_idea.id)
-                and idea.idea_count >= frequency // 2
-                and (
-                    random() < 1 / frequency
-                    or (
-                        frequency // 2
-                        <= idea.idea_count - last_ai_idea_count
-                        >= frequency
-                    )
-                )
-                # and idea.idea_count % frequency == 0  # as an alternative to the
-                # line above
-            ):
+            if should_post:
                 was_tasked = True
-                lock.last_id = last_ai_idea.id
+                lock.last_id = idea.id
                 background_tasks.add_task(
                     generate_idea_and_post, agent, briefing, session, lock
                 )

@@ -34,14 +34,12 @@ async def generate_idea_and_post(
 
         match strategy.type:
             case PromptStrategyType.CHAINING:
-                briefing1 = get_briefing_by_agent_id(str(agent.id), session)
                 await chaining_generate_idea_and_post(
-                    agent, briefing1, session
+                    agent, briefing, session
                 )
             case PromptStrategyType.FEW_SHOT:
-                briefing1 = get_briefing_by_agent_id(str(agent.id), session)
                 await few_shot_generate_idea_and_post(
-                    agent, briefing1, session
+                    agent, briefing, session
                 )
             case PromptStrategyType.XLEAP_ZERO_SHOT:
                 await xleap_generate_idea_and_post(

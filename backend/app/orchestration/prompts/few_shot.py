@@ -6,13 +6,13 @@ from langchain_openai import ChatOpenAI
 
 from app.api.deps import SessionDep
 from app.core.config import settings
-from app.models import AIAgent, Briefing
+from app.models import AIAgent, Briefing, Briefing2
 from app.orchestration.prompts import BasePrompt, langfuse_handler
 from app.utils import get_last_n_ideas
 
 
 async def generate_idea_and_post(
-    agent: AIAgent, briefing: Briefing, session: SessionDep
+    agent: AIAgent, briefing: Briefing2, session: SessionDep
 ) -> None:
     """
     Generate idea and post it to the XLeap server
