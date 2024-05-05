@@ -59,8 +59,8 @@ class TextTypeSwapper:
             "w": ["q", "a", "s", "e", ""],
             "x": ["z", "s", "d", "c", ""],
             # Account for English and German keyboard layouts
-            "y": ["t", "g", "h", "u", "a", "s", "x", "y", ""],
-            "z": ["a", "s", "x", "y", "t", "g", "h", "u", ""],
+            # "y": ["t", "g", "h", "u", "a", "s", "x", "y", ""],
+            # "z": ["a", "s", "x", "y", "t", "g", "h", "u", ""],
             # Special characters
             # " ": ["c", "v", "b", "n", "m"],
             ".": [",", "/", "-", " "],
