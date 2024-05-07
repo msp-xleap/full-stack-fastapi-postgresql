@@ -60,7 +60,8 @@ def update_idea(
     Returns:
         Idea: Updated idea object
     """
-    do_not_update_creator: set[str] = set('created_by')
+    # Temporarily exclude the creator field from update/delete
+    do_not_update_creator: set[str] = {'created_by'}
     idea_data = idea_new.model_dump(exclude_unset=True, exclude=do_not_update_creator)
     idea_db.sqlmodel_update(idea_data)
     idea_db.deleted = False  # Idea was restored

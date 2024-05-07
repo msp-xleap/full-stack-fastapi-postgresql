@@ -102,7 +102,7 @@ class XLeapBasicPrompt(BrainstormBasePrompt, XLeapSystemPromptBase):
 
         chain = final_prompt | llm
 
-        idea = chain.invoke(
+        idea = chain.ainvoke(
             input=self._lang_chain_input,
             config={"callbacks": [langfuse_handler]},
         )

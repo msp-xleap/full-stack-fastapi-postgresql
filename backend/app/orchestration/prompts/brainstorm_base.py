@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 import aiohttp
+from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
 
 from app.models import AIAgent, Idea

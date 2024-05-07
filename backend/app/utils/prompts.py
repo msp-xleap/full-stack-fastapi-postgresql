@@ -27,4 +27,4 @@ def get_prompt_strategy(*, session: Session, agent: AIAgent) -> PromptStrategy:
     if strategy is not None:
         return strategy
 
-    return PromptStrategy(type=PromptStrategyType.XLEAP_FEW_SHOT, version=0)
+    return PromptStrategy(type=PromptStrategyType.CHAINING, version=0)
