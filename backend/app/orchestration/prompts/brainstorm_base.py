@@ -10,6 +10,8 @@ from app.models import AIAgent, Idea
 from app.orchestration.data import resolve_server_addr
 from app.orchestration.prompts import langfuse_client, langfuse_handler
 
+from sqlmodel import Session
+
 
 class BrainstormBasePrompt(ABC):
     """
@@ -45,10 +47,14 @@ class BrainstormBasePrompt(ABC):
         """
         return idea_to_post
 
-    async def post_idea(self, idea: str | None = None) -> None:
+    async def post_idea(self,
+                        idea: str | None = None,
+                        test_secret: str | None = None) -> None:
         """
         Post idea to the XLeap
         :param idea (optional), default self.generated_idea
+        :param test_secret (optional, default None) when an idea is created by the test briefing request,
+         the result required a secret to be presented to XLeap inorder to bypass Agent.is_active checks
         """
         logging.getLogger().setLevel(logging.DEBUG)
 
@@ -70,20 +76,60 @@ class BrainstormBasePrompt(ABC):
         # Maybe alter generated Idea before sending it
         idea_to_post = self._alter_generated_idea(idea)
 
+        data = {"text": idea_to_post, "folder_id": ""}
+        if test_secret is not None:  # only include for test generations, as this can bypass active agent checks
+            data.test_secret = test_secret
+
         async with aiohttp.ClientSession() as session:
-            session_post = session.post(
+            async with session.post(
                 url=f"{self._agent.server_address}/services/api/sessions"
                 f"/{self._agent.session_id}/brainstorms/"
                 f"{self._agent.workspace_id}/ideas",
-                data=json.dumps({"text": idea_to_post, "folder_id": "string"}),
+                data=json.dumps(data),
                 headers={
                     "Authorization": f"Bearer {self._agent.secret}",
                     "content-type": "application/json",
                 },
-            )
+            ) as response:
+                response.raise_for_status()
 
-            # Don't await the response
-            await session_post
+    @staticmethod
+    def handle_client_response_errors(err: aiohttp.ClientResponseError,
+                                      agent: AIAgent,
+                                      session: Session) -> AIAgent:
+        """
+        Handles some common HTTP status like
+          402 Payment Required - if the XLeap subscription expired
+          409 Conflict - when an agent is not supposed to be active
+        other errors will be reraised
+
+        Both lead to the agent being deactivated if it is not already the case.
+
+        :param err: a  ClientResponseError
+        :param agent: the current agent
+        :param session: the DB session
+        :return: the updated agent object
+        """
+        must_deactivate_agent = False
+        # 402 payment required => XLeap license expired
+        if 402 == err.status:
+            logging.info('XLeap subscription expired, agent is being deactivated')
+            must_deactivate_agent = True
+        # 409 conflict => The agent should not be generating content since it was deactivated
+        elif 409 == err.status:
+            logging.info('Agent should not have been active, deactivating')
+            must_deactivate_agent = True
+        else:
+            raise err
+
+        if must_deactivate_agent:
+            # update the agent object before changing it
+            session.refresh(agent)
+            if agent.is_active:
+                agent.is_active = False
+                session.merge(agent)
+
+        return agent
 
     @abstractmethod
     async def generate_idea(self) -> str:

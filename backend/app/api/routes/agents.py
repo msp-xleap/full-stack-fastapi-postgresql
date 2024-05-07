@@ -235,5 +235,5 @@ async def test_briefing(
     briefing = get_briefing2_by_agent_id(agent_id, session)
 
     background_tasks.add_task(
-        generate_ideas_and_post, agent, briefing, config.num_samples, session,
+        generate_ideas_and_post, agent, briefing, config.secret, config.num_samples, session,
     )

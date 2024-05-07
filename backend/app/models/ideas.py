@@ -1,6 +1,7 @@
 import uuid as uuid_pkg
 from datetime import datetime
 
+from pydantic import BaseModel
 from sqlmodel import Field, SQLModel
 
 
@@ -9,8 +10,13 @@ class IdeaBase(SQLModel):
     text: str
     folder_id: str | None = None
     created_by_ai: bool
-    created_by_this_ai: bool
+    """ did this AI create this idea? """
+    created_by_an_ai: bool = Field(
+        default=False, nullable=False
+    )
+    """ did an AI (this or another) create this idea? """
     created_by: str | None = None
+
 
 class Idea(IdeaBase, table=True):
     __tablename__ = "idea"
@@ -29,3 +35,7 @@ class Idea(IdeaBase, table=True):
     )
     idea_count: int = Field(default=None)
     deleted: bool = False
+
+
+class BulkIdeaDeletionRequestData(BaseModel):
+    list: list[str]

@@ -5,6 +5,8 @@ from sqlmodel import Session, desc, select, func
 from app.models import Idea
 from fastapi import HTTPException
 
+import logging
+
 
 def check_if_idea_exists(
     session: Session, idea_id: str, agent_id: uuid_pkg.uuid4
@@ -117,7 +119,11 @@ def get_human_ideas_since(session: Session,
     return count
 
 
-def delete_idea_by_agent_and_id(agent_id: str, xleap_idea_id_or_uuid: str, mark_only: bool, session: Session):
+def delete_idea_by_agent_and_id(agent_id: str,
+                                xleap_idea_id_or_uuid: str,
+                                mark_only: bool,
+                                session: Session,
+                                silent: bool = False):
     """Deletes an idea
 
     Args:
@@ -127,6 +133,8 @@ def delete_idea_by_agent_and_id(agent_id: str, xleap_idea_id_or_uuid: str, mark_
         mark_only (bool): when True the idea's deleted flag is set to True, otherwise
             the entity actually deleted from the database
         session (SessionDep): Database session
+        silent (bool): Default False in which case a HTTPException is raised when the specified ID does
+            not exist, if True no exception is raised
 
     Raises:
         HTTPException - 404: If the idea was not found
@@ -145,6 +153,9 @@ def delete_idea_by_agent_and_id(agent_id: str, xleap_idea_id_or_uuid: str, mark_
     idea = session.exec(query).first()
 
     if idea is None:
+        if silent:
+            return
+
         logging.info(f"The requested idea does not exist {xleap_idea_id_or_uuid} for {agent_id}")
         # If agent is not found, raise HTTPException
         raise HTTPException(

@@ -1,6 +1,7 @@
 import logging
 import re
 
+import aiohttp
 from langchain.chains.llm import LLMChain
 from langchain.chains.sequential import SequentialChain
 from langchain_core.prompts import ChatPromptTemplate
@@ -26,8 +27,8 @@ async def generate_idea_and_post(
 
     Todo: get question from the agent settings
     """
-    attached_agent = session.merge(agent)
-    attached_briefing = session.merge(briefing)
+    attached_agent = session.get(AIAgent, agent.id)
+    attached_briefing = session.get(Briefing, briefing.briefing_id)
     attached_ideas = get_last_n_ideas(
         session, n=attached_briefing.frequency * 3, agent_id=attached_agent.id
     )
@@ -35,7 +36,15 @@ async def generate_idea_and_post(
         agent=attached_agent, briefing=attached_briefing, ideas=attached_ideas
     )
     await prompt_chaining.generate_idea()
-    await prompt_chaining.post_idea()
+
+    # refresh agent object again, then check if our agent is still active,
+    # before posting the Idea to XLeap
+    attached_agent = session.get(AIAgent, attached_agent.id)
+    if attached_agent.is_active:
+        try:
+            await prompt_chaining.post_idea()
+        except aiohttp.ClientResponseError as err:
+            prompt_chaining.handle_client_response_errors(err, agent, session)
 
 
 class ChainingPrompt(BasePrompt):

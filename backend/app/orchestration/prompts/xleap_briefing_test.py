@@ -1,6 +1,6 @@
 import logging
 
-
+import aiohttp
 from langchain_core.prompts import (
     ChatPromptTemplate,
 )
@@ -18,20 +18,23 @@ from app.utils.streaming_briefing_test_token_consumer import XLeapStreamingToken
 async def generate_ideas_and_post(
         agent: AIAgent,
         briefing: Briefing2,
+        test_secret: str,
         num_ideas_to_generate: int,
         session: SessionDep
 ) -> None:
     """
     Generate idea and post it to the XLeap server
     """
-    attached_agent = session.merge(agent)
-    attached_briefing = session.merge(briefing)
+    attached_agent = session.get(AIAgent, agent.id)
+    attached_briefing = session.get(Briefing2, briefing.briefing_id)
     references = get_ai_agent_references(session=session, agent=agent)
     xleap_test = XLeapBriefingTest(
         agent=attached_agent,
         briefing=attached_briefing,
         references=references,
-        num_ideas_to_generate=num_ideas_to_generate
+        test_secret=test_secret,
+        session=session,
+        num_ideas_to_generate=num_ideas_to_generate,
     )
 
     await xleap_test.generate_and_post_ideas(num_ideas_to_generate)
@@ -54,11 +57,15 @@ class XLeapBriefingTest(BrainstormBasePrompt, XLeapSystemPromptBase):
                  agent: AIAgent,
                  briefing: Briefing2,
                  references: list[Briefing2Reference],
+                 test_secret: str,
+                 session: SessionDep,
                  num_ideas_to_generate: int = 12,
                  temperature: float = 0.5):
         super().__init__(agent=agent, ideas=None, temperature=temperature)
         self._briefing = briefing
         self._references = references
+        self._test_secret = test_secret
+        self._db_session = session
         self._num_ideas_to_generate = num_ideas_to_generate
 
     async def generate_and_post_ideas(self, num_ideas_to_generate: int) -> None:  # type: ignore
@@ -81,14 +88,17 @@ class XLeapBriefingTest(BrainstormBasePrompt, XLeapSystemPromptBase):
 
         chain = final_prompt | llm | tokenizer
 
-        async for chunk in chain.astream(
-                input=self._lang_chain_input,
-                config={"callbacks": [langfuse_handler]}):
-            logging.info(f"""
-                XLeapBriefingTest.generate_and_post_ideas
-                chunk is {chunk}
-            """)
-            await self.post_idea(chunk)
+        try:
+            async for chunk in chain.astream(
+                    input=self._lang_chain_input,
+                    config={"callbacks": [langfuse_handler]}):
+                logging.info(f"""
+                    XLeapBriefingTest.generate_and_post_ideas
+                    chunk is {chunk}
+                """)
+                await self.post_idea(chunk, self._test_secret)
+        except aiohttp.ClientResponseError as err:
+            self.handle_client_response_errors(err, self._agent, self._db_session)
 
     async def generate_test_prompt(self) -> GeneratedPrompt:
         """

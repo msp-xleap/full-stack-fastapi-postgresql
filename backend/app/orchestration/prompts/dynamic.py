@@ -18,8 +18,8 @@ from .xleap_few_shot import (
 async def generate_idea_and_post(
     agent: AIAgent,
     briefing: Briefing2,
-    session: SessionDep,
     lock: AgentGenerationLock,
+    session: SessionDep,
 ) -> None:
     """
     Dynamically switches the prompt strategy for the specified agent
