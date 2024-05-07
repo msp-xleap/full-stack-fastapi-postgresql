@@ -32,7 +32,7 @@ from .briefings import (
     XLeapBriefingPrompt,
     BriefingTextResponse,
 )
-from .ideas import Idea, IdeaBase, BulkIdeaDeletionRequestData
+from .ideas import Idea, IdeaBase
 
 from .prompts import PromptStrategyType, PromptStrategy
 
@@ -55,7 +55,6 @@ __all__ = [
     "BriefingCategory",
     "BriefingSubCategory",
     "BriefingTextResponse",
-    "BulkIdeaDeletionRequestData",
     "Field",
     "Idea",
     "IdeaBase",

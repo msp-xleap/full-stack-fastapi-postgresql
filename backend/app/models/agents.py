@@ -52,6 +52,7 @@ class AIAgentIdResponse(SQLModel):
 class AIAgentsOut(SQLModel):
     data: list[AIAgent]
 
+
 class AIBriefingTest(SQLModel):
     """ Generate number of examples based on a briefing
     """

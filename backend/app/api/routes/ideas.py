@@ -2,15 +2,13 @@ import json
 import logging
 from random import random
 
-from fastapi import APIRouter, BackgroundTasks, Depends
+from fastapi import APIRouter, BackgroundTasks
 
 from app import crud
-from app.api.deps import SessionDep, get_db
-from app.models import Idea, IdeaBase, BulkIdeaDeletionRequestData
+from app.api.deps import SessionDep
+from app.models import Idea, IdeaBase
 
-# from app.orchestration.prompts.zero_shot import generate_idea_and_post
-# from app.orchestration.prompts.few_shot import generate_idea_and_post
-# from app.orchestration.prompts.chaining import generate_idea_and_post
+
 from app.orchestration.prompts.dynamic import generate_idea_and_post
 from app.utils import (
     check_if_idea_exists,
@@ -93,7 +91,7 @@ def _maybe_kick_idea_generation(agent,
                 was_tasked = True
                 lock.set_last_idea(last_ai_idea)
                 background_tasks.add_task(
-                    generate_idea_and_post, agent, briefing, lock
+                    generate_idea_and_post, agent, briefing, lock, session
                 )
             else:
                 logging.info(f"Agent {agent.id} does not need to create an idea")

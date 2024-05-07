@@ -1,7 +1,6 @@
 import uuid as uuid_pkg
 from datetime import datetime
 
-from pydantic import BaseModel
 from sqlmodel import Field, SQLModel
 
 
@@ -36,6 +35,3 @@ class Idea(IdeaBase, table=True):
     idea_count: int = Field(default=None)
     deleted: bool = False
 
-
-class BulkIdeaDeletionRequestData(BaseModel):
-    list: list[str]
