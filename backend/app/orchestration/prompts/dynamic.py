@@ -1,10 +1,10 @@
 import logging
 
-from app.api.deps import SessionDep
+from app.core.db import engine
+from sqlmodel import Session
 from app.models import AIAgent, Briefing2, PromptStrategyType
 from app.utils import (
     AgentGenerationLock,
-    get_briefing_by_agent_id,
     get_prompt_strategy,
 )
 
@@ -16,41 +16,41 @@ from .xleap_few_shot import (
 
 
 async def generate_idea_and_post(
-    agent: AIAgent,
-    briefing: Briefing2,
+    agent_id: str,
     lock: AgentGenerationLock,
-    session: SessionDep,
 ) -> None:
     """
     Dynamically switches the prompt strategy for the specified agent
     """
+    with Session(engine) as session:
+        try:
+            strategy = get_prompt_strategy(agent_id=agent_id, session=session)
 
-    try:
-        strategy = get_prompt_strategy(agent=agent, session=session)
+            logging.info(
+                f"""Using prompt strategy {strategy.type} (version {strategy.version}) for agent {agent_id}"""
+            )
 
-        logging.info(
-            f"""Using prompt strategy {strategy.type} (version {strategy.version}) for agent {agent.id}"""
-        )
-
-        match strategy.type:
-            case PromptStrategyType.CHAINING:
-                await chaining_generate_idea_and_post(
-                    agent, briefing, session
-                )
-            case PromptStrategyType.FEW_SHOT:
-                await few_shot_generate_idea_and_post(
-                    agent, briefing, session
-                )
-            case PromptStrategyType.XLEAP_ZERO_SHOT:
-                await xleap_generate_idea_and_post(
-                    agent, briefing, session
-                )  # same as few shot deprecated
-            case PromptStrategyType.XLEAP_FEW_SHOT:
-                await xleap_generate_idea_and_post(agent, briefing, session)
-            case _:
-                raise ValueError(f"Unhandled strategy type: '{strategy.type}'")
-    except Exception as e:
-        lock.set_last_idea(None)
-        raise e
-    finally:
-        lock.release()
+            match strategy.type:
+                case PromptStrategyType.CHAINING:
+                    await chaining_generate_idea_and_post(
+                        agent_id, session
+                    )
+                case PromptStrategyType.FEW_SHOT:
+                    await few_shot_generate_idea_and_post(
+                        agent_id, session
+                    )
+                case PromptStrategyType.XLEAP_ZERO_SHOT:
+                    await xleap_generate_idea_and_post(
+                        agent_id, session
+                    )  # same as few shot deprecated
+                case PromptStrategyType.XLEAP_FEW_SHOT:
+                    await xleap_generate_idea_and_post(
+                        agent_id, session
+                    )
+                case _:
+                    raise ValueError(f"Unhandled strategy type: '{strategy.type}'")
+        except Exception as e:
+            lock.set_last_idea(None)
+            raise e
+        finally:
+            lock.release()

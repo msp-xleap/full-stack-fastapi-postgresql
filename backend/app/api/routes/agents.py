@@ -232,8 +232,6 @@ async def test_briefing(
     # Check if agent already exists
     agent = get_agent_by_id(agent_id, session)
 
-    briefing = get_briefing2_by_agent_id(agent_id, session)
-
     background_tasks.add_task(
-        generate_ideas_and_post, agent, briefing, config.secret, config.num_samples, session,
+        generate_ideas_and_post, agent_id, config.secret, config.num_samples,
     )

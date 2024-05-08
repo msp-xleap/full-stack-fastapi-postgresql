@@ -11,9 +11,11 @@ from langchain_openai import ChatOpenAI
 
 from app.api.deps import SessionDep
 from app.core.config import settings
-from app.models import AIAgent, Briefing, Briefing2
+from app.models import AIAgent
 from app.orchestration.prompts import BasePrompt, langfuse_handler
 from app.utils import get_last_n_ideas
+from app.utils.agents import get_agent_by_id
+from app.utils.briefings import get_briefing2_by_agent_id
 
 ##
 # Currently using briefing.additional_info as the only instruction (previously briefing.question)
@@ -22,15 +24,15 @@ from app.utils import get_last_n_ideas
 
 
 async def generate_idea_and_post(
-    agent: AIAgent, briefing: Briefing2, session: SessionDep
+    agent_id: str, session: SessionDep
 ) -> None:
     """
     Generate idea and post it to the XLeap server
 
     Todo: get question from the agent settings
     """
-    attached_agent = session.get(AIAgent, agent.id)
-    attached_briefing = session.get(Briefing, briefing.briefing_id)
+    attached_agent = get_agent_by_id(agent_id, session)
+    attached_briefing = get_briefing2_by_agent_id(agent_id, session)
     attached_ideas = get_last_n_ideas(
         session, n=attached_briefing.frequency * 3, agent_id=attached_agent.id
     )
@@ -40,7 +42,7 @@ async def generate_idea_and_post(
     attached_docs = reordering.transform_documents(documents=docs)
 
     prompt_chaining = ChainingPrompt(
-        agent=attached_agent, briefing=attached_briefing, ideas=attached_docs
+        agent=attached_agent, briefing=attached_briefing, ideas=attached_ideas
     )
     await prompt_chaining.generate_idea()
 
@@ -51,7 +53,8 @@ async def generate_idea_and_post(
         try:
             await prompt_chaining.post_idea()
         except aiohttp.ClientResponseError as err:
-            prompt_chaining.handle_client_response_errors(err, agent, session)
+            prompt_chaining.maybe_deactivate_agent(err, attached_agent, session)
+            raise err
 
 
 class ChainingPrompt(BasePrompt):

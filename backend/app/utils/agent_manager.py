@@ -1,9 +1,7 @@
 from datetime import datetime, timezone
-import logging
 import threading
 import uuid as uuid_pkg
 from app.models import Idea
-import json
 
 
 class AgentContext:
@@ -17,14 +15,15 @@ class AgentGenerationLock:
         You must check 'lock.acquired' before you enter the code which requires the lock
         Furthermore, if you successfully acquired the lock you must release it with AgentGenerationLock.release()
     """
-    def __init__(self, acquired: bool,
+    def __init__(self,
                  agent_id: uuid_pkg.uuid4,
                  context: AgentContext | None = None,
                  lock: threading.Lock = None):
-        self.acquired = acquired
+        self.acquired = lock is not None
         self.agent_id = agent_id
         self._lock = lock
         self._context = context
+        self._released = not self.acquired
 
     def get_last_idea(self) -> Idea | None:
         if self._context is not None and self._context.last_idea is not None:
@@ -41,7 +40,10 @@ class AgentGenerationLock:
 
     def release(self):
         """ release the lock held be the agent"""
+        if self._released:
+            return
         if self._lock is not None:
+            self._released = True
             agent_manager.release_generation_lock(lock=self._lock, agent_id=self.agent_id, next_context=self._context)
 
 
@@ -122,9 +124,9 @@ class AgentManager:
         if lock.acquire(blocking=False):
             if last_context is not None:
                 last_context = AgentContext(last_context.last_idea)
-            return AgentGenerationLock(acquired=True, lock=lock, agent_id=agent_id, context=last_context)
+            return AgentGenerationLock(agent_id=agent_id, lock=lock, context=last_context)
         else:
-            return AgentGenerationLock(acquired=False, agent_id=agent_id, context=None)
+            return AgentGenerationLock(agent_id=agent_id)
 
     def release_contribution_lock(self, agent_id: uuid_pkg.uuid4, lock: threading.Lock):
         """ Only to be called from AgentLock.release() """

@@ -6,28 +6,32 @@ from langchain_core.prompts import (
 )
 from langchain_openai import ChatOpenAI
 
-from app.api.deps import SessionDep
+from fastapi import Depends
+from app.api.deps import get_db
+from sqlmodel import Session
 from app.core.config import settings
 from app.models import AIAgent, Briefing2, Briefing2Reference
 from app.orchestration.prompts import BrainstormBasePrompt, langfuse_handler
 from app.crud import get_ai_agent_references
 from .xleap_system_prompt_base import XLeapSystemPromptBase, GeneratedPrompt
 from app.utils.streaming_briefing_test_token_consumer import XLeapStreamingTokenizer
-
+from app.utils.agents import get_agent_by_id
+from app.utils.briefings import get_briefing2_by_agent_id
 
 async def generate_ideas_and_post(
-        agent: AIAgent,
-        briefing: Briefing2,
+        agent_id: str,
         test_secret: str,
         num_ideas_to_generate: int,
-        session: SessionDep
-) -> None:
+        session: Session = Depends(get_db)
+        ) -> None:
     """
     Generate idea and post it to the XLeap server
     """
-    attached_agent = session.get(AIAgent, agent.id)
-    attached_briefing = session.get(Briefing2, briefing.briefing_id)
-    references = get_ai_agent_references(session=session, agent=agent)
+
+    attached_agent = get_agent_by_id(agent_id, session)
+    attached_briefing = get_briefing2_by_agent_id(agent_id, session)
+
+    references = get_ai_agent_references(session=session, agent=attached_agent)
     xleap_test = XLeapBriefingTest(
         agent=attached_agent,
         briefing=attached_briefing,
@@ -58,7 +62,7 @@ class XLeapBriefingTest(BrainstormBasePrompt, XLeapSystemPromptBase):
                  briefing: Briefing2,
                  references: list[Briefing2Reference],
                  test_secret: str,
-                 session: SessionDep,
+                 session: Session,
                  num_ideas_to_generate: int = 12,
                  temperature: float = 0.5):
         super().__init__(agent=agent, ideas=None, temperature=temperature)
@@ -98,7 +102,7 @@ class XLeapBriefingTest(BrainstormBasePrompt, XLeapSystemPromptBase):
                 """)
                 await self.post_idea(chunk, self._test_secret)
         except aiohttp.ClientResponseError as err:
-            self.handle_client_response_errors(err, self._agent, self._db_session)
+            raise err
 
     async def generate_test_prompt(self) -> GeneratedPrompt:
         """

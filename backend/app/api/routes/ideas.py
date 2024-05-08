@@ -47,53 +47,39 @@ def _maybe_kick_idea_generation(agent,
         was_tasked = False
         try:
             briefing = get_briefing2_by_agent_id(agent_id, session)
-
             frequency = briefing.frequency + 1
+
             last_ai_idea = lock.get_last_idea()
             if last_ai_idea is None:
                 last_ai_idea = get_last_ai_idea(session, agent_id)
 
             last_ai_idea_count = 0
-
             if last_ai_idea is not None:
                 last_ai_idea_count = get_human_ideas_since(session, agent.id, last_ai_idea)
 
-            previous_id = lock.get_last_id()
+            ai_share = get_ai_idea_share(session, agent_id)
 
-            random_number = random()
-
-            debug_info = {
-                'agent.is_active': agent.is_active,
-                'previous_id': previous_id,
-                'last_ai_idea.id': last_ai_idea.id,
-                'frequency': frequency,
-                'random_number': random_number,
-                '1/frequency': 1 / frequency,
-                'frequency//2': frequency // 2,
-                'new_idea.idea_count': new_idea.idea_count,
-                'new_idea.idea_count - last_ai_idea_count': new_idea.idea_count - last_ai_idea_count
-            }
-
-            logging.info(json.dumps(debug_info, indent=2))
+            # Post the idea if specific conditions are met. These include:
+            # the agent being active, no current lock preventing posting,
+            # and criteria indicating the need for more visibility of
+            # AI-generated ideas—such as AI ideas being underrepresented,
+            # a favorable random chance outcome, or a significant increase
+            # in idea count.
+            should_post = should_ai_post_new_idea(
+                agent=agent,
+                lock=lock,
+                last_ai_idea=last_ai_idea,
+                frequency=frequency,
+                ai_idea_share=ai_share,
+                last_ai_idea_count=last_ai_idea_count,
+            )
 
             # Generate idea and post if agent is active
-            if (
-                    (previous_id is None
-                     or previous_id != last_ai_idea.id)
-                    and new_idea.idea_count >= frequency // 2
-                    and (random_number < 1 / frequency
-                         or (frequency // 2 <= new_idea.idea_count - last_ai_idea_count >=
-                             frequency))
-                    # and idea.idea_count % frequency == 0  # as an alternative to the
-                    # line above
-            ):
-                was_tasked = True
+            if should_post:
                 lock.set_last_idea(last_ai_idea)
                 background_tasks.add_task(
-                    generate_idea_and_post, agent, briefing, lock, session
+                    generate_idea_and_post, str(agent.id), lock
                 )
-            else:
-                logging.info(f"Agent {agent.id} does not need to create an idea")
         finally:
             if not was_tasked:
                 lock.release()
@@ -120,51 +106,16 @@ async def create_idea(
     """
     # Check if agent exists
     agent = get_agent_by_id(agent_id, session)
-    # Check if idea already exists
-    idea_old = check_if_idea_exists(
-        session=session, idea_id=idea.id, agent_id=agent_id
-    )
 
-    if not idea_old:
-        # Create idea if it does not exist
-        idea = crud.create_idea(session=session, idea=idea, agent_id=agent_id)
-    else:
-        # Update idea if it exists
-        idea = crud.update_idea(
-            session=session, idea_db=idea_old, idea_new=idea
-        )
+    cou_result = crud.create_or_update_idea(session=session, idea=idea, agent_id=agent_id)
+    new_idea = cou_result.idea
 
-    lock = agent_manager.try_acquire_generation_lock(agent.id)
-    if lock.acquired:
-        was_tasked = False
-        try:
-            briefing = get_briefing2_by_agent_id(agent_id, session)
-            frequency = briefing.frequency + 1
-            last_ai_idea = get_last_ai_idea(session, agent_id)
-            last_ai_idea_count = last_ai_idea.idea_count if last_ai_idea else 0
-            ai_share = get_ai_idea_share(session, agent_id)
-
-            # Post the idea if specific conditions are met. These include:
-            # the agent being active, no current lock preventing posting,
-            # and criteria indicating the need for more visibility of
-            # AI-generated ideas—such as AI ideas being underrepresented,
-            # a favorable random chance outcome, or a significant increase
-            # in idea count.
-            should_post = should_ai_post_new_idea(
-                agent=agent, lock=lock, last_ai_idea=last_ai_idea,
-                idea=idea, frequency=frequency, ai_idea_share=ai_share
-            )
-
-            # Generate idea and post if agent is active
-            if should_post:
-                was_tasked = True
-                lock.last_id = last_ai_idea.id
-                background_tasks.add_task(
-                    generate_idea_and_post, agent, briefing, session, lock
-                )
-        finally:
-            if not was_tasked:
-                lock.release()
+    if cou_result.is_new:
+        _maybe_kick_idea_generation(agent=agent,
+                                    agent_id=agent_id,
+                                    new_idea=new_idea,
+                                    session=session,
+                                    background_tasks=background_tasks)
 
 @router.post(
     "/agents/{agent_id}/ideas",

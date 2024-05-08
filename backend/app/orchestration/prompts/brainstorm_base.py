@@ -79,7 +79,7 @@ class BrainstormBasePrompt(ABC):
 
         data = {"text": idea_to_post, "folder_id": ""}
         if test_secret is not None:  # only include for test generations, as this can bypass active agent checks
-            data.test_secret = test_secret
+            data['test_secret'] = test_secret
 
         async with aiohttp.ClientSession() as session:
             async with session.post(
@@ -95,16 +95,13 @@ class BrainstormBasePrompt(ABC):
                 response.raise_for_status()
 
     @staticmethod
-    def handle_client_response_errors(err: aiohttp.ClientResponseError,
+    def maybe_deactivate_agent(err: aiohttp.ClientResponseError,
                                       agent: AIAgent,
-                                      session: Session) -> AIAgent:
+                                      session: Session):
         """
-        Handles some common HTTP status like
+        Deactivates the agent is these HTTP status are returned
           402 Payment Required - if the XLeap subscription expired
           409 Conflict - when an agent is not supposed to be active
-        other errors will be reraised
-
-        Both lead to the agent being deactivated if it is not already the case.
 
         :param err: a  ClientResponseError
         :param agent: the current agent
@@ -120,8 +117,6 @@ class BrainstormBasePrompt(ABC):
         elif 409 == err.status:
             logging.info('Agent should not have been active, deactivating')
             must_deactivate_agent = True
-        else:
-            raise err
 
         if must_deactivate_agent:
             # update the agent object before changing it
@@ -129,8 +124,8 @@ class BrainstormBasePrompt(ABC):
             if agent.is_active:
                 agent.is_active = False
                 session.merge(agent)
+                session.commit()
 
-        return agent
 
     @abstractmethod
     async def generate_idea(self) -> str:

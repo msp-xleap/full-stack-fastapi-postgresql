@@ -1,21 +1,20 @@
 from sqlmodel import Session, select
-from app.models import AIAgent, PromptStrategy, PromptStrategyType
+from app.models import PromptStrategy, PromptStrategyType
 
 
-def get_prompt_strategy(*, session: Session, agent: AIAgent) -> PromptStrategy:
+def get_prompt_strategy(*, session: Session, agent_id: str) -> PromptStrategy:
     """
      returns the prompt strategy to use.
      This works as follows:
      1. check if a strategy for the agent was defined
         IF YES return it
-        IF NO check if a default strategy is defined
+        IF NO, then check if a default strategy is defined
             IF YES return it
             OTHERWISE return  XLEAP_FEW_SHOT
     :param session: the sql session
-    :param agent: the agent to use.
+    :param agent_id: the ID of the agent to use.
     :return: the strategy to use for this agent.
     """
-    agent_id = agent.id
     query = select(PromptStrategy).where(PromptStrategy.agent_id == agent_id)
     strategy = session.exec(query).first()
 

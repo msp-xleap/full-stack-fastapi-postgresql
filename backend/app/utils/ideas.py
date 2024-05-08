@@ -133,9 +133,9 @@ def should_ai_post_new_idea(
         agent: AIAgent,
         lock: AgentGenerationLock,
         last_ai_idea: Idea,
-        idea: Idea,
         frequency: int,
         ai_idea_share: float,
+        last_ai_idea_count: int
 ) -> bool:
     """
     Determine whether a new AI-generated idea should be posted based on
@@ -149,48 +149,67 @@ def should_ai_post_new_idea(
         agent (AIAgent): Agent instance, must have an 'is_active' attribute.
         lock (AgentGenerationLock): Lock instance, must have a 'last_id' attribute.
         last_ai_idea (Idea): The last AI idea fetched.
-        idea (Idea): The current idea under consideration.
         frequency (int): The expected frequency of idea posting.
         ai_idea_share (float): The percentage of ideas created by AI.
-
+        last_ai_idea_count (int): The number of Ideas generated since last_ai_idea was created
     Returns:
         bool: True if a new AI idea should be posted, False otherwise.
     """
+    debug = True
+    # Primary rule: If the agent is not active there is no need to check anything else
+    if not agent.is_active:
+        if debug:
+            logging.info('should_ai_post_new_idea: No, the agent is not active')
+        return False
+
+    previous_id = lock.get_last_id()
+    # We base our calculations on the number of ideas generated since
+    # our agent created its last idea. However, if this is still the same
+    # we should not continue.
+    if previous_id is not None and previous_id == last_ai_idea.id:
+        return False
+
     # Defines the "ideal" share of AI ideas.
     target_share = 1 / frequency
     # 25% buffer around the target share for flexibility.
     buffer = 0.25 * target_share
-    # Get the idea count of the last AI idea.
-    last_ai_idea_count = last_ai_idea.idea_count if last_ai_idea else 0
-
-    # Basic conditions to check if the agent is active and the idea
-    # is not locked.
-    if not agent.is_active:
-        return False
-    if lock.last_id is not None and lock.last_id == idea.id:
-        return False
 
     # Checking idea count relative to frequency
-    if idea.idea_count < frequency // 2:
+    if last_ai_idea_count < frequency // 2:
+        if debug:
+            logging.info(f"should_ai_post_new_idea: No, because: {last_ai_idea_count} < {frequency // 2}")
         return False
 
     # Dynamic condition based on AI idea share:
     # Using a buffer to add flexibility to the decision to post.
     if ai_idea_share < target_share - buffer:
         # Post more if the share of AI ideas is significantly below the target.
+        if debug:
+            logging.info(f"should_ai_post_new_idea: Yes, because AI share is to low: {ai_idea_share} < {target_share - buffer}")
         return True
     elif ai_idea_share > target_share + buffer:
         # Do not post if AI ideas are significantly overrepresented.
+        if debug:
+            logging.info(f"should_ai_post_new_idea: No, because AI share is to high: {ai_idea_share} > {target_share + buffer}")
         return False
 
     # Fallback conditions for additional posting checks:
     # Random chance to post based on the defined frequency.
     random_chance_to_post = random() < 1 / frequency
     # Significant change in idea count, suggesting a burst of new ideas.
-    significant_idea_increase = (idea.idea_count - last_ai_idea_count >= frequency)
+    significant_idea_increase = (last_ai_idea_count >= frequency)
 
     # Evaluate fallback conditions
-    return random_chance_to_post or significant_idea_increase
+    if random_chance_to_post:
+        if debug:
+            logging.info(f"should_ai_post_new_idea: Yes, because of randomness")
+        return True
+
+    if significant_idea_increase:
+        if debug:
+            logging.info(f"should_ai_post_new_idea: Yes, significant increase in idea count: {last_ai_idea_count} >= {frequency}")
+        return True
+    return False
 
 
 def get_human_ideas_since(session: Session,
