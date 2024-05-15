@@ -24,7 +24,10 @@ from app.utils.briefings import get_briefing2_by_agent_id
 
 
 async def generate_idea_and_post(
-    agent_id: str, session: SessionDep
+    agent_id: str,
+    session: SessionDep,
+    ideas_to_generate: int = 1,
+    task_reference: str | None = None,
 ) -> None:
     """
     Generate idea and post it to the XLeap server
@@ -33,8 +36,12 @@ async def generate_idea_and_post(
     """
     attached_agent = get_agent_by_id(agent_id, session)
     attached_briefing = get_briefing2_by_agent_id(agent_id, session)
+    ideas_to_select = attached_briefing.frequency * 3
+    if attached_briefing.frequency <= 0:
+        ideas_to_select = 50
+
     attached_ideas = get_last_n_ideas(
-        session, n=attached_briefing.frequency * 3, agent_id=attached_agent.id
+        session, n=ideas_to_select, agent_id=attached_agent.id
     )
     # Reorder the ideas such that they get not lost in the middle
     docs = [Document(idea.text) for idea in attached_ideas]
@@ -42,7 +49,7 @@ async def generate_idea_and_post(
     attached_docs = reordering.transform_documents(documents=docs)
 
     prompt_chaining = ChainingPrompt(
-        agent=attached_agent, briefing=attached_briefing, ideas=attached_ideas
+        agent=attached_agent, briefing=attached_briefing, ideas=attached_ideas, task_reference=task_reference
     )
     await prompt_chaining.generate_idea()
 

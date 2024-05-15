@@ -38,7 +38,7 @@ def get_last_n_ideas(
 
     Args:
         session (Session): Database session.
-        n (int): Number of last ideas to retrieve.
+        n (int): Number of last ideas to retrieve. These are only the ideas of others.
         agent_id (uuid_pkg.uuid4): Agent ID.
 
 

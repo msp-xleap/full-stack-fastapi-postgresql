@@ -18,6 +18,7 @@ from app.utils.streaming_briefing_test_token_consumer import XLeapStreamingToken
 from app.utils.agents import get_agent_by_id
 from app.utils.briefings import get_briefing2_by_agent_id
 
+
 async def generate_ideas_and_post(
         agent_id: str,
         test_secret: str,

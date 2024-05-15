@@ -30,6 +30,7 @@ class BrainstormBasePrompt(ABC):
         agent: AIAgent,
         ideas: list[Idea] | None = None,
         temperature: float = 0.5,
+        task_reference: str | None = None,
     ):
         self._agent = agent
         self._api_key = agent.api_key
@@ -37,6 +38,7 @@ class BrainstormBasePrompt(ABC):
         self._temperature = temperature
         self._ideas = ideas
         self.generated_idea: str | list[str | dict[Any, Any]] | None = None
+        self.task_reference = task_reference
 
     def _alter_generated_idea(self, idea_to_post: str) -> str:
         """
@@ -50,17 +52,22 @@ class BrainstormBasePrompt(ABC):
 
     async def post_idea(self,
                         idea: str | None = None,
-                        test_secret: str | None = None) -> None:
+                        task_reference: str | None = None) -> None:
         """
         Post idea to the XLeap
         :param idea (optional), default self.generated_idea
-        :param test_secret (optional, default None) when an idea is created by the test briefing request,
-         the result required a secret to be presented to XLeap inorder to bypass Agent.is_active checks
+        :param task_reference (optional, default self.task_reference)
+          when an idea is created on demand or by a test briefing request
+          the result requires a task_reference (secret) to be presented to XLeap inorder to bypass
+          Agent.is_active checks
         """
         logging.getLogger().setLevel(logging.DEBUG)
 
         if idea is None:
             idea = self.generated_idea
+
+        if task_reference is None:
+            task_reference = self.task_reference
 
         logging.info(
             f"""
@@ -78,8 +85,8 @@ class BrainstormBasePrompt(ABC):
         idea_to_post = self._alter_generated_idea(idea)
 
         data = {"text": idea_to_post, "folder_id": ""}
-        if test_secret is not None:  # only include for test generations, as this can bypass active agent checks
-            data['test_secret'] = test_secret
+        if task_reference is not None:  # only include for test generations, as this can bypass active agent checks
+            data['task_reference'] = task_reference
 
         async with aiohttp.ClientSession() as session:
             async with session.post(

@@ -35,3 +35,13 @@ class Idea(IdeaBase, table=True):
     idea_count: int = Field(default=None)
     deleted: bool = False
 
+
+class IdeaGenerationData(SQLModel):
+    """ Generate number of examples based on a briefing
+    """
+    reference: str
+    """ the secret to be presented to XLeap with every generated example idea
+        This is required to bypass Agent.is_active check in XLeap 
+    """
+    num_items: int
+    """ the number of items to generate """

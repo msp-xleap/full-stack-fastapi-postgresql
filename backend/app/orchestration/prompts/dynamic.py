@@ -18,9 +18,18 @@ from .xleap_few_shot import (
 async def generate_idea_and_post(
     agent_id: str,
     lock: AgentGenerationLock,
+    ideas_to_generate: int = 1,
+    task_reference: str | None = None,
 ) -> None:
     """
-    Dynamically switches the prompt strategy for the specified agent
+    Dynamically switches the prompt strategy for the specified agent then generates the specified number
+    of ideas
+    :param agent_id: the ID of the agent
+    :param lock: the lock for generating ideas
+    :param ideas_to_generate: (optional, default=1) the number of ideas to generate
+    :param task_reference: (optional, default=None) if specified the task_reference must be passed with
+           every generated idea to XLeap
+    :return:
     """
     with Session(engine) as session:
         try:

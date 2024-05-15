@@ -4,7 +4,7 @@ from fastapi import APIRouter, BackgroundTasks
 
 from app import crud
 from app.api.deps import SessionDep
-from app.models import Idea, IdeaBase
+from app.models import Idea, IdeaBase, IdeaGenerationData
 
 
 from app.orchestration.prompts.dynamic import generate_idea_and_post
@@ -20,9 +20,9 @@ from app.utils import (
 
 router = APIRouter()
 
+
 def _maybe_kick_idea_generation(agent,
                                 agent_id: str,
-                                new_idea: IdeaBase,
                                 session: SessionDep,
                                 background_tasks: BackgroundTasks):
     """
@@ -30,7 +30,6 @@ def _maybe_kick_idea_generation(agent,
     its next own idea.
     :param agent: the agent object
     :param agent_id: the agent ID
-    :param new_idea: the last new idea received from XLeap
     :param session: the database session
     :param background_tasks: the background tasks
     """
@@ -82,7 +81,7 @@ def _maybe_kick_idea_generation(agent,
             if should_post:
                 lock.set_last_idea(last_ai_idea)
                 background_tasks.add_task(
-                    generate_idea_and_post, str(agent.id), lock
+                    generate_idea_and_post, str(agent.id), lock, 1, None
                 )
         finally:
             if not was_tasked:
@@ -117,7 +116,6 @@ async def create_idea(
     if cou_result.is_new:
         _maybe_kick_idea_generation(agent=agent,
                                     agent_id=agent_id,
-                                    new_idea=new_idea,
                                     session=session,
                                     background_tasks=background_tasks)
 
@@ -147,12 +145,10 @@ async def create_idea(
     )
 
     cou_result = crud.create_or_update_idea(session=session, idea=new_idea, agent_id=agent_id)
-    new_idea = cou_result.idea
 
     if cou_result.is_new:
         _maybe_kick_idea_generation(agent=agent,
                                     agent_id=agent_id,
-                                    new_idea=new_idea,
                                     session=session,
                                     background_tasks=background_tasks)
 
@@ -180,7 +176,6 @@ async def create_ideas(
     if last_new_idea is not None:
         _maybe_kick_idea_generation(agent=agent,
                                     agent_id=agent_id,
-                                    new_idea=last_new_idea,
                                     session=session,
                                     background_tasks=background_tasks)
 
@@ -238,3 +233,28 @@ async def delete_idea(
 
     delete_idea_by_agent_and_id(agent_id, idea_id, MARK_IDEAS_DELETED_ONLY, session)
 
+@router.post(
+    "/agents/{agent_id}/ideas/generate",
+    responses={
+        403: {"detail": "Invalid secret"},
+        404: {"detail": "Agent not found"},
+    },
+    status_code=202,
+)
+async def generate_idea_(
+        agent_id: str,
+        session: SessionDep,
+        config: IdeaGenerationData,
+        background_tasks: BackgroundTasks,
+) -> None:
+    """
+    On demand request to generate one or multiple ideas.
+    The created ideas must pass the reference mentioned in the config to XLeap
+    """
+    # Check if agent exists
+    agent = get_agent_by_id(agent_id, session)
+
+    lock = agent_manager.acquire_generation_lock(agent.id)
+    background_tasks.add_task(
+        generate_idea_and_post, str(agent.id), lock, config.num_items, config.reference
+    )

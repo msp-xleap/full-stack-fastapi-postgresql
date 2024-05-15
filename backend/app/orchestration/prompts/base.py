@@ -21,8 +21,9 @@ class BasePrompt(BrainstormBasePrompt):
         briefing: Briefing2,
         ideas: list[Idea] | None = None,
         temperature: float = 0.5,
+        task_reference: str | None = None,
     ):
-        super().__init__(agent, ideas, temperature)
+        super().__init__(agent, ideas, temperature, task_reference)
         self._briefing = briefing
 
     def _alter_generated_idea(self, idea_to_post: str) -> str:

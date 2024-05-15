@@ -111,8 +111,10 @@ class AgentManager:
         lock.acquire(blocking=True)
         return AgentContributionLock(lock=lock, agent_id=agent_id)
 
-    def try_acquire_generation_lock(self, agent_id: uuid_pkg.uuid4) -> AgentGenerationLock:
+    def _acquire_generation_lock(self, agent_id: uuid_pkg.uuid4, blocking: bool) -> AgentGenerationLock:
         """ tries to acquire a write lock for the specified agent
+            if blocking is true, the current job will wait until the lock is obtained, if false
+            and a job is already running the method returns a non-acquired lock
             :returns an AgentLock with acquire: True if this was successful, False otherwise
         """
         # Acquiring the lock for the specific agent
@@ -121,12 +123,24 @@ class AgentManager:
         if agent_id in self._generation_context:
             last_context = self._generation_context[agent_id]
 
-        if lock.acquire(blocking=False):
+        if lock.acquire(blocking=blocking):
             if last_context is not None:
                 last_context = AgentContext(last_context.last_idea)
             return AgentGenerationLock(agent_id=agent_id, lock=lock, context=last_context)
         else:
             return AgentGenerationLock(agent_id=agent_id)
+
+    def try_acquire_generation_lock(self, agent_id: uuid_pkg.uuid4) -> AgentGenerationLock:
+        """ tries to acquire a write lock for the specified agent
+            :returns an AgentLock with acquire: True if this was successful, False otherwise
+        """
+        return self._acquire_generation_lock(agent_id=agent_id, blocking=False)
+
+    def acquire_generation_lock(self, agent_id: uuid_pkg.uuid4) -> AgentGenerationLock:
+        """ tries to acquire a write lock for the specified agent
+            :returns an AgentLock with acquire: True if this was successful, False otherwise
+        """
+        return self._acquire_generation_lock(agent_id=agent_id, blocking=True)
 
     def release_contribution_lock(self, agent_id: uuid_pkg.uuid4, lock: threading.Lock):
         """ Only to be called from AgentLock.release() """
