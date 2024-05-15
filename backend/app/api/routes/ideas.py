@@ -1,6 +1,4 @@
-import json
 import logging
-from random import random
 
 from fastapi import APIRouter, BackgroundTasks
 
@@ -47,6 +45,12 @@ def _maybe_kick_idea_generation(agent,
         was_tasked = False
         try:
             briefing = get_briefing2_by_agent_id(agent_id, session)
+
+            # a frequency of 0 (or below) means the Agent will be triggered manually
+            # However, we should not get here, since an on demand agent stay inactive.
+            if briefing.frequency <= 0:
+                return
+
             frequency = briefing.frequency + 1
 
             last_ai_idea = lock.get_last_idea()
