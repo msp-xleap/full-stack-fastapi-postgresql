@@ -101,7 +101,7 @@ class XLeapBriefingTest(BrainstormBasePrompt, XLeapSystemPromptBase):
                     XLeapBriefingTest.generate_and_post_ideas
                     chunk is {chunk}
                 """)
-                await self.post_idea(chunk, self._test_secret)
+                await self.post_idea(idea=chunk, task_reference=self._test_secret)
         except aiohttp.ClientResponseError as err:
             raise err
 

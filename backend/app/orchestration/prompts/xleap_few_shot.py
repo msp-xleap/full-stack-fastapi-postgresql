@@ -40,6 +40,12 @@ async def generate_idea_and_post(
 ) -> None:
     """
     Generate idea and post it to the XLeap server
+    :param agent_id: the ID of the agent
+    :param session: the database session
+    :param ideas_to_generate: the number of ideas to generate
+    :param task_reference: if a task reference is given this is an on-demand generation
+      which can ignore the agent active check
+    :return:
     """
     attached_agent = get_agent_by_id(agent_id, session)
     attached_briefing = get_briefing2_by_agent_id(agent_id, session)
@@ -69,12 +75,15 @@ async def generate_idea_and_post(
     # refresh agent object again, then check if our agent is still active,
     # before posting the Idea to XLeap
     session.refresh(attached_agent)
-    if attached_agent.is_active:
+    if (attached_agent.is_active
+            or task_reference is not None):
         try:
             await xleap_prompt.post_idea()
         except aiohttp.ClientResponseError as err:
             xleap_prompt.maybe_deactivate_agent(err, attached_agent, session)
             raise err
+    else:
+        logging.info(f"Agent is no longer active ${agent_id}, ${task_reference}")
 
 
 class XLeapBasicPrompt(BrainstormBasePrompt, XLeapSystemPromptBase):

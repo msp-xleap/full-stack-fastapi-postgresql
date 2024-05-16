@@ -22,6 +22,11 @@ async def generate_idea_and_post(
 ) -> None:
     """
     Generate idea and post it to the XLeap server
+    :param agent_id: the ID of the agent
+    :param session: the database session
+    :param ideas_to_generate: the number of ideas to generate
+    :param task_reference: if a task reference is given this is an on-demand generation
+    which can ignore the agent active check
 
     Todo: get question from the agent settings
     """
@@ -43,7 +48,8 @@ async def generate_idea_and_post(
     # refresh agent object again, then check if our agent is still active,
     # before posting the Idea to XLeap
     attached_agent = session.get(AIAgent, attached_agent.id)
-    if attached_agent.is_active:
+    if (attached_agent.is_active
+            or task_reference is not None):
         try:
             await zero_shot_prompt.post_idea()
         except aiohttp.ClientResponseError as err:

@@ -39,22 +39,25 @@ async def generate_idea_and_post(
                 f"""Using prompt strategy {strategy.type} (version {strategy.version}) for agent {agent_id}"""
             )
 
+            if task_reference is not None:
+                logging.info(f"On-Demand generation requested ${task_reference}")
+
             match strategy.type:
                 case PromptStrategyType.CHAINING:
                     await chaining_generate_idea_and_post(
-                        agent_id, session
+                        agent_id, session, ideas_to_generate, task_reference
                     )
                 case PromptStrategyType.FEW_SHOT:
                     await few_shot_generate_idea_and_post(
-                        agent_id, session
+                        agent_id, session, ideas_to_generate, task_reference
                     )
                 case PromptStrategyType.XLEAP_ZERO_SHOT:
                     await xleap_generate_idea_and_post(
-                        agent_id, session
+                        agent_id, session, ideas_to_generate, task_reference
                     )  # same as few shot deprecated
                 case PromptStrategyType.XLEAP_FEW_SHOT:
                     await xleap_generate_idea_and_post(
-                        agent_id, session
+                        agent_id, session, ideas_to_generate, task_reference
                     )
                 case _:
                     raise ValueError(f"Unhandled strategy type: '{strategy.type}'")

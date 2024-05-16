@@ -69,15 +69,6 @@ class BrainstormBasePrompt(ABC):
         if task_reference is None:
             task_reference = self.task_reference
 
-        logging.info(
-            f"""
-        Agent ({self._agent.id}) is posting new idea to
-        XLeap server: {self._agent.server_address}
-        XLeap session ID: {self._agent.session_id}
-        XLeap workspace ID: {self._agent.workspace_id}
-        """
-        )
-
         # check if we can resolve the server address in DNS
         resolve_server_addr(self._agent.server_address)
 
@@ -85,8 +76,18 @@ class BrainstormBasePrompt(ABC):
         idea_to_post = self._alter_generated_idea(idea)
 
         data = {"text": idea_to_post, "folder_id": ""}
-        if task_reference is not None:  # only include for test generations, as this can bypass active agent checks
+        if task_reference is not None:
             data['task_reference'] = task_reference
+
+        logging.info(
+            f"""
+                Agent ({self._agent.id}) is posting new idea to
+                XLeap server: {self._agent.server_address}
+                XLeap session ID: {self._agent.session_id}
+                XLeap workspace ID: {self._agent.workspace_id}
+                XLeap task reference: {task_reference}
+                """
+        )
 
         async with aiohttp.ClientSession() as session:
             async with session.post(
