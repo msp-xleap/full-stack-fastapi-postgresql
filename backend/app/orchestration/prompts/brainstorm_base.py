@@ -61,8 +61,6 @@ class BrainstormBasePrompt(ABC):
           the result requires a task_reference (secret) to be presented to XLeap inorder to bypass
           Agent.is_active checks
         """
-        logging.getLogger().setLevel(logging.DEBUG)
-
         if idea is None:
             idea = self.generated_idea
 

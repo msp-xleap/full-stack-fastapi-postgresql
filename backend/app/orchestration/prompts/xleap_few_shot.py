@@ -102,7 +102,7 @@ class XLeapBasicPrompt(BrainstormBasePrompt, XLeapSystemPromptBase):
         temperature: float = 0.5,
         task_reference: str | None = None,
     ):
-        super().__init__(agent=agent, ideas=ideas, temperature=temperature, task_reference=task_reference)
+        super().__init__(agent=agent, ideas=ideas, temperature=briefing.temperature / 100.0, task_reference=task_reference)
         self._briefing = briefing
         self._references = references
 

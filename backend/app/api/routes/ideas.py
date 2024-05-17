@@ -34,6 +34,8 @@ def _maybe_kick_idea_generation(agent,
     :param background_tasks: the background tasks
     """
 
+    logging.getLogger().setLevel(logging.INFO)
+
     # no need to check anything when the agent is not active
     if not agent.is_active:
         logging.info(f"Agent {agent.id} is not active")
@@ -48,6 +50,7 @@ def _maybe_kick_idea_generation(agent,
             # a frequency of 0 (or below) means the Agent will be triggered manually
             # However, we should not get here, since an on demand agent stay inactive.
             if briefing.frequency <= 0:
+                logging.info(f"Agent {agent.id} is in on-demand mode")
                 return
 
             frequency = briefing.frequency + 1

@@ -29,6 +29,7 @@ from .briefings import (
     Briefing2,
     BriefingCategory,
     BriefingSubCategory,
+    BriefingSubCategoryDifferentiator,
     XLeapBriefingPrompt,
     BriefingTextResponse,
 )
@@ -58,6 +59,7 @@ __all__ = [
     "Briefing2Reference",
     "BriefingCategory",
     "BriefingSubCategory",
+    "BriefingSubCategoryDifferentiator",
     "BriefingTextResponse",
     "Field",
     "Idea",

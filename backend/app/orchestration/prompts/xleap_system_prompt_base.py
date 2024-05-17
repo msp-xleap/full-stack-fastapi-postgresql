@@ -156,6 +156,8 @@ class XLeapSystemPromptBase(ABC):
         #    - Please limit your contributions to one sentence without detail.
         #    - Include necessary detail in no more than 3 sentences.
         #    - Give some detail or an example in no more than 5 sentences.
+        # 12. Response language (optional)
+        #    - Please send your contributions in {{response_language}}
 
         prompt_parts = []
         lang_chain_input = {}
@@ -261,6 +263,15 @@ class XLeapSystemPromptBase(ABC):
         )
         prompt_parts.append(prompt)
 
+        # 12. response language
+        if briefing.with_response_language:
+            prompt = await self._get_prompt_from_langfuse(
+                prompt_name=briefing.response_language_langfuse_name
+            )
+            prompt_parts.append(prompt)
+            lang_chain_input["response_language"] = briefing.response_language
+
+
         system_prompt = "\n".join(prompt_parts)
 
         return GeneratedPrompt(
@@ -279,22 +290,35 @@ class XLeapSystemPromptBase(ABC):
         return result
 
     async def generate_task_prompt(
-        self, briefing: Briefing2, ideas: list[Idea] | None
+        self, briefing: Briefing2, ideas: list[Idea] | None, num_contributions:int = 1
     ) -> GeneratedPrompt:
         """
         Generates the task for the agent to generate an own idea
         :param briefing: the briefing
         :param ideas: the participant ideas
+        :param num_contributions: (optional, default 1) number of contributions to generate
         :return: the prompt for the AI
         """
-        prompt = await self._get_prompt_from_langfuse(
-            prompt_name=briefing.task_langfuse_name
+        contribution_prompt = await self._get_prompt_from_langfuse(
+            prompt_name=briefing.contribution_langfuse_name
         )
         list_elements: list = []
         for idea in ideas:
             list_elements.append(f"\n<li>{escape(idea.text)}</li>")
 
         lang_chain_input: dict = {"idea-list-items": ""}
+
+        if 1 == num_contributions:
+            task_prompt = await self._get_prompt_from_langfuse(
+                prompt_name=briefing.task_langfuse_name
+            )
+        else:
+            task_prompt = await self._get_prompt_from_langfuse(
+                prompt_name=briefing.task_multi_langfuse_name
+            )
+            lang_chain_input['num_contributions'] = num_contributions
+
+        prompt = contribution_prompt + task_prompt
 
         return GeneratedPrompt(
             prompt=prompt, lang_chain_input=lang_chain_input
