@@ -73,7 +73,7 @@ class XLeapBriefingTest(BrainstormBasePrompt, XLeapSystemPromptBase):
         self._db_session = session
         self._num_ideas_to_generate = num_ideas_to_generate
 
-    async def generate_and_post_ideas(self, num_ideas_to_generate: int) -> None:  # type: ignore
+    async def generate_and_post_ideas(self) -> None:  # type: ignore
         """
         Generate ideas
 

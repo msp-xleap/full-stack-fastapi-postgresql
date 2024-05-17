@@ -15,6 +15,7 @@ from app.orchestration.prompts import BrainstormBasePrompt, langfuse_handler
 from app.utils import get_last_n_ideas
 from app.utils.agents import get_agent_by_id
 from app.utils.briefings import get_briefing2_by_agent_id
+from app.utils.streaming_briefing_test_token_consumer import XLeapStreamingTokenizer
 
 from .xleap_system_prompt_base import GeneratedPrompt, XLeapSystemPromptBase
 
@@ -65,25 +66,20 @@ async def generate_idea_and_post(
         ideas=attached_ideas,
         references=references,
         task_reference=task_reference,
+        ideas_to_generate=ideas_to_generate,
     )
     # noinspection PyBroadException
     try:
-        await xleap_prompt.generate_idea()
-    except Exception:
-        await xleap_prompt.generate_idea()
-
-    # refresh agent object again, then check if our agent is still active,
-    # before posting the Idea to XLeap
-    session.refresh(attached_agent)
-    if (attached_agent.is_active
-            or task_reference is not None):
         try:
-            await xleap_prompt.post_idea()
-        except aiohttp.ClientResponseError as err:
+            await xleap_prompt.generate_idea()
+        except aiohttp.ClientResponseError as err:  # error when generated idea was sent to XLeap
+            session.refresh(attached_agent)
             xleap_prompt.maybe_deactivate_agent(err, attached_agent, session)
             raise err
-    else:
-        logging.info(f"Agent is no longer active ${agent_id}, ${task_reference}")
+        except Exception:
+            await xleap_prompt.generate_idea()
+    except aiohttp.ClientResponseError as err:  # error when generated idea was sent to XLeap
+        raise err
 
 
 class XLeapBasicPrompt(BrainstormBasePrompt, XLeapSystemPromptBase):
@@ -101,8 +97,13 @@ class XLeapBasicPrompt(BrainstormBasePrompt, XLeapSystemPromptBase):
         ideas: list[Idea] | None = None,
         temperature: float = 0.5,
         task_reference: str | None = None,
+        ideas_to_generate: int = 1,
     ):
-        super().__init__(agent=agent, ideas=ideas, temperature=briefing.temperature / 100.0, task_reference=task_reference)
+        super().__init__(agent=agent,
+                         ideas=ideas,
+                         temperature=briefing.temperature / 100.0,
+                         task_reference=task_reference,
+                         ideas_to_generate=ideas_to_generate)
         self._briefing = briefing
         self._references = references
 
@@ -122,14 +123,32 @@ class XLeapBasicPrompt(BrainstormBasePrompt, XLeapSystemPromptBase):
             openai_proxy=settings.HTTP_PROXY,
         )
 
-        chain = final_prompt | llm
+        if self._ideas_to_generate > 1:
+            tokenizer = XLeapStreamingTokenizer()
+            chain = final_prompt | llm | tokenizer
 
-        idea = chain.invoke(
-            input=self._lang_chain_input,
-            config={"callbacks": [langfuse_handler]},
-        )
+            try:
+                async for chunk in chain.astream(
+                        input=self._lang_chain_input,
+                        config={"callbacks": [langfuse_handler]}):
+                    logging.info(f"""
+                    XLeapBasicPrompt.generate_idea
+                    chunk is {chunk}
+                """)
+                    await self.post_idea(idea=chunk, task_reference=self.task_reference)
+            except aiohttp.ClientResponseError as err:
+                raise err
+        else:
+            chain = final_prompt | llm
 
-        self.generated_idea = idea.content
+            idea = chain.invoke(
+                input=self._lang_chain_input,
+                config={"callbacks": [langfuse_handler]},
+            )
+
+            self.generated_idea = idea.content
+            await self.post_idea(idea=idea.content, task_reference=self.task_reference)
+
 
     async def _generate_prompt(self) -> ChatPromptTemplate:
         """
@@ -149,7 +168,7 @@ class XLeapBasicPrompt(BrainstormBasePrompt, XLeapSystemPromptBase):
         )
 
         task_prompt = await self.generate_task_prompt(
-            briefing=self._briefing, ideas=self._ideas
+            briefing=self._briefing, ideas=self._ideas, num_contributions=self._ideas_to_generate
         )
 
         self._lang_chain_input = {

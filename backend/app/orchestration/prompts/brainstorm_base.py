@@ -31,6 +31,7 @@ class BrainstormBasePrompt(ABC):
         ideas: list[Idea] | None = None,
         temperature: float = 0.5,
         task_reference: str | None = None,
+        ideas_to_generate: int = 1
     ):
         self._agent = agent
         self._api_key = agent.api_key
@@ -39,6 +40,7 @@ class BrainstormBasePrompt(ABC):
         self._ideas = ideas
         self.generated_idea: str | list[str | dict[Any, Any]] | None = None
         self.task_reference = task_reference
+        self._ideas_to_generate = ideas_to_generate
 
     def _alter_generated_idea(self, idea_to_post: str) -> str:
         """
