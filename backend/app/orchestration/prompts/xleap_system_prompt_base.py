@@ -294,31 +294,47 @@ class XLeapSystemPromptBase(ABC):
     ) -> GeneratedPrompt:
         """
         Generates the task for the agent to generate an own idea
+        If num_contributions is > 0 then the prompt also includes an expected format
+        instruction for the XLeap token
         :param briefing: the briefing
-        :param ideas: the participant ideas
+        :param ideas: the ideas from participants or this agent
         :param num_contributions: (optional, default 1) number of contributions to generate
         :return: the prompt for the AI
         """
-        contribution_prompt = await self._get_prompt_from_langfuse(
-            prompt_name=briefing.contribution_langfuse_name
-        )
-        list_elements: list = []
-        for idea in ideas:
-            list_elements.append(f"\n<li>{escape(idea.text)}</li>")
+        lang_chain_input: dict = {}
 
-        lang_chain_input: dict = {"idea-list-items": ""}
+        num_human_ideas = len(list(filter(lambda idea: not idea.created_by_ai, ideas)))
+        num_ai_ideas = len(list(filter(lambda idea: idea.created_by_ai, ideas)))
 
+        # if there are contributions from either the AI or participants
+        # the instruction also contains a constraint instruction to produce
+        # num aspects
+        # If num_contributions is > 0 then the prompt also includes an expected format
+        # instruction for the XLeap tokenizer
         if 1 == num_contributions:
-            task_prompt = await self._get_prompt_from_langfuse(
-                prompt_name=briefing.task_langfuse_name
-            )
+            if 0 == num_human_ideas and 0 == num_ai_ideas:
+                prompt_name = briefing.task_nn_langfuse_name
+            elif 0 < num_human_ideas and 0 == num_ai_ideas:
+                prompt_name = briefing.task_pn_langfuse_name
+            elif 0 == num_human_ideas and 0 < num_ai_ideas:
+                prompt_name = briefing.task_na_langfuse_name
+            else:
+                prompt_name = briefing.task_pn_langfuse_name
         else:
-            task_prompt = await self._get_prompt_from_langfuse(
-                prompt_name=briefing.task_multi_langfuse_name
-            )
+            if 0 == num_human_ideas and 0 == num_ai_ideas:
+                prompt_name = briefing.task_multi_nn_langfuse_name
+            elif 0 < num_human_ideas and 0 == num_ai_ideas:
+                prompt_name = briefing.task_multi_pn_langfuse_name
+            elif 0 == num_human_ideas and 0 < num_ai_ideas:
+                prompt_name = briefing.task_multi_na_langfuse_name
+            else:
+                prompt_name = briefing.task_multi_pa_langfuse_name
             lang_chain_input['num_contributions'] = num_contributions
 
-        prompt = contribution_prompt + task_prompt
+        task_prompt = await self._get_prompt_from_langfuse(
+            prompt_name=prompt_name
+        )
+        prompt = task_prompt
 
         return GeneratedPrompt(
             prompt=prompt, lang_chain_input=lang_chain_input

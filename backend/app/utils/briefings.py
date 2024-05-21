@@ -237,7 +237,7 @@ def langfuse_base_from_briefing_base(
     Returns:
         AIBriefing2LangfuseBase: the result of the conversion
     """
-    langfuse_base = AIBriefing2LangfuseBase()
+    langfuse_base: AIBriefing2LangfuseBase = AIBriefing2LangfuseBase()
     sub_category = BriefingSubCategory.MEDIUM
     if briefing_base.response_length == 1:
         sub_category = BriefingSubCategory.BRIEF
@@ -347,28 +347,68 @@ def langfuse_base_from_briefing_base(
             template=briefing_base.exemplar_template,
         )
 
-    langfuse_base.contribution_langfuse_name = _get_langfuse_prompt_name(
-        session=session,
-        cat=BriefingCategory.TASK_TEMPLATE,  # yes this a TASK_TEMPLATE
-        sub_category=workspace_sub_category,
-        template=briefing_base.contribution_template,
-        differentiator=BriefingSubCategoryDifferentiator.TASK_CONTRIBUTIONS
-    )
-
-    langfuse_base.task_langfuse_name = _get_langfuse_prompt_name(
+    langfuse_base.task_nn_langfuse_name = _get_langfuse_prompt_name(
         session=session,
         cat=BriefingCategory.TASK_TEMPLATE,
         sub_category=workspace_sub_category,
-        template=briefing_base.task_template,
-        differentiator=BriefingSubCategoryDifferentiator.TASK_SINGLE
+        template=briefing_base.task_template_nn,
+        differentiator=BriefingSubCategoryDifferentiator.TASK_ONE_NN
     )
 
-    langfuse_base.task_multi_langfuse_name = _get_langfuse_prompt_name(
+    langfuse_base.task_pn_langfuse_name = _get_langfuse_prompt_name(
         session=session,
         cat=BriefingCategory.TASK_TEMPLATE,
         sub_category=workspace_sub_category,
-        template=briefing_base.task_template_multi,
-        differentiator=BriefingSubCategoryDifferentiator.TASK_MULTI
+        template=briefing_base.task_template_pn,
+        differentiator=BriefingSubCategoryDifferentiator.TASK_ONE_PN
+    )
+
+    langfuse_base.task_na_langfuse_name = _get_langfuse_prompt_name(
+        session=session,
+        cat=BriefingCategory.TASK_TEMPLATE,
+        sub_category=workspace_sub_category,
+        template=briefing_base.task_template_na,
+        differentiator=BriefingSubCategoryDifferentiator.TASK_ONE_NA
+    )
+
+    langfuse_base.task_pa_langfuse_name = _get_langfuse_prompt_name(
+        session=session,
+        cat=BriefingCategory.TASK_TEMPLATE,
+        sub_category=workspace_sub_category,
+        template=briefing_base.task_template_pn,
+        differentiator=BriefingSubCategoryDifferentiator.TASK_ONE_PA
+    )
+
+    langfuse_base.task_multi_nn_langfuse_name = _get_langfuse_prompt_name(
+        session=session,
+        cat=BriefingCategory.TASK_TEMPLATE,
+        sub_category=workspace_sub_category,
+        template=briefing_base.task_template_multi_nn,
+        differentiator=BriefingSubCategoryDifferentiator.TASK_MULTI_NN
+    )
+
+    langfuse_base.task_multi_pn_langfuse_name = _get_langfuse_prompt_name(
+        session=session,
+        cat=BriefingCategory.TASK_TEMPLATE,
+        sub_category=workspace_sub_category,
+        template=briefing_base.task_template_multi_pn,
+        differentiator=BriefingSubCategoryDifferentiator.TASK_MULTI_PN
+    )
+
+    langfuse_base.task_multi_na_langfuse_name = _get_langfuse_prompt_name(
+        session=session,
+        cat=BriefingCategory.TASK_TEMPLATE,
+        sub_category=workspace_sub_category,
+        template=briefing_base.task_template_multi_na,
+        differentiator=BriefingSubCategoryDifferentiator.TASK_MULTI_NA
+    )
+
+    langfuse_base.task_multi_pa_langfuse_name = _get_langfuse_prompt_name(
+        session=session,
+        cat=BriefingCategory.TASK_TEMPLATE,
+        sub_category=workspace_sub_category,
+        template=briefing_base.task_template_multi_pa,
+        differentiator=BriefingSubCategoryDifferentiator.TASK_MULTI_PA
     )
 
     langfuse_base.test_briefing_langfuse_name = _get_langfuse_prompt_name(

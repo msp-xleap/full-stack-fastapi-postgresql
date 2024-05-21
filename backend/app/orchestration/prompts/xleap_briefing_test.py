@@ -6,8 +6,7 @@ from langchain_core.prompts import (
 )
 from langchain_openai import ChatOpenAI
 
-from fastapi import Depends
-from app.api.deps import get_db
+from app.core.db import engine
 from sqlmodel import Session
 from app.core.config import settings
 from app.models import AIAgent, Briefing2, Briefing2Reference
@@ -23,32 +22,32 @@ async def generate_ideas_and_post(
         agent_id: str,
         test_secret: str,
         num_ideas_to_generate: int,
-        session: Session = Depends(get_db)
         ) -> None:
     """
     Generate idea and post it to the XLeap server
     """
 
-    attached_agent = get_agent_by_id(agent_id, session)
-    attached_briefing = get_briefing2_by_agent_id(agent_id, session)
+    with Session(engine) as session:
+        attached_agent = get_agent_by_id(agent_id, session)
+        attached_briefing = get_briefing2_by_agent_id(agent_id, session)
 
-    references = get_ai_agent_references(session=session, agent=attached_agent)
-    xleap_test = XLeapBriefingTest(
-        agent=attached_agent,
-        briefing=attached_briefing,
-        references=references,
-        test_secret=test_secret,
-        session=session,
-        num_ideas_to_generate=num_ideas_to_generate,
-    )
+        references = get_ai_agent_references(session=session, agent=attached_agent)
+        xleap_test = XLeapBriefingTest(
+            agent=attached_agent,
+            briefing=attached_briefing,
+            references=references,
+            test_secret=test_secret,
+            session=session,
+            num_ideas_to_generate=num_ideas_to_generate,
+        )
 
-    await xleap_test.generate_and_post_ideas(num_ideas_to_generate)
+        await xleap_test.generate_and_post_ideas()
 
-    logging.info(""" 
-    ################ 
-    XLeapBriefingTest completed
-    ################
-    """)
+        logging.info(""" 
+        ################ 
+        XLeapBriefingTest completed
+        ################
+        """)
 
 
 class XLeapBriefingTest(BrainstormBasePrompt, XLeapSystemPromptBase):

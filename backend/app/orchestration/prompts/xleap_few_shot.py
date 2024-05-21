@@ -149,7 +149,6 @@ class XLeapBasicPrompt(BrainstormBasePrompt, XLeapSystemPromptBase):
             self.generated_idea = idea.content
             await self.post_idea(idea=idea.content, task_reference=self.task_reference)
 
-
     async def _generate_prompt(self) -> ChatPromptTemplate:
         """
         Generate prompt for prompt chaining

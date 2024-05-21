@@ -15,6 +15,11 @@ class IdeaBase(SQLModel):
     )
     """ did an AI (this or another) create this idea? """
     created_by: str | None = None
+    """ ID of the user or AI who created the idea (may depend on anonymity settings) """
+    visible: bool = True
+    """ The microservice may receive ideas that are not visible to it. Invisible ideas should 
+        only be used for counting purposes. E.g. act after n-human contributions.     
+    """
 
 
 class Idea(IdeaBase, table=True):

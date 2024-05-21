@@ -153,11 +153,17 @@ class BriefingSubCategory(enum.StrEnum):
      PromptType.WORKSPACE_CONTENT
     """
 
+
 class BriefingSubCategoryDifferentiator(enum.StrEnum):
     NONE = ""
-    TASK_CONTRIBUTIONS = "_contrib"
-    TASK_SINGLE = "_one"
-    TASK_MULTI = "_n"
+    TASK_ONE_NN = "_1_nn"
+    TASK_ONE_PN = "_1_pn"
+    TASK_ONE_NA = "_1_na"
+    TASK_ONE_PA = "_1_pa"
+    TASK_MULTI_NN = "_m_nn"
+    TASK_MULTI_PN = "_m_pn"
+    TASK_MULTI_NA = "_m_na"
+    TASK_MULTI_PA = "_m_pa"
 
 
 class XLeapBriefingPrompt(SQLModel, table=True):
@@ -342,16 +348,49 @@ class AIBriefing2Base(SQLModel):
     response_language_template: str = ""
     """ The template for the response language instruction. It has a variable {{response_language}}
     """
-    contribution_template: str = ""
-    """ The contribution template represents the begin of the actual question to the AI after the system prompt was given
-     The template provides a single variable {{contributions}} for a listing of participant contributions
+    task_template_nn: str = ""
+    """  The task template to be used when the AI is ask to contribution 1 own contribution and
+     there are neither participant contributions nor prior AI contributions.
+     The template provides no variable
     """
-    task_template: str = ""
-    """ A specific template to ask the AI for one contribution """
-    task_template_multi: str = ""
-    """ A specific template to ask the AI for multiple contribution
-       It provides a variable {{num_contributions}} for the number of contributions
-       This number is usually provides via on-demand generation request
+    task_template_pn: str = ""
+    """ The task template to be used when the AI is ask to contribution 1 own contribution and there are participant 
+     contributions but no prior AI contributions.
+     The template provides no variable
+    """
+    task_template_na: str = ""
+    """ The task template to be used when the AI is ask to contribution 1 own contribution and
+      there are no participant contributions but prior AI contributions.
+      The template provides no variable
+    """
+    task_template_pa: str = ""
+    """ The task template to be used when the AI is ask to contribution <b>one</b> own contribution and
+    there are participant and prior AI contributions.
+    The template provides no variable
+    """
+    task_template_multi_nn: str = ""
+    """ The task template to be used when the AI is ask to contribution multiple own contributions and
+    there are neither participant contributions nor prior AI contributions.
+    The template provides the variable {{num_contributions}} to the number of contributions to generate
+    The value for the variable is provided as part of an on-demand request
+    """
+    task_template_multi_pn: str = ""
+    """ The task template to be used when the AI is ask to contribution multiple own contributions and
+     there are participant contributions but no prior AI contributions.
+     The template provides the variable {{num_contributions}} to the number of contributions to generate
+     The value for the variable is provided as part of an on-demand request
+    """
+    task_template_multi_na: str = ""
+    """ The task template to be used when the AI is ask to contribution multiple own contributions and
+    there are no participant contributions but prior AI contributions.
+    The template provides the variable {{num_contributions}} to the number of contributions to generate
+    The value for the variable is provided as part of an on-demand request
+    """
+    task_template_multi_pa: str = ""
+    """ The task template to be used when the AI is ask to contribution multiple own contributions and
+    there are participant and prior AI contributions.
+    The template provides the variable {{num_contributions}} to the number of contributions to generate
+    The value for the variable is provided as part of an on-demand request
     """
     test_briefing_template: str = ""
     """  The test briefing template is used when the host clicks on the test briefing 
@@ -374,8 +413,14 @@ class AIBriefing2LangfuseBase(SQLModel):
     workspace_instruction_langfuse_name: str = ""
     exemplar_langfuse_name: str = ""
     contribution_langfuse_name: str = ""
-    task_langfuse_name: str = ""
-    task_multi_langfuse_name: str = ""
+    task_nn_langfuse_name: str = ""
+    task_pn_langfuse_name: str = ""
+    task_na_langfuse_name: str = ""
+    task_pa_langfuse_name: str = ""
+    task_multi_nn_langfuse_name: str = ""
+    task_multi_pn_langfuse_name: str = ""
+    task_multi_na_langfuse_name: str = ""
+    task_multi_pa_langfuse_name: str = ""
     test_briefing_langfuse_name: str = ""
     response_language_langfuse_name: str = ""
 
@@ -439,9 +484,14 @@ class Briefing2(SQLModel, table=True):
     with_num_exemplar: int = 0
     exemplar: str = ""
     exemplar_langfuse_name: str = ""
-    contribution_langfuse_name: str = ""
-    task_langfuse_name: str = ""
-    task_multi_langfuse_name: str = ""
+    task_nn_langfuse_name: str = ""
+    task_pn_langfuse_name: str = ""
+    task_na_langfuse_name: str = ""
+    task_pa_langfuse_name: str = ""
+    task_multi_nn_langfuse_name: str = ""
+    task_multi_pn_langfuse_name: str = ""
+    task_multi_na_langfuse_name: str = ""
+    task_multi_pa_langfuse_name: str = ""
     test_briefing_langfuse_name: str = ""
 
 
