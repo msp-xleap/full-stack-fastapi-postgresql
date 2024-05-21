@@ -114,7 +114,7 @@ class XLeapBriefingTest(BrainstormBasePrompt, XLeapSystemPromptBase):
         )
 
         lang_chain_input = dict()
-        lang_chain_input["num-generate"] = self._num_ideas_to_generate
+        lang_chain_input["num_generate"] = self._num_ideas_to_generate
 
         return GeneratedPrompt(prompt=prompt, lang_chain_input=lang_chain_input)
 
