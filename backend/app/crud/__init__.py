@@ -7,7 +7,7 @@ from .briefings import (
     get_ai_agent_references,
     replace_briefing2_references,
 )
-from .ideas import create_idea, update_idea
+from .ideas import create_idea, update_idea, create_or_update_idea
 from .users import create_user
 
 __all__ = [
@@ -17,10 +17,11 @@ __all__ = [
     "create_ai_agent_briefing2_reference",
     "create_idea",
     "create_or_update_ai_agent_briefing2",
+    "create_or_update_idea",
+    "create_user",
     "deactivate_ai_agent",
     "get_ai_agent_file_references",
     "get_ai_agent_references",
     "replace_briefing2_references",
     "update_idea",
-    "create_user",
 ]

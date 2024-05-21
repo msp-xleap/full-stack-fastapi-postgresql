@@ -8,30 +8,39 @@ from .agents import (
     AIAgentIdResponse,
     AIAgentsOut,
     XLeapDetailsBase,
+    AIBriefingTest,
 )
-from .briefings import (
-    AIBriefing2Base,
-    AIBriefing2LangfuseBase,
-    AIBriefing2ReferenceBase,
-    AIBriefing2ReferenceLangfuseBase,
-    Briefing,
-    Briefing2,
-    Briefing2Reference,
-    BriefingCategory,
-    BriefingSubCategory,
-    BriefingTextResponse,
-    XLeapBriefingPrompt,
-)
-from .ideas import Idea, IdeaBase
-from .prompts import PromptStrategy, PromptStrategyType
-from .users import (  # isort: skip_file
+from .users import (
     UpdatePassword,
     User,
     UserBase,
     UserCreate,
     UserUpdate,
     UserUpdateMe,
+)  # isort: skip_file
+
+from .briefings import (
+    AIBriefing2Base,
+    AIBriefing2LangfuseBase,
+    AIBriefing2ReferenceBase,
+    AIBriefing2ReferenceLangfuseBase,
+    Briefing,
+    Briefing2Reference,
+    Briefing2,
+    BriefingCategory,
+    BriefingSubCategory,
+    BriefingSubCategoryDifferentiator,
+    XLeapBriefingPrompt,
+    BriefingTextResponse,
 )
+from .ideas import (
+    Idea,
+    IdeaBase,
+    IdeaGenerationData,
+)
+
+from .prompts import PromptStrategyType, PromptStrategy
+
 from .varia import Message, NewPassword, Token, TokenPayload
 
 __all__ = [
@@ -50,10 +59,12 @@ __all__ = [
     "Briefing2Reference",
     "BriefingCategory",
     "BriefingSubCategory",
+    "BriefingSubCategoryDifferentiator",
     "BriefingTextResponse",
     "Field",
     "Idea",
     "IdeaBase",
+    "IdeaGenerationData",
     "Message",
     "NewPassword",
     "PromptStrategy",
@@ -70,4 +81,5 @@ __all__ = [
     "UserUpdateMe",
     "XLeapBriefingPrompt",
     "XLeapDetailsBase",
+    "AIBriefingTest",
 ]

@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Sequence
 from datetime import datetime
 
@@ -14,6 +15,7 @@ from app.models import (
     Briefing2Reference,
     BriefingCategory,
     BriefingSubCategory,
+    BriefingSubCategoryDifferentiator,
     XLeapBriefingPrompt,
 )
 from app.orchestration.prompts import langfuse_client
@@ -124,13 +126,13 @@ def _create_xleap_prompt(
     *,
     session: Session,
     cat: BriefingCategory,
-    sub_category: BriefingSubCategory,
+    db_sub_cat: str,
     template: str,
     langfuse_prompt: str,
 ) -> None:
     db_prompt = XLeapBriefingPrompt(
         category=cat,
-        sub_category=sub_category,
+        sub_category=db_sub_cat,
         template=template,
         langfuse_prompt=langfuse_prompt,
     )
@@ -168,6 +170,7 @@ def _get_langfuse_prompt_name(
     sub_category: BriefingSubCategory,
     template: str,
     ref_number: int = 0,
+    differentiator: BriefingSubCategoryDifferentiator = BriefingSubCategoryDifferentiator.NONE,
 ) -> str:
     """
     Gets the name of a Prompt from an XLeap template string
@@ -175,11 +178,16 @@ def _get_langfuse_prompt_name(
     :param cat: the category for the prompt
     :param sub_category:  the sub category of the prompt
     :param template: the language template
+    :param ref_number: required for references
+    :param differentiator: default NONE="", used TASK_TEMPLATES
     :return: the name of the corresponding prompt in Langfuse
     """
+    db_sub_cat = sub_category + differentiator
+    if ref_number > 0:
+        db_sub_cat = db_sub_cat + "@" + str(ref_number)
     query = select(XLeapBriefingPrompt).where(
         XLeapBriefingPrompt.category == cat,
-        XLeapBriefingPrompt.sub_category == sub_category,
+        XLeapBriefingPrompt.sub_category == db_sub_cat,
         XLeapBriefingPrompt.template == template,
     )
     briefing_prompt = session.exec(query).first()
@@ -195,18 +203,20 @@ def _get_langfuse_prompt_name(
         else:
             name = f"xleap-{cat}-{ref_number}-{date_str}"
     elif ref_number == 0:
-        name = f"xleap-{cat}-{sub_category}-{date_str}"
+        name = f"xleap-{cat}-{sub_category}{differentiator}-{date_str}"
     else:
-        name = f"xleap-{cat}-{sub_category}-{ref_number}-{date_str}"
+        name = f"xleap-{cat}-{sub_category}{differentiator}-{ref_number}-{date_str}"
 
     langfuse_prompt = langfuse_client.create_prompt(
         name=name, prompt=template, is_active=True
     )
 
+    logging.info(f"new prompt name is: {name}")
+
     _create_xleap_prompt(
         session=session,
         cat=cat,
-        sub_category=sub_category,
+        db_sub_cat=db_sub_cat,
         template=template,
         langfuse_prompt=langfuse_prompt.name,
     )
@@ -227,7 +237,7 @@ def langfuse_base_from_briefing_base(
     Returns:
         AIBriefing2LangfuseBase: the result of the conversion
     """
-    langfuse_base = AIBriefing2LangfuseBase()
+    langfuse_base: AIBriefing2LangfuseBase = AIBriefing2LangfuseBase()
     sub_category = BriefingSubCategory.MEDIUM
     if briefing_base.response_length == 1:
         sub_category = BriefingSubCategory.BRIEF
@@ -243,6 +253,13 @@ def langfuse_base_from_briefing_base(
         cat=BriefingCategory.RESPONSE_LENGTH,
         sub_category=sub_category,
         template=briefing_base.response_length_template,
+    )
+
+    langfuse_base.response_language_langfuse_name = _get_langfuse_prompt_name(
+        session=session,
+        cat=BriefingCategory.RESPONSE_LANGUAGE,
+        sub_category=BriefingSubCategory.NONE,
+        template=briefing_base.response_language_template,
     )
 
     langfuse_base.context_intro_langfuse_name = _get_langfuse_prompt_name(
@@ -330,11 +347,68 @@ def langfuse_base_from_briefing_base(
             template=briefing_base.exemplar_template,
         )
 
-    langfuse_base.task_langfuse_name = _get_langfuse_prompt_name(
+    langfuse_base.task_nn_langfuse_name = _get_langfuse_prompt_name(
         session=session,
         cat=BriefingCategory.TASK_TEMPLATE,
         sub_category=workspace_sub_category,
-        template=briefing_base.task_template,
+        template=briefing_base.task_template_nn,
+        differentiator=BriefingSubCategoryDifferentiator.TASK_ONE_NN
+    )
+
+    langfuse_base.task_pn_langfuse_name = _get_langfuse_prompt_name(
+        session=session,
+        cat=BriefingCategory.TASK_TEMPLATE,
+        sub_category=workspace_sub_category,
+        template=briefing_base.task_template_pn,
+        differentiator=BriefingSubCategoryDifferentiator.TASK_ONE_PN
+    )
+
+    langfuse_base.task_na_langfuse_name = _get_langfuse_prompt_name(
+        session=session,
+        cat=BriefingCategory.TASK_TEMPLATE,
+        sub_category=workspace_sub_category,
+        template=briefing_base.task_template_na,
+        differentiator=BriefingSubCategoryDifferentiator.TASK_ONE_NA
+    )
+
+    langfuse_base.task_pa_langfuse_name = _get_langfuse_prompt_name(
+        session=session,
+        cat=BriefingCategory.TASK_TEMPLATE,
+        sub_category=workspace_sub_category,
+        template=briefing_base.task_template_pn,
+        differentiator=BriefingSubCategoryDifferentiator.TASK_ONE_PA
+    )
+
+    langfuse_base.task_multi_nn_langfuse_name = _get_langfuse_prompt_name(
+        session=session,
+        cat=BriefingCategory.TASK_TEMPLATE,
+        sub_category=workspace_sub_category,
+        template=briefing_base.task_template_multi_nn,
+        differentiator=BriefingSubCategoryDifferentiator.TASK_MULTI_NN
+    )
+
+    langfuse_base.task_multi_pn_langfuse_name = _get_langfuse_prompt_name(
+        session=session,
+        cat=BriefingCategory.TASK_TEMPLATE,
+        sub_category=workspace_sub_category,
+        template=briefing_base.task_template_multi_pn,
+        differentiator=BriefingSubCategoryDifferentiator.TASK_MULTI_PN
+    )
+
+    langfuse_base.task_multi_na_langfuse_name = _get_langfuse_prompt_name(
+        session=session,
+        cat=BriefingCategory.TASK_TEMPLATE,
+        sub_category=workspace_sub_category,
+        template=briefing_base.task_template_multi_na,
+        differentiator=BriefingSubCategoryDifferentiator.TASK_MULTI_NA
+    )
+
+    langfuse_base.task_multi_pa_langfuse_name = _get_langfuse_prompt_name(
+        session=session,
+        cat=BriefingCategory.TASK_TEMPLATE,
+        sub_category=workspace_sub_category,
+        template=briefing_base.task_template_multi_pa,
+        differentiator=BriefingSubCategoryDifferentiator.TASK_MULTI_PA
     )
 
     langfuse_base.test_briefing_langfuse_name = _get_langfuse_prompt_name(

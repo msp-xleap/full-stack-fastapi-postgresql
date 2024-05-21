@@ -2,33 +2,59 @@ from langchain_core.prompts import (
     ChatPromptTemplate,
     FewShotChatMessagePromptTemplate,
 )
+import aiohttp
 from langchain_openai import ChatOpenAI
 
 from app.api.deps import SessionDep
 from app.core.config import settings
-from app.models import AIAgent, Briefing
+from app.models import AIAgent
 from app.orchestration.prompts import BasePrompt, langfuse_handler
 from app.utils import get_last_n_ideas
+from app.utils.agents import get_agent_by_id
+from app.utils.briefings import get_briefing2_by_agent_id
 
 
 async def generate_idea_and_post(
-    agent: AIAgent, briefing: Briefing, session: SessionDep
+    agent_id: str,
+    session: SessionDep,
+    ideas_to_generate: int = 1,
+    task_reference: str | None = None,
 ) -> None:
     """
     Generate idea and post it to the XLeap server
+    :param agent_id: the ID of the agent
+    :param session: the database session
+    :param ideas_to_generate: the number of ideas to generate
+    :param task_reference: if a task reference is given this is an on-demand generation
+    which can ignore the agent active check
 
     Todo: get question from the agent settings
     """
-    attached_agent = session.merge(agent)
-    attached_briefing = session.merge(briefing)
+    attached_agent = get_agent_by_id(agent_id, session)
+    attached_briefing = get_briefing2_by_agent_id(agent_id, session)
+
+    ideas_to_select = attached_briefing.frequency * 3
+    if attached_briefing.frequency <= 0:
+        ideas_to_select = 50
+
     attached_ideas = get_last_n_ideas(
-        session, n=attached_briefing.frequency, agent_id=attached_agent.id
+        session, n=ideas_to_select, agent_id=attached_agent.id
     )
     zero_shot_prompt = FewShotPrompt(
-        agent=attached_agent, briefing=attached_briefing, ideas=attached_ideas
+        agent=attached_agent, briefing=attached_briefing, ideas=attached_ideas, task_reference=task_reference
     )
     await zero_shot_prompt.generate_idea()
-    await zero_shot_prompt.post_idea()
+
+    # refresh agent object again, then check if our agent is still active,
+    # before posting the Idea to XLeap
+    attached_agent = session.get(AIAgent, attached_agent.id)
+    if (attached_agent.is_active
+            or task_reference is not None):
+        try:
+            await zero_shot_prompt.post_idea()
+        except aiohttp.ClientResponseError as err:
+            zero_shot_prompt.maybe_deactivate_agent(err, attached_agent, session)
+            raise err
 
 
 class FewShotPrompt(BasePrompt):

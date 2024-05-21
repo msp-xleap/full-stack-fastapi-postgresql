@@ -89,6 +89,10 @@ class BriefingCategory(enum.StrEnum):
     TEST_BRIEFING_TEMPLATE = "test_briefing_template"
     """ The template used to generate N-ideas only based on the briefing
     """
+    TEMPERATURE = "temperature"
+    """ The temperature which defined the creativity of the AI """
+    RESPONSE_LANGUAGE = "response_language"
+    """ The language in which the AI should respond to us """
 
 
 class BriefingSubCategory(enum.StrEnum):
@@ -150,6 +154,18 @@ class BriefingSubCategory(enum.StrEnum):
     """
 
 
+class BriefingSubCategoryDifferentiator(enum.StrEnum):
+    NONE = ""
+    TASK_ONE_NN = "_1_nn"
+    TASK_ONE_PN = "_1_pn"
+    TASK_ONE_NA = "_1_na"
+    TASK_ONE_PA = "_1_pa"
+    TASK_MULTI_NN = "_m_nn"
+    TASK_MULTI_PN = "_m_pn"
+    TASK_MULTI_NA = "_m_na"
+    TASK_MULTI_PA = "_m_pa"
+
+
 class XLeapBriefingPrompt(SQLModel, table=True):
     """
     The XLeapPrompt table provides a mapping between an
@@ -190,44 +206,198 @@ class AIBriefing2ReferenceBase(SQLModel):
     url_expires_at: str
     filename: str
 
-
 class AIBriefing2Base(SQLModel):
     instance_id: str
-    frequency: int = 7
+    """ reference to the ID in XLeap for the briefing """
     workspace_type: str = ""
+    """ The type of workspace this briefing is for 
+        e.g. 'brainstorm', 'deepdive', 'presentation'
+    """
+    frequency: int = 7
+    """ After who many human contributions the AI should contribute.
+        A frequency of 0 means that the agent should only generate a contribution
+        when explicitly requested
+    """
+    temperature: int = 70
+    """ A specific temperature (decimal, 1..200) for the AI.
+        E.g. this is to be used when generating contributions. Other steps may use other temperatures.
+    """
     response_length: int = 3
+    """ A number in the range 1 - 3 where 
+        Where 1 means short, 2 medium, and 3 long.
+    """
     response_length_template: str = ""
+    """ The template for the prompt element as instruction to the AI
+        This template has no variables
+    """
     context_intro_template: str = ""
+    """ The generic template for the context information of a workspace. 
+        This template has no variables
+    """
     with_additional_info: bool = False
+    """ Whether additional info should be provided to the AI """
     additional_info: str = ""
+    """ The additional info to be passed to the self.additional_info_template as {{additional_info}} if
+        self.with_additional_info is True
+    """
     additional_info_template: str = ""
+    """ The language template for the AI instruction.
+        The template provides the {{additional_info}} variable for self.additional_info
+    """
     with_persona: bool = False
+    """ Whether the AI should assume a specific Persona """
     persona: str = ""
+    """ The persona info to be passed to the self.persona_template as {{persona}} if
+         self.with_persona is True
+    """
     persona_template: str = ""
+    """ The language template for the persona instruction. 
+        The template provides the {{persona}} variable for self.persona
+    """
     with_tone: bool = False
+    """ Whether the AI should use a specific tone its responses """
     tone: str = ""
+    """ The tone info to be passed to the self.with_session_info as {{tone}} if
+        self.with_tone is True
+    """
     tone_template: str = ""
+    """ The language template for the tone instruction. 
+        The template provides the {{tone}} variable for self.tone
+    """
     with_session_info: bool = False
+    """ Whether information about the current session should be provided to the AI """
     session_info: str = ""
+    """ The session info to be passed to self.session_info_template as {{session_info}} if
+        self.with_session_info is True
+    """
     session_info_template: str = ""
+    """  The language template for the session info instruction .
+         The template provides the {{session_info} variable for self.session_info
+    """
     with_host_info: bool = False
+    """ Whether information about the host should be provided to the AI """
     host_info: str = ""
+    """ The host info to be passed to the self.host_info_template as {{host_info}} if
+       self.with_host_info is True
+    """
     host_info_template: str = ""
+    """ The language template for the host info instruction.
+        The template provides the {{host_info}} variable for self.host_info.
+        **NOTE:** the host info can be empty, if it is not empty it always ends with '. '
+    """
     with_participant_info: bool = False
+    """ Whether information about the participants should be provided to the AI """
     participant_info: str = ""
+    """ The participants info to be passed to the self.participant_info_template
+        as {{participant_info}} if self.with_participant_info is True
+    """
     participant_info_template: str = ""
+    """ The language template for the participant info instruction.
+        The template provides the {{participant_info}} variable for self.participant_info_template.
+    """
     with_workspace_info: bool = False
+    """ Whether information about the workspace (e.g. Brainstorm) should be provided to the AI """
     workspace_info: str = ""
+    """ The workspace information (e.g. the purpose of the brainstorm)
+        to be passed to the self.workspace_info_template as {{workspace_info}} 
+        if self.with_workspace_info is True
+    """
     workspace_info_template: str = ""
+    """ The language template for the workspace info.
+        The template provides one variable {{workspace_info}} variable for self.workspace_info.
+    """
     workspace_info_references: list[AIBriefing2ReferenceBase] = Field(None)
+    """  A list of references describing the purpose of the workspace.
+     Depending on their AIBriefing2ReferenceBase.type their description is composed
+     from their own templates AIBriefing2ReferenceBase.template and passed to the
+     self.workspace_info_template as {{references}} if self.with_workspace_info is True.
+     It is possible that there are no references, in such case {{references}} should be replaced with an empty string.
+    """
     with_workspace_instruction: bool = False
+    """ Whether the workspace has an instruction """
     workspace_instruction: str = ""
+    """ The instruction passed to the self.workspace_instruction_template as {{workspace_instruction}} if
+        self.with_workspace_instruction is True 
+    """
     workspace_instruction_template: str = ""
+    """ The language template for the workspace instruction.
+        The template provides the {{workspace_instruction}} variable for
+        self.workspace_instruction.
+    """
     with_num_exemplar: int = 0
+    """ The number of provided exemplar """
     exemplar_template: str = ""
+    """ The language template for the exemplar 
+        The template provides one variable, and ends with a colon ':'
+        The examples are supposed to follow next.
+        It provides the {{num-exemplar}} variable for self.with_num_exemplar
+    """
     exemplar_references: list[AIBriefing2ReferenceBase] = Field(None)
-    task_template: str = ""
+    """
+        The reference exemplar
+    """
+    with_response_language: bool = False
+    """ Are we asking the AI to respond in a specific language. 
+        Only used if the requested response language differs from the language
+        in the templates
+    """
+    response_language: str = ""
+    """ The language to respond in passed to the self.response_language_template as
+        {{response_language}} if self. with_response_language is True.    
+    """
+    response_language_template: str = ""
+    """ The template for the response language instruction. It has a variable {{response_language}}
+    """
+    task_template_nn: str = ""
+    """  The task template to be used when the AI is ask to contribution 1 own contribution and
+     there are neither participant contributions nor prior AI contributions.
+     The template provides no variable
+    """
+    task_template_pn: str = ""
+    """ The task template to be used when the AI is ask to contribution 1 own contribution and there are participant 
+     contributions but no prior AI contributions.
+     The template provides no variable
+    """
+    task_template_na: str = ""
+    """ The task template to be used when the AI is ask to contribution 1 own contribution and
+      there are no participant contributions but prior AI contributions.
+      The template provides no variable
+    """
+    task_template_pa: str = ""
+    """ The task template to be used when the AI is ask to contribution <b>one</b> own contribution and
+    there are participant and prior AI contributions.
+    The template provides no variable
+    """
+    task_template_multi_nn: str = ""
+    """ The task template to be used when the AI is ask to contribution multiple own contributions and
+    there are neither participant contributions nor prior AI contributions.
+    The template provides the variable {{num_contributions}} to the number of contributions to generate
+    The value for the variable is provided as part of an on-demand request
+    """
+    task_template_multi_pn: str = ""
+    """ The task template to be used when the AI is ask to contribution multiple own contributions and
+     there are participant contributions but no prior AI contributions.
+     The template provides the variable {{num_contributions}} to the number of contributions to generate
+     The value for the variable is provided as part of an on-demand request
+    """
+    task_template_multi_na: str = ""
+    """ The task template to be used when the AI is ask to contribution multiple own contributions and
+    there are no participant contributions but prior AI contributions.
+    The template provides the variable {{num_contributions}} to the number of contributions to generate
+    The value for the variable is provided as part of an on-demand request
+    """
+    task_template_multi_pa: str = ""
+    """ The task template to be used when the AI is ask to contribution multiple own contributions and
+    there are participant and prior AI contributions.
+    The template provides the variable {{num_contributions}} to the number of contributions to generate
+    The value for the variable is provided as part of an on-demand request
+    """
     test_briefing_template: str = ""
+    """  The test briefing template is used when the host clicks on the test briefing 
+      button of an AI tab. The template provides a single variable {{num-generate}} 
+      for the number of ideas the Agent shall generate, if the number is 0 there the 
+      variable is not present. This number is provided in a separate test request.
+    """
 
 
 class AIBriefing2LangfuseBase(SQLModel):
@@ -242,8 +412,17 @@ class AIBriefing2LangfuseBase(SQLModel):
     workspace_info_langfuse_name: str = ""
     workspace_instruction_langfuse_name: str = ""
     exemplar_langfuse_name: str = ""
-    task_langfuse_name: str = ""
+    contribution_langfuse_name: str = ""
+    task_nn_langfuse_name: str = ""
+    task_pn_langfuse_name: str = ""
+    task_na_langfuse_name: str = ""
+    task_pa_langfuse_name: str = ""
+    task_multi_nn_langfuse_name: str = ""
+    task_multi_pn_langfuse_name: str = ""
+    task_multi_na_langfuse_name: str = ""
+    task_multi_pa_langfuse_name: str = ""
     test_briefing_langfuse_name: str = ""
+    response_language_langfuse_name: str = ""
 
 
 class AIBriefing2ReferenceLangfuseBase(SQLModel):
@@ -270,8 +449,12 @@ class Briefing2(SQLModel, table=True):
 
     instance_id: str
     frequency: int = 7
+    temperature: int = 70
     response_length: int = 3
     response_length_langfuse_name: str = ""
+    with_response_language:bool = False
+    response_language: str = ""
+    response_language_langfuse_name: str = ""
     context_intro_langfuse_name: str = ""
     with_additional_info: bool = False
     additional_info: str = ""
@@ -301,7 +484,14 @@ class Briefing2(SQLModel, table=True):
     with_num_exemplar: int = 0
     exemplar: str = ""
     exemplar_langfuse_name: str = ""
-    task_langfuse_name: str = ""
+    task_nn_langfuse_name: str = ""
+    task_pn_langfuse_name: str = ""
+    task_na_langfuse_name: str = ""
+    task_pa_langfuse_name: str = ""
+    task_multi_nn_langfuse_name: str = ""
+    task_multi_pn_langfuse_name: str = ""
+    task_multi_na_langfuse_name: str = ""
+    task_multi_pa_langfuse_name: str = ""
     test_briefing_langfuse_name: str = ""
 
 

@@ -5,7 +5,6 @@ from sqlmodel import Session, select
 
 from app.models import AIAgent
 
-
 def get_agent_by_id(agent_id: str, session: Session) -> AIAgent:
     """Get agent by ID
 

@@ -1,8 +1,9 @@
 from abc import abstractmethod
 
+from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
 
-from app.models import AIAgent, Briefing, Idea
+from app.models import AIAgent, Briefing, Idea, Briefing2
 from app.orchestration.prompts import BrainstormBasePrompt
 from app.utils import TextTypeSwapper
 
@@ -12,16 +13,18 @@ class BasePrompt(BrainstormBasePrompt):
     Abstract class for generating prompts
     """
 
-    _briefing: Briefing
+    _briefing: Briefing2
 
     def __init__(
         self,
         agent: AIAgent,
-        briefing: Briefing,
+        briefing: Briefing2,
         ideas: list[Idea] | None = None,
         temperature: float = 0.5,
+        task_reference: str | None = None,
+        ideas_to_generate: int = 1
     ):
-        super().__init__(agent, ideas, temperature)
+        super().__init__(agent, ideas, temperature, task_reference, ideas_to_generate)
         self._briefing = briefing
 
     def _alter_generated_idea(self, idea_to_post: str) -> str:

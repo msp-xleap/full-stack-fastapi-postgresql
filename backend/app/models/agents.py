@@ -51,3 +51,14 @@ class AIAgentIdResponse(SQLModel):
 
 class AIAgentsOut(SQLModel):
     data: list[AIAgent]
+
+
+class AIBriefingTest(SQLModel):
+    """ Generate number of examples based on a briefing
+    """
+    secret: str
+    """ the secret to be presented to XLeap with every generated example idea
+        This is required to bypass Agent.is_active check in XLeap 
+    """
+    num_samples: int
+    """ the number of examples to generate """
