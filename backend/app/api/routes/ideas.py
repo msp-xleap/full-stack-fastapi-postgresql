@@ -55,10 +55,7 @@ def _maybe_kick_idea_generation(agent,
 
             frequency = briefing.frequency + 1
 
-            last_ai_idea = lock.get_last_idea()
-            if last_ai_idea is None:
-                last_ai_idea = get_last_ai_idea(session, agent_id)
-
+            last_ai_idea = get_last_ai_idea(session, agent_id)
             last_ai_idea_count = 0
             if last_ai_idea is not None:
                 last_ai_idea_count = get_human_ideas_since(session, agent.id, last_ai_idea)

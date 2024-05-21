@@ -1,7 +1,6 @@
 from langchain_core.messages import AIMessageChunk
 from langchain_core.runnables import RunnableGenerator
 
-import logging
 from .token_buffer import TokenBuffer
 from typing import (
     AsyncIterable
@@ -62,7 +61,6 @@ class XLeapStreamingTokenizer(RunnableGenerator):
 
     async def gen(self, chunks: AsyncIterable[AIMessageChunk]) -> AsyncIterable[str]:
         async for chunk in chunks:
-            logging.info(f"XLeapStreamingTokenizer.gen chunk={chunk.content}")
             complete = self.append_token(chunk.content)
             if complete is not None:
                 yield complete

@@ -110,14 +110,14 @@ def get_ai_idea_share(session: Session, agent_id: uuid_pkg.uuid4) -> float:
     # Total number of ideas created by the agent
     total_ideas_query = (
         select(func.count())
-        .where(Idea.agent_id == agent_id)
+        .where(Idea.agent_id == agent_id, Idea.deleted == False)
     )
     total_ideas = session.execute(total_ideas_query).scalar_one()
 
     # Number of ideas created by AI by the same agent
     ai_ideas_query = (
         select(func.count())
-        .where(Idea.agent_id == agent_id, Idea.created_by_ai == True)
+        .where(Idea.agent_id == agent_id, Idea.deleted == False, Idea.created_by_ai == True)
     )
     ai_ideas = session.execute(ai_ideas_query).scalar_one()
 
@@ -156,6 +156,8 @@ def should_ai_post_new_idea(
         bool: True if a new AI idea should be posted, False otherwise.
     """
     debug = True
+    if debug:
+        logging.info(f"should_ai_post_new_idea: Computing share for agent {agent.id}")
     # Primary rule: If the agent is not active there is no need to check anything else
     if not agent.is_active:
         if debug:
@@ -167,6 +169,8 @@ def should_ai_post_new_idea(
     # our agent created its last idea. However, if this is still the same
     # we should not continue.
     if previous_id is not None and previous_id == last_ai_idea.id:
+        if debug:
+            logging.info(f"should_ai_post_new_idea: base idea is still the same, not continuing")
         return False
 
     # Defines the "ideal" share of AI ideas.
@@ -209,6 +213,9 @@ def should_ai_post_new_idea(
         if debug:
             logging.info(f"should_ai_post_new_idea: Yes, significant increase in idea count: {last_ai_idea_count} >= {frequency}")
         return True
+
+    if debug:
+        logging.info(f"should_ai_post_new_idea: No finally")
     return False
 
 
@@ -230,6 +237,7 @@ def get_human_ideas_since(session: Session,
         .select_from(Idea)
         .where(Idea.agent_id == agent_id,
                Idea.created_by_ai == False,  # noqa
+               Idea.deleted == False,
                Idea.created_at > reference_idea.created_at)
     )
 
