@@ -11,6 +11,7 @@ class XLeapDetailsBase(SQLModel):
     workspace_id: str
     instance_id: str = Field(unique=True, index=True)
     secret: str
+    host_id: str = Field(nullable=False, default="")
 
 
 class AIAgentConfigBase(SQLModel):

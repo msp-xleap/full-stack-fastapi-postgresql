@@ -17,6 +17,7 @@ from .xleap_few_shot import (
 
 async def generate_idea_and_post(
     agent_id: str,
+    host_id: str | None,
     lock: AgentGenerationLock,
     ideas_to_generate: int = 1,
     task_reference: str | None = None,
@@ -25,6 +26,7 @@ async def generate_idea_and_post(
     Dynamically switches the prompt strategy for the specified agent then generates the specified number
     of ideas
     :param agent_id: the ID of the agent
+    :param host_id: the ID of the XLeap session's host (used to select the prompt strategy by host ID)
     :param lock: the lock for generating ideas
     :param ideas_to_generate: (optional, default=1) the number of ideas to generate
     :param task_reference: (optional, default=None) if specified the task_reference must be passed with
@@ -33,7 +35,7 @@ async def generate_idea_and_post(
     """
     with Session(engine) as session:
         try:
-            strategy = get_prompt_strategy(agent_id=agent_id, session=session)
+            strategy = get_prompt_strategy(agent_id=agent_id, host_id=host_id, session=session)
 
             logging.info(
                 f"""Using prompt strategy {strategy.type} (version {strategy.version}) for agent {agent_id}"""

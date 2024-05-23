@@ -36,3 +36,5 @@ class PromptStrategy(SQLModel, table=True):
     """ a version field in case we ever want different variants """
     agent_id: uuid_pkg.UUID = Field(None, nullable=True)
     """ optional default None, if specified the agent with the given UID will use this strategy """
+    host_id: str = Field(None, nullable=True)
+    """ optional default None, if specified and a host created an agent it will be using this strategy """

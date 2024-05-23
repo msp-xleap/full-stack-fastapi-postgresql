@@ -81,7 +81,7 @@ def _maybe_kick_idea_generation(agent,
             if should_post:
                 lock.set_last_idea(last_ai_idea)
                 background_tasks.add_task(
-                    generate_idea_and_post, str(agent.id), lock, 1, None
+                    generate_idea_and_post, str(agent.id), agent.host_id, lock, 1, None
                 )
         finally:
             if not was_tasked:
