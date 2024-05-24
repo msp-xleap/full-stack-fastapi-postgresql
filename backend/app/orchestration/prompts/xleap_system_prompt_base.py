@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from html import escape
 
 from app.models import Briefing2, Briefing2Reference, Idea
 
@@ -158,6 +157,7 @@ class XLeapSystemPromptBase(ABC):
         #    - Give some detail or an example in no more than 5 sentences.
         # 12. Response language (optional)
         #    - Please send your contributions in {{response_language}}
+        # 13. Folders (optional)
 
         prompt_parts = []
         lang_chain_input = {}
@@ -271,6 +271,9 @@ class XLeapSystemPromptBase(ABC):
             prompt_parts.append(prompt)
             lang_chain_input["response_language"] = briefing.response_language
 
+        # 13. folders
+        if briefing.with_folders:
+            prompt_parts.append(briefing.folders_template)
 
         system_prompt = "\n".join(prompt_parts)
 
@@ -282,6 +285,7 @@ class XLeapSystemPromptBase(ABC):
         self, ideas: list[Idea] | None
     ) -> list[tuple[str, str]]:
         result: list[tuple[str, str]] = []
+        ideas.sort(key=lambda x: x.created_at)
         for idea in ideas:
             if idea.created_by_ai:
                 result.append(("assistant", idea.text))

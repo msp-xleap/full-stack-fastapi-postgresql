@@ -204,10 +204,10 @@ def should_ai_post_new_idea(
     significant_idea_increase = (last_ai_idea_count >= frequency)
 
     # Evaluate fallback conditions
-    if random_chance_to_post:
-        if debug:
-            logging.info(f"should_ai_post_new_idea: Yes, because of randomness")
-        return True
+    #if random_chance_to_post:
+    #    if debug:
+    #        logging.info(f"should_ai_post_new_idea: Yes, because of randomness")
+    #    return True
 
     if significant_idea_increase:
         if debug:

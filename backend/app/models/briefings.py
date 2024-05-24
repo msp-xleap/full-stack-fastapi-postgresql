@@ -493,6 +493,8 @@ class Briefing2(SQLModel, table=True):
     task_multi_na_langfuse_name: str = ""
     task_multi_pa_langfuse_name: str = ""
     test_briefing_langfuse_name: str = ""
+    with_folders: bool = False
+    folders_template: str = ""
 
 
 class Briefing2Reference(SQLModel, table=True):
