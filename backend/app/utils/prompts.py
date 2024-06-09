@@ -36,4 +36,4 @@ def get_prompt_strategy(*, session: Session, agent_id: str, host_id: str) -> Pro
     if strategy is not None:
         return strategy
 
-    return PromptStrategy(type=PromptStrategyType.CHAINING, version=0)
+    return PromptStrategy(type=PromptStrategyType.MULTI_AGENT, version=0)

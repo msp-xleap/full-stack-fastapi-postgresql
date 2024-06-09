@@ -13,6 +13,8 @@ from .few_shot import generate_idea_and_post as few_shot_generate_idea_and_post
 from .xleap_few_shot import (
     generate_idea_and_post as xleap_generate_idea_and_post,
 )
+from .multi_agent import (generate_idea_and_post as
+                          multi_agent_generate_idea_and_post)
 
 
 async def generate_idea_and_post(
@@ -51,6 +53,10 @@ async def generate_idea_and_post(
                     )
                 case PromptStrategyType.FEW_SHOT:
                     await few_shot_generate_idea_and_post(
+                        agent_id, session, ideas_to_generate, task_reference
+                    )
+                case PromptStrategyType.MULTI_AGENT:
+                    await multi_agent_generate_idea_and_post(
                         agent_id, session, ideas_to_generate, task_reference
                     )
                 case PromptStrategyType.XLEAP_ZERO_SHOT:

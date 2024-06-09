@@ -39,6 +39,8 @@ async def generate_idea_and_post(
 
     Todo: get question from the agent settings
     """
+    logging.info(f"""
+
     attached_agent = get_agent_by_id(agent_id, session)
     attached_briefing = get_briefing2_by_agent_id(agent_id, session)
     ideas_to_select = attached_briefing.frequency * 3
