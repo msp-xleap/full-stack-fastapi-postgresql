@@ -164,10 +164,10 @@ def should_ai_post_new_idea(
             logging.info('should_ai_post_new_idea: No, the agent is not active')
         return False
 
+    # Secondary rule: If the idea is still locked, we will not generate a new
+    # idea
     previous_id = lock.get_last_id()
-    # We base our calculations on the number of ideas generated since
-    # our agent created its last idea. However, if this is still the same
-    # we should not continue.
+
     if previous_id is not None and previous_id == last_ai_idea.id:
         if debug:
             logging.info(f"should_ai_post_new_idea: base idea is still the same, not continuing")
@@ -223,8 +223,8 @@ def get_human_ideas_since(session: Session,
                           agent_id: uuid_pkg.uuid4,
                           reference_idea: Idea) -> int:
     """
-        Count the number of ideas created by a human since the last AI contribution
-        indicated by the specified idea
+    Count the number of ideas created by a human since the last AI contribution
+    indicated by the specified idea
 
     :param session: Database session.
     :param agent_id: Agent ID
