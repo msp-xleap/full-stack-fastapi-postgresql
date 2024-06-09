@@ -36,10 +36,7 @@ async def generate_idea_and_post(
     :param ideas_to_generate: the number of ideas to generate
     :param task_reference: if a task reference is given this is an on-demand generation
     which can ignore the agent active check
-
-    Todo: get question from the agent settings
     """
-    logging.info(f"""
 
     attached_agent = get_agent_by_id(agent_id, session)
     attached_briefing = get_briefing2_by_agent_id(agent_id, session)
@@ -50,10 +47,6 @@ async def generate_idea_and_post(
     attached_ideas = get_last_n_ideas(
         session, n=ideas_to_select, agent_id=attached_agent.id
     )
-    # Reorder the ideas such that they get not lost in the middle
-    docs = [Document(idea.text) for idea in attached_ideas]
-    reordering = LongContextReorder()
-    attached_docs = reordering.transform_documents(documents=docs)
 
     prompt_chaining = ChainingPrompt(
         agent=attached_agent, briefing=attached_briefing, ideas=attached_ideas, task_reference=task_reference
@@ -222,8 +215,13 @@ class ChainingPrompt(BasePrompt):
         self,
     ) -> str:
         """ """
+        # Reorder the ideas such that they get not lost in the middle
+        docs = [Document(idea.text) for idea in self._ideas]
+        reordering = LongContextReorder()
+        reordered_docs = reordering.transform_documents(documents=docs)
+
         idea_examples: str = ""
-        for example in self._ideas:
+        for example in reordered_docs:
             idea_examples += "- " + example.page_content + "\n"
 
         return idea_examples
