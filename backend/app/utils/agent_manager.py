@@ -69,13 +69,13 @@ class AgentManager:
         b) synchronizing the internal counter, so that if XLeap sends two ideas at the same
            time they do get different idea counts
     """
-    _generation_locks: dict[uuid_pkg.uuid4, threading.Lock] = dict()
+    _generation_locks: dict[uuid_pkg.uuid4, threading.Lock] = {}
     """ map from Agent uuid to lock for that agent """
-    _contribution_lock: dict[uuid_pkg.uuid4, threading.Lock] = dict()
+    _contribution_lock: dict[uuid_pkg.uuid4, threading.Lock] = {}
     """ map from Agent uuid to lock for that agent """
-    _last_generation: dict[uuid_pkg.uuid4] = dict()
+    _last_generation: dict[uuid_pkg.uuid4] = {}
     """ the last time the _generation_lock for an agent was returned """
-    _generation_context: dict[uuid_pkg.uuid4, AgentContext] = dict()
+    _generation_context: dict[uuid_pkg.uuid4, AgentContext] = {}
     """ map from Agent uuid to lock to the last uuid the agent contribution was triggered for """
 
     _internalLock = threading.Lock()
