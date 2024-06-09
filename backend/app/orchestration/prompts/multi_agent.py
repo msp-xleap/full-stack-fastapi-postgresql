@@ -160,17 +160,17 @@ class MultiAgent(BasePrompt):
                                   max_rounds: int = 6, allow_repeat_speaker:
             bool = False) -> str:
         """
-        Sets up a group chat environment for the agents with specified 
+        Sets up a group chat environment for the agents with specified
         configurations.
-        Manages the interaction between agents in a group chat to generate 
+        Manages the interaction between agents in a group chat to generate
         ideas based on the initial task prompt.
 
         Args:
             agents (List[AssistantAgent]): List of participating agents.
             task (str): The initial task message to start the conversation.
-            max_rounds (int, optional): Maximum number of rounds the agents 
+            max_rounds (int, optional): Maximum number of rounds the agents
                 are allowed to interact. Default is 6.
-            allow_repeat_speaker (bool, optional): Flag to allow or disallow 
+            allow_repeat_speaker (bool, optional): Flag to allow or disallow
                 the same agent to speak consecutively. Default is False.
 
         Returns:

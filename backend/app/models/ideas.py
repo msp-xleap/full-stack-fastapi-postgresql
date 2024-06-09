@@ -17,8 +17,8 @@ class IdeaBase(SQLModel):
     created_by: str | None = None
     """ ID of the user or AI who created the idea (may depend on anonymity settings) """
     visible: bool = True
-    """ The microservice may receive ideas that are not visible to it. Invisible ideas should 
-        only be used for counting purposes. E.g. act after n-human contributions.     
+    """ The microservice may receive ideas that are not visible to it. Invisible ideas should
+        only be used for counting purposes. E.g. act after n-human contributions.
     """
 
 
@@ -46,7 +46,7 @@ class IdeaGenerationData(SQLModel):
     """
     reference: str
     """ the secret to be presented to XLeap with every generated example idea
-        This is required to bypass Agent.is_active check in XLeap 
+        This is required to bypass Agent.is_active check in XLeap
     """
     num_items: int
     """ the number of items to generate """

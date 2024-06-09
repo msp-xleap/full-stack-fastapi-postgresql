@@ -59,7 +59,7 @@ class AIBriefingTest(SQLModel):
     """
     secret: str
     """ the secret to be presented to XLeap with every generated example idea
-        This is required to bypass Agent.is_active check in XLeap 
+        This is required to bypass Agent.is_active check in XLeap
     """
     num_samples: int
     """ the number of examples to generate """

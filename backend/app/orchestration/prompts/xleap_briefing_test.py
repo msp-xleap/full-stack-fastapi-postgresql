@@ -46,8 +46,8 @@ async def generate_ideas_and_post(
 
         await xleap_test.generate_and_post_ideas()
 
-        logging.info(""" 
-        ################ 
+        logging.info("""
+        ################
         XLeapBriefingTest completed
         ################
         """)
