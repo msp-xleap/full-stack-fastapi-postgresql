@@ -15,7 +15,9 @@ from app.orchestration.prompts import BrainstormBasePrompt, langfuse_handler
 from app.utils import get_last_n_ideas
 from app.utils.agents import get_agent_by_id
 from app.utils.briefings import get_briefing2_by_agent_id
-from app.utils.streaming_briefing_test_token_consumer import XLeapStreamingTokenizer
+from app.utils.streaming_briefing_test_token_consumer import (
+    XLeapStreamingTokenizer,
+)
 
 from .xleap_system_prompt_base import GeneratedPrompt, XLeapSystemPromptBase
 

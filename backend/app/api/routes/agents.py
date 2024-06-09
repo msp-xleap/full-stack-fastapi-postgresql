@@ -13,10 +13,14 @@ from app.models import (
     AIAgentIdResponse,
     AIAgentsOut,
     AIBriefing2Base,
-    BriefingTextResponse,
     AIBriefingTest,
+    BriefingTextResponse,
 )
-from app.utils import check_agent_exists_by_instance_id, get_agent_by_id, get_briefing2_by_agent_id
+from app.utils import (
+    check_agent_exists_by_instance_id,
+    get_agent_by_id,
+    get_briefing2_by_agent_id,
+)
 
 router = APIRouter()
 
@@ -228,7 +232,9 @@ async def test_briefing(
     :param session:
     :return:
     """
-    from app.orchestration.prompts.xleap_briefing_test import generate_ideas_and_post
+    from app.orchestration.prompts.xleap_briefing_test import (
+        generate_ideas_and_post,
+    )
     # Check if agent already exists
     agent = get_agent_by_id(agent_id, session)
 

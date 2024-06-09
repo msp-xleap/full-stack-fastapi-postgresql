@@ -5,17 +5,17 @@ from fastapi import APIRouter, BackgroundTasks
 from app import crud
 from app.api.deps import SessionDep
 from app.models import Idea, IdeaBase, IdeaGenerationData
-
-
 from app.orchestration.prompts.dynamic import generate_idea_and_post
 from app.utils import (
+    agent_manager,
     check_if_idea_exists,
-    get_agent_by_id,
-    get_briefing2_by_agent_id,
-    get_last_ai_idea, get_ai_idea_share, should_ai_post_new_idea,
-    get_human_ideas_since,
     delete_idea_by_agent_and_id,
-    agent_manager
+    get_agent_by_id,
+    get_ai_idea_share,
+    get_briefing2_by_agent_id,
+    get_human_ideas_since,
+    get_last_ai_idea,
+    should_ai_post_new_idea,
 )
 
 router = APIRouter()

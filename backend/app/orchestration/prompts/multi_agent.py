@@ -1,6 +1,4 @@
-import logging
 import re
-from typing import List
 
 import aiohttp
 import autogen
@@ -132,7 +130,7 @@ class MultiAgent(BasePrompt):
 
         return tone.content
 
-    async def _initialize_agents(self, tone: str) -> List[AssistantAgent]:
+    async def _initialize_agents(self, tone: str) -> list[AssistantAgent]:
         """
         Initializes and returns a list of agents based on the given tone.
 
@@ -157,7 +155,7 @@ class MultiAgent(BasePrompt):
 
         return agent_list
 
-    async def _conduct_group_discussion(self, agents: List[AssistantAgent],
+    async def _conduct_group_discussion(self, agents: list[AssistantAgent],
                                   task: str,
                                   max_rounds: int = 6, allow_repeat_speaker:
             bool = False) -> str:
@@ -166,7 +164,7 @@ class MultiAgent(BasePrompt):
         configurations.
         Manages the interaction between agents in a group chat to generate 
         ideas based on the initial task prompt.
-    
+
         Args:
             agents (List[AssistantAgent]): List of participating agents.
             task (str): The initial task message to start the conversation.
@@ -174,7 +172,7 @@ class MultiAgent(BasePrompt):
                 are allowed to interact. Default is 6.
             allow_repeat_speaker (bool, optional): Flag to allow or disallow 
                 the same agent to speak consecutively. Default is False.
-    
+
         Returns:
             str: Concatenated string of all messages from the group chat.
         """

@@ -1,4 +1,3 @@
-import logging
 import re
 
 import aiohttp
@@ -193,7 +192,7 @@ class ChainingPrompt(BasePrompt):
             prompt_name="SYSTEM_PROMPT"
         )
         context_prompt = await self._get_prompt_from_langfuse(
-            prompt_name=f"CONTEXT_PROMPT"
+            prompt_name="CONTEXT_PROMPT"
         )
         chaining_prompt_examples = await self._get_prompt_from_langfuse(
             prompt_name="CHAINING_PROMPT_EXAMPLES"

@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from html import escape
 
 from app.models import Briefing2, Briefing2Reference, Idea
 

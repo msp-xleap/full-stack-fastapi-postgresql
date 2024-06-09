@@ -1,8 +1,9 @@
 import logging
 
-from app.core.db import engine
 from sqlmodel import Session
-from app.models import AIAgent, Briefing2, PromptStrategyType
+
+from app.core.db import engine
+from app.models import PromptStrategyType
 from app.utils import (
     AgentGenerationLock,
     get_prompt_strategy,
@@ -10,11 +11,12 @@ from app.utils import (
 
 from .chaining import generate_idea_and_post as chaining_generate_idea_and_post
 from .few_shot import generate_idea_and_post as few_shot_generate_idea_and_post
+from .multi_agent import (
+    generate_idea_and_post as multi_agent_generate_idea_and_post,
+)
 from .xleap_few_shot import (
     generate_idea_and_post as xleap_generate_idea_and_post,
 )
-from .multi_agent import (generate_idea_and_post as
-                          multi_agent_generate_idea_and_post)
 
 
 async def generate_idea_and_post(

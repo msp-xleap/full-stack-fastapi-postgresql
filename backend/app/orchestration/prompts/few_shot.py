@@ -1,8 +1,8 @@
+import aiohttp
 from langchain_core.prompts import (
     ChatPromptTemplate,
     FewShotChatMessagePromptTemplate,
 )
-import aiohttp
 from langchain_openai import ChatOpenAI
 
 from app.api.deps import SessionDep

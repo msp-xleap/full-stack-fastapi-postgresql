@@ -5,17 +5,20 @@ from langchain_core.prompts import (
     ChatPromptTemplate,
 )
 from langchain_openai import ChatOpenAI
-
-from app.core.db import engine
 from sqlmodel import Session
+
 from app.core.config import settings
+from app.core.db import engine
+from app.crud import get_ai_agent_references
 from app.models import AIAgent, Briefing2, Briefing2Reference
 from app.orchestration.prompts import BrainstormBasePrompt, langfuse_handler
-from app.crud import get_ai_agent_references
-from .xleap_system_prompt_base import XLeapSystemPromptBase, GeneratedPrompt
-from app.utils.streaming_briefing_test_token_consumer import XLeapStreamingTokenizer
 from app.utils.agents import get_agent_by_id
 from app.utils.briefings import get_briefing2_by_agent_id
+from app.utils.streaming_briefing_test_token_consumer import (
+    XLeapStreamingTokenizer,
+)
+
+from .xleap_system_prompt_base import GeneratedPrompt, XLeapSystemPromptBase
 
 
 async def generate_ideas_and_post(

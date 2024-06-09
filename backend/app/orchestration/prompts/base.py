@@ -1,9 +1,8 @@
 from abc import abstractmethod
 
-from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
 
-from app.models import AIAgent, Briefing, Idea, Briefing2
+from app.models import AIAgent, Briefing2, Idea
 from app.orchestration.prompts import BrainstormBasePrompt
 from app.utils import TextTypeSwapper
 

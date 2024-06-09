@@ -1,10 +1,9 @@
+from collections.abc import AsyncIterable
+
 from langchain_core.messages import AIMessageChunk
 from langchain_core.runnables import RunnableGenerator
 
 from .token_buffer import TokenBuffer
-from typing import (
-    AsyncIterable
-)
 
 
 def _maybe_unquote(s: str) -> str:

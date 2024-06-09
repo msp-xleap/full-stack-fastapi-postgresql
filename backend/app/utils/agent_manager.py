@@ -1,6 +1,7 @@
-from datetime import datetime, timezone
 import threading
 import uuid as uuid_pkg
+from datetime import UTC, datetime
+
 from app.models import Idea
 
 
@@ -155,7 +156,7 @@ class AgentManager:
         """ Only to be called from AgentLock.release() """
         if (agent_id in self._generation_locks
                 and lock == self._generation_locks[agent_id]):
-            self._last_generation[agent_id] = datetime.now(timezone.utc)
+            self._last_generation[agent_id] = datetime.now(UTC)
 
             if next_context is not None:
                 self._generation_context[agent_id] = next_context

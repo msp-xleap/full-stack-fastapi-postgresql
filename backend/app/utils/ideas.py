@@ -1,14 +1,13 @@
 
+import logging
 import uuid as uuid_pkg
 from random import random
 
-from sqlmodel import Session, desc, select, func
-
-from app.models import Idea, AIAgent
-from app.utils import AgentGenerationLock
 from fastapi import HTTPException
+from sqlmodel import Session, desc, func, select
 
-import logging
+from app.models import AIAgent, Idea
+from app.utils import AgentGenerationLock
 
 
 def check_if_idea_exists(
@@ -170,7 +169,7 @@ def should_ai_post_new_idea(
 
     if previous_id is not None and previous_id == last_ai_idea.id:
         if debug:
-            logging.info(f"should_ai_post_new_idea: base idea is still the same, not continuing")
+            logging.info("should_ai_post_new_idea: base idea is still the same, not continuing")
         return False
 
     # Defines the "ideal" share of AI ideas.
@@ -206,7 +205,7 @@ def should_ai_post_new_idea(
     # Evaluate fallback conditions
     if random_chance_to_post:
         if debug:
-            logging.info(f"should_ai_post_new_idea: Yes, because of randomness")
+            logging.info("should_ai_post_new_idea: Yes, because of randomness")
         return True
 
     if significant_idea_increase:
@@ -215,7 +214,7 @@ def should_ai_post_new_idea(
         return True
 
     if debug:
-        logging.info(f"should_ai_post_new_idea: No finally")
+        logging.info("should_ai_post_new_idea: No finally")
     return False
 
 

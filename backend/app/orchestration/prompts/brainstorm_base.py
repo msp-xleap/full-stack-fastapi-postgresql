@@ -4,14 +4,12 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 import aiohttp
-from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
+from sqlmodel import Session
 
 from app.models import AIAgent, Idea
 from app.orchestration.data import resolve_server_addr
 from app.orchestration.prompts import langfuse_client, langfuse_handler
-
-from sqlmodel import Session
 
 
 class BrainstormBasePrompt(ABC):
