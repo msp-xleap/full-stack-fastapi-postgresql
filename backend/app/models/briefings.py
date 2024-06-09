@@ -206,6 +206,7 @@ class AIBriefing2ReferenceBase(SQLModel):
     url_expires_at: str
     filename: str
 
+
 class AIBriefing2Base(SQLModel):
     instance_id: str
     """ reference to the ID in XLeap for the briefing """
@@ -452,7 +453,7 @@ class Briefing2(SQLModel, table=True):
     temperature: int = 70
     response_length: int = 3
     response_length_langfuse_name: str = ""
-    with_response_language:bool = False
+    with_response_language: bool = False
     response_language: str = ""
     response_language_langfuse_name: str = ""
     context_intro_langfuse_name: str = ""

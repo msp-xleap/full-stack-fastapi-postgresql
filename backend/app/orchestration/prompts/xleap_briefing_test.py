@@ -22,10 +22,10 @@ from .xleap_system_prompt_base import GeneratedPrompt, XLeapSystemPromptBase
 
 
 async def generate_ideas_and_post(
-        agent_id: str,
-        test_secret: str,
-        num_ideas_to_generate: int,
-        ) -> None:
+    agent_id: str,
+    test_secret: str,
+    num_ideas_to_generate: int,
+) -> None:
     """
     Generate idea and post it to the XLeap server
     """
@@ -34,7 +34,9 @@ async def generate_ideas_and_post(
         attached_agent = get_agent_by_id(agent_id, session)
         attached_briefing = get_briefing2_by_agent_id(agent_id, session)
 
-        references = get_ai_agent_references(session=session, agent=attached_agent)
+        references = get_ai_agent_references(
+            session=session, agent=attached_agent
+        )
         xleap_test = XLeapBriefingTest(
             agent=attached_agent,
             briefing=attached_briefing,
@@ -46,28 +48,32 @@ async def generate_ideas_and_post(
 
         await xleap_test.generate_and_post_ideas()
 
-        logging.info("""
+        logging.info(
+            """
         ################
         XLeapBriefingTest completed
         ################
-        """)
+        """
+        )
 
 
 class XLeapBriefingTest(BrainstormBasePrompt, XLeapSystemPromptBase):
     """
-        Class using basic XLeap prompting and Langchain API to generate ideas
+    Class using basic XLeap prompting and Langchain API to generate ideas
     """
 
     _lang_chain_input: dict
 
-    def __init__(self,
-                 agent: AIAgent,
-                 briefing: Briefing2,
-                 references: list[Briefing2Reference],
-                 test_secret: str,
-                 session: Session,
-                 num_ideas_to_generate: int = 12,
-                 temperature: float = 0.5):
+    def __init__(
+        self,
+        agent: AIAgent,
+        briefing: Briefing2,
+        references: list[Briefing2Reference],
+        test_secret: str,
+        session: Session,
+        num_ideas_to_generate: int = 12,
+        temperature: float = 0.5,
+    ):
         super().__init__(agent=agent, ideas=None, temperature=temperature)
         self._briefing = briefing
         self._references = references
@@ -97,13 +103,18 @@ class XLeapBriefingTest(BrainstormBasePrompt, XLeapSystemPromptBase):
 
         try:
             async for chunk in chain.astream(
-                    input=self._lang_chain_input,
-                    config={"callbacks": [langfuse_handler]}):
-                logging.info(f"""
+                input=self._lang_chain_input,
+                config={"callbacks": [langfuse_handler]},
+            ):
+                logging.info(
+                    f"""
                     XLeapBriefingTest.generate_and_post_ideas
                     chunk is {chunk}
-                """)
-                await self.post_idea(idea=chunk, task_reference=self._test_secret)
+                """
+                )
+                await self.post_idea(
+                    idea=chunk, task_reference=self._test_secret
+                )
         except aiohttp.ClientResponseError as err:
             raise err
 
@@ -116,9 +127,11 @@ class XLeapBriefingTest(BrainstormBasePrompt, XLeapSystemPromptBase):
             prompt_name=self._briefing.test_briefing_langfuse_name
         )
 
-        lang_chain_input: dict= {"num_generate": self._num_ideas_to_generate}
+        lang_chain_input: dict = {"num_generate": self._num_ideas_to_generate}
 
-        return GeneratedPrompt(prompt=prompt, lang_chain_input=lang_chain_input)
+        return GeneratedPrompt(
+            prompt=prompt, lang_chain_input=lang_chain_input
+        )
 
     async def _generate_prompt(self) -> ChatPromptTemplate:
         """
@@ -128,19 +141,23 @@ class XLeapBriefingTest(BrainstormBasePrompt, XLeapSystemPromptBase):
             str: Generated prompt
 
         """
-        system_prompt = await self.generate_system_prompt(briefing=self._briefing, references=self._references)
+        system_prompt = await self.generate_system_prompt(
+            briefing=self._briefing, references=self._references
+        )
 
         test_task_prompt = await self.generate_test_prompt()
 
         self._lang_chain_input = {
             **system_prompt.lang_chain_input,
-            **test_task_prompt.lang_chain_input
+            **test_task_prompt.lang_chain_input,
         }
 
-        final_prompt = ChatPromptTemplate.from_messages([
-            ("system", system_prompt.prompt),
-            ("human", test_task_prompt.prompt)
-        ])
+        final_prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", system_prompt.prompt),
+                ("human", test_task_prompt.prompt),
+            ]
+        )
         return final_prompt
 
     async def generate_idea(self) -> str:
@@ -151,5 +168,3 @@ class XLeapBriefingTest(BrainstormBasePrompt, XLeapSystemPromptBase):
             str: Generated idea
         """
         raise NotImplementedError  # not used
-
-

@@ -42,16 +42,17 @@ async def generate_idea_and_post(
     )
 
     multi_agent = MultiAgent(
-        agent=attached_agent, briefing=attached_briefing, ideas=attached_ideas,
-        task_reference=task_reference
+        agent=attached_agent,
+        briefing=attached_briefing,
+        ideas=attached_ideas,
+        task_reference=task_reference,
     )
     await multi_agent.generate_idea()
 
     # refresh agent object again, then check if our agent is still active,
     # before posting the Idea to XLeap
     attached_agent = session.get(AIAgent, attached_agent.id)
-    if (attached_agent.is_active
-            or task_reference is not None):
+    if attached_agent.is_active or task_reference is not None:
         try:
             await multi_agent.post_idea()
         except aiohttp.ClientResponseError as err:
@@ -123,8 +124,10 @@ class MultiAgent(BasePrompt):
 
         # Invoke chain
         tone = chain.invoke(
-            input={"question": self._briefing.workspace_instruction,
-                   "idea": examples},
+            input={
+                "question": self._briefing.workspace_instruction,
+                "idea": examples,
+            },
             config={"callbacks": [langfuse_handler]},
         )
 
@@ -149,16 +152,21 @@ class MultiAgent(BasePrompt):
         # Initialize first agent `Mayor`
         mayor = await self._generate_autogen_agent("MAYOR", "Mayor", tone)
         # Initiliaze second agent
-        second_agent = await self._generate_autogen_agent("OTHER", self._briefing.persona, tone)
+        second_agent = await self._generate_autogen_agent(
+            "OTHER", self._briefing.persona, tone
+        )
 
         agent_list = [mayor, second_agent]
 
         return agent_list
 
-    async def _conduct_group_discussion(self, agents: list[AssistantAgent],
-                                  task: str,
-                                  max_rounds: int = 6, allow_repeat_speaker:
-            bool = False) -> str:
+    async def _conduct_group_discussion(
+        self,
+        agents: list[AssistantAgent],
+        task: str,
+        max_rounds: int = 6,
+        allow_repeat_speaker: bool = False,
+    ) -> str:
         """
         Sets up a group chat environment for the agents with specified
         configurations.
@@ -180,13 +188,17 @@ class MultiAgent(BasePrompt):
         llm_configs = await self._get_agent_configs()
 
         # Initializes a GroupChat object with a list of agents.
-        group_chat = GroupChat(agents=agents, messages=[],
-                               max_round=max_rounds,
-                  allow_repeat_speaker=allow_repeat_speaker)
+        group_chat = GroupChat(
+            agents=agents,
+            messages=[],
+            max_round=max_rounds,
+            allow_repeat_speaker=allow_repeat_speaker,
+        )
         # This manager will handle the operation and progression of the
         # group chat.
-        manager = GroupChatManager(groupchat=group_chat,
-                                   llm_config=llm_configs)
+        manager = GroupChatManager(
+            groupchat=group_chat, llm_config=llm_configs
+        )
         # The first agent in the list starts the chat by sending an initial
         # message (task) which sets the context or the topic for the group
         # discussion.
@@ -214,7 +226,10 @@ class MultiAgent(BasePrompt):
         # Generate chat prompt template
         tone_prompt = ChatPromptTemplate.from_messages(
             [
-                ("human", examples_prompt_template + tone_char_prompt_template),
+                (
+                    "human",
+                    examples_prompt_template + tone_char_prompt_template,
+                ),
             ]
         )
         return tone_prompt
@@ -234,15 +249,19 @@ class MultiAgent(BasePrompt):
         """
         # Template for task description
         task_prompt_template = self._langfuse_client.get_prompt(
-            "MULTI_AGENT_TASK_PROMPT")
+            "MULTI_AGENT_TASK_PROMPT"
+        )
 
         # Fill variables into prompt template
         task_prompt = task_prompt_template.compile(
-            question=self._briefing.workspace_instruction, ideas=examples)
+            question=self._briefing.workspace_instruction, ideas=examples
+        )
 
         return task_prompt
 
-    async def _generate_agent_prompt(self, type: str, role: str, tone: str) -> str:
+    async def _generate_agent_prompt(
+        self, type: str, role: str, tone: str
+    ) -> str:
         """
         Generates a customized prompt for an agent based on the specified
         ype, role, and tone.
@@ -272,14 +291,14 @@ class MultiAgent(BasePrompt):
 
         # Fill variables into prompt template
         agent_system_message = agent_system_prompt_template.compile(
-            role=role,
-            question=self._briefing.workspace_instruction,
-            tone=tone
+            role=role, question=self._briefing.workspace_instruction, tone=tone
         )
 
         return agent_system_message
 
-    async def _generate_autogen_agent(self, type: str, role: str, tone: str) -> AssistantAgent:
+    async def _generate_autogen_agent(
+        self, type: str, role: str, tone: str
+    ) -> AssistantAgent:
         """
         Generates an autonomous agent with specified parameters.
 
@@ -339,11 +358,13 @@ class MultiAgent(BasePrompt):
         """
         # Define the configuration settings for the language model interaction
         llm_config = {
-            'config_list': [{'model': self._agent.model, 'api_key': self._agent.api_key}],
-            'temperature': 0.7,  # Adjusts the randomness of the model's responses
-            'top_p': 0.7,  # Controls the diversity of the model's responses
-            'frequency_penalty': 0.7,  # Discourages repetitive responses
-            'presence_penalty': 0.7  # Encourages novel topic introduction
+            "config_list": [
+                {"model": self._agent.model, "api_key": self._agent.api_key}
+            ],
+            "temperature": 0.7,  # Adjusts the randomness of the model's responses
+            "top_p": 0.7,  # Controls the diversity of the model's responses
+            "frequency_penalty": 0.7,  # Discourages repetitive responses
+            "presence_penalty": 0.7,  # Encourages novel topic introduction
         }
         return llm_config
 
@@ -367,12 +388,10 @@ class MultiAgent(BasePrompt):
         # Return the content of the last match
         content = matches[-1]
         # Transform special characters
-        content = content.strip().encode('utf-8').decode('unicode_escape')
+        content = content.strip().encode("utf-8").decode("unicode_escape")
         # Remove all occurrences of **
         content = content.replace("**", "")
         # Remove all occurrences of "
         content = content.replace('"', "")
 
         return content
-
-

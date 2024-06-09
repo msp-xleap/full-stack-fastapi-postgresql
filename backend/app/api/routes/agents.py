@@ -58,13 +58,19 @@ async def create_agent(
 
     # Create agent if it does not exist
     agent = crud.create_ai_agent(session=session, ai_agent=agent_in)
-    briefing = crud.create_ai_agent_briefing2(session=session, ai_agent=agent, briefing_base=agent_in.briefing)
+    briefing = crud.create_ai_agent_briefing2(
+        session=session, ai_agent=agent, briefing_base=agent_in.briefing
+    )
 
     for brie_ref in agent_in.briefing.workspace_info_references:
-        crud.create_ai_agent_briefing2_reference(session=session, briefing=briefing, briefing_ref_base=brie_ref)
+        crud.create_ai_agent_briefing2_reference(
+            session=session, briefing=briefing, briefing_ref_base=brie_ref
+        )
 
     for exemplar in agent_in.briefing.exemplar_references:
-        crud.create_ai_agent_briefing2_reference(session=session, briefing=briefing, briefing_ref_base=exemplar)
+        crud.create_ai_agent_briefing2_reference(
+            session=session, briefing=briefing, briefing_ref_base=exemplar
+        )
 
     # background_tasks.add_task(get_agent_briefing, agent)
 
@@ -147,10 +153,8 @@ async def deactivate_agent(agent_id: str, session: SessionDep) -> None:
     status_code=200,
 )
 async def update_agent_briefing(
-        *,
-        agent_id: str,
-        briefing_in: AIBriefing2Base,
-        session: SessionDep) -> Any:
+    *, agent_id: str, briefing_in: AIBriefing2Base, session: SessionDep
+) -> Any:
     """
     Updates the briefing of an existing agent.
 
@@ -172,12 +176,14 @@ async def update_agent_briefing(
     # Find agent by ID
     agent = get_agent_by_id(agent_id, session)
 
-    crud.create_or_update_ai_agent_briefing2(session=session, ai_agent=agent, briefing_base=briefing_in)
+    crud.create_or_update_ai_agent_briefing2(
+        session=session, ai_agent=agent, briefing_base=briefing_in
+    )
 
     crud.replace_briefing2_references(
         session=session,
         agent_id=str(agent.id),
-        briefing_refs=briefing_in.workspace_info_references
+        briefing_refs=briefing_in.workspace_info_references,
     )
     return None
 
@@ -191,34 +197,39 @@ async def update_agent_briefing(
     },
     status_code=200,
 )
-async def get_briefing_as_text(
-        *,
-        agent_id: str,
-        session: SessionDep) -> Any:
+async def get_briefing_as_text(*, agent_id: str, session: SessionDep) -> Any:
     from app.orchestration.prompts.xleap_few_shot import describe_system_prompt
+
     # Check if agent exists
     agent = get_agent_by_id(agent_id, session)
     briefing = get_briefing2_by_agent_id(agent_id, session)
     prompt = await describe_system_prompt(agent, briefing, session)
 
-    logging.info(json.dumps({"text": prompt.prompt, "vars": prompt.lang_chain_input}, indent=4))
+    logging.info(
+        json.dumps(
+            {"text": prompt.prompt, "vars": prompt.lang_chain_input}, indent=4
+        )
+    )
 
     return BriefingTextResponse(
         text=prompt.prompt.format(**prompt.lang_chain_input)
     )
 
 
-@router.post("/{agent_id}/test",
-             responses={
-                 403: {"detail": "Invalid secret"},
-                 404: {"detail": "Agent not found"},
-             },
-             status_code=202)
+@router.post(
+    "/{agent_id}/test",
+    responses={
+        403: {"detail": "Invalid secret"},
+        404: {"detail": "Agent not found"},
+    },
+    status_code=202,
+)
 async def test_briefing(
-        agent_id: str,
-        config: AIBriefingTest,
-        session: SessionDep,
-        background_tasks: BackgroundTasks) -> None:
+    agent_id: str,
+    config: AIBriefingTest,
+    session: SessionDep,
+    background_tasks: BackgroundTasks,
+) -> None:
     """
     Tests the briefing for an agent.
     This test can be run at any time meaning, unlike create_idea
@@ -235,9 +246,13 @@ async def test_briefing(
     from app.orchestration.prompts.xleap_briefing_test import (
         generate_ideas_and_post,
     )
+
     # Check if agent already exists
     agent = get_agent_by_id(agent_id, session)  # noqa
 
     background_tasks.add_task(
-        generate_ideas_and_post, agent_id, config.secret, config.num_samples,
+        generate_ideas_and_post,
+        agent_id,
+        config.secret,
+        config.num_samples,
     )

@@ -55,8 +55,8 @@ class AIAgentsOut(SQLModel):
 
 
 class AIBriefingTest(SQLModel):
-    """ Generate number of examples based on a briefing
-    """
+    """Generate number of examples based on a briefing"""
+
     secret: str
     """ the secret to be presented to XLeap with every generated example idea
         This is required to bypass Agent.is_active check in XLeap

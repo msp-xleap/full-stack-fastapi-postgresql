@@ -270,7 +270,6 @@ class XLeapSystemPromptBase(ABC):
             prompt_parts.append(prompt)
             lang_chain_input["response_language"] = briefing.response_language
 
-
         system_prompt = "\n".join(prompt_parts)
 
         return GeneratedPrompt(
@@ -289,7 +288,10 @@ class XLeapSystemPromptBase(ABC):
         return result
 
     async def generate_task_prompt(
-        self, briefing: Briefing2, ideas: list[Idea] | None, num_contributions:int = 1
+        self,
+        briefing: Briefing2,
+        ideas: list[Idea] | None,
+        num_contributions: int = 1,
     ) -> GeneratedPrompt:
         """
         Generates the task for the agent to generate an own idea
@@ -302,8 +304,12 @@ class XLeapSystemPromptBase(ABC):
         """
         lang_chain_input: dict = {}
 
-        num_human_ideas = len(list(filter(lambda idea: not idea.created_by_ai, ideas)))
-        num_ai_ideas = len(list(filter(lambda idea: idea.created_by_ai, ideas)))
+        num_human_ideas = len(
+            list(filter(lambda idea: not idea.created_by_ai, ideas))
+        )
+        num_ai_ideas = len(
+            list(filter(lambda idea: idea.created_by_ai, ideas))
+        )
 
         # if there are contributions from either the AI or participants
         # the instruction also contains a constraint instruction to produce
@@ -328,7 +334,7 @@ class XLeapSystemPromptBase(ABC):
                 prompt_name = briefing.task_multi_na_langfuse_name
             else:
                 prompt_name = briefing.task_multi_pa_langfuse_name
-            lang_chain_input['num_contributions'] = num_contributions
+            lang_chain_input["num_contributions"] = num_contributions
 
         task_prompt = await self._get_prompt_from_langfuse(
             prompt_name=prompt_name

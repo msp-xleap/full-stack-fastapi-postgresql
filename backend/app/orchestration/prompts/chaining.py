@@ -48,19 +48,23 @@ async def generate_idea_and_post(
     )
 
     prompt_chaining = ChainingPrompt(
-        agent=attached_agent, briefing=attached_briefing, ideas=attached_ideas, task_reference=task_reference
+        agent=attached_agent,
+        briefing=attached_briefing,
+        ideas=attached_ideas,
+        task_reference=task_reference,
     )
     await prompt_chaining.generate_idea()
 
     # refresh agent object again, then check if our agent is still active,
     # before posting the Idea to XLeap
     attached_agent = session.get(AIAgent, attached_agent.id)
-    if (attached_agent.is_active
-            or task_reference is not None):
+    if attached_agent.is_active or task_reference is not None:
         try:
             await prompt_chaining.post_idea()
         except aiohttp.ClientResponseError as err:
-            prompt_chaining.maybe_deactivate_agent(err, attached_agent, session)
+            prompt_chaining.maybe_deactivate_agent(
+                err, attached_agent, session
+            )
             raise err
 
 
@@ -120,18 +124,27 @@ class ChainingPrompt(BasePrompt):
                 idea_generation_chain,
                 idea_selection_chain,
             ],
-            input_variables=["question", "idea", "persona", "setting", "language", "context"],
+            input_variables=[
+                "question",
+                "idea",
+                "persona",
+                "setting",
+                "language",
+                "context",
+            ],
             output_variables=["selected_idea"],
         )
 
         # Invoke the chain with the input
         idea = await ss_chain.ainvoke(
-            input={"question": self._briefing.workspace_instruction,
-                   "idea": examples,
-                   "persona": self._briefing.persona,
-                   "setting": self._briefing.participant_info,
-                   "context": self._briefing.workspace_info,
-                   "language": "German"},
+            input={
+                "question": self._briefing.workspace_instruction,
+                "idea": examples,
+                "persona": self._briefing.persona,
+                "setting": self._briefing.participant_info,
+                "context": self._briefing.workspace_info,
+                "language": "German",
+            },
             config={"callbacks": [langfuse_handler]},
         )
 

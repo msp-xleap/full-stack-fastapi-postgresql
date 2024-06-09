@@ -6,20 +6,22 @@ from app.models import Idea
 
 
 class AgentContext:
-
     def __init__(self, idea: Idea):
         self.last_idea = idea
 
 
 class AgentGenerationLock:
-    """ Represents the result of a AgentManager.try_acquire_generation_lock method
-        You must check 'lock.acquired' before you enter the code which requires the lock
-        Furthermore, if you successfully acquired the lock you must release it with AgentGenerationLock.release()
+    """Represents the result of a AgentManager.try_acquire_generation_lock method
+    You must check 'lock.acquired' before you enter the code which requires the lock
+    Furthermore, if you successfully acquired the lock you must release it with AgentGenerationLock.release()
     """
-    def __init__(self,
-                 agent_id: uuid_pkg.uuid4,
-                 context: AgentContext | None = None,
-                 lock: threading.Lock = None):
+
+    def __init__(
+        self,
+        agent_id: uuid_pkg.uuid4,
+        context: AgentContext | None = None,
+        lock: threading.Lock = None,
+    ):
         self.acquired = lock is not None
         self.agent_id = agent_id
         self._lock = lock
@@ -40,35 +42,43 @@ class AgentGenerationLock:
         return None
 
     def release(self):
-        """ release the lock held be the agent"""
+        """release the lock held be the agent"""
         if self._released:
             return
         if self._lock is not None:
             self._released = True
-            agent_manager.release_generation_lock(lock=self._lock, agent_id=self.agent_id, next_context=self._context)
+            agent_manager.release_generation_lock(
+                lock=self._lock,
+                agent_id=self.agent_id,
+                next_context=self._context,
+            )
 
 
 class AgentContributionLock:
-    """ Represents the result of a AgentManager.acquire_contribution_lock method
-        This lock was always acquired and must be released by calling AgentContributionLock.release()
+    """Represents the result of a AgentManager.acquire_contribution_lock method
+    This lock was always acquired and must be released by calling AgentContributionLock.release()
     """
+
     def __init__(self, agent_id: uuid_pkg.uuid4, lock: threading.Lock = None):
         self.agent_id = agent_id
         self.lock = lock
 
     def release(self):
-        """ release the lock held be the agent"""
+        """release the lock held be the agent"""
         if self.lock is not None:
-            agent_manager.release_contribution_lock(lock=self.lock, agent_id=self.agent_id)
+            agent_manager.release_contribution_lock(
+                lock=self.lock, agent_id=self.agent_id
+            )
 
 
 class AgentManager:
     """
-        The AgentManager provides a locking facilities for two types
-        a) making sure that the same agent is not generating ideas more than once
-        b) synchronizing the internal counter, so that if XLeap sends two ideas at the same
-           time they do get different idea counts
+    The AgentManager provides a locking facilities for two types
+    a) making sure that the same agent is not generating ideas more than once
+    b) synchronizing the internal counter, so that if XLeap sends two ideas at the same
+       time they do get different idea counts
     """
+
     _generation_locks: dict[uuid_pkg.uuid4, threading.Lock] = {}
     """ map from Agent uuid to lock for that agent """
     _contribution_lock: dict[uuid_pkg.uuid4, threading.Lock] = {}
@@ -84,7 +94,9 @@ class AgentManager:
         # Creating a lock for each agent based on their unique ID
         self._internalLock = threading.Lock()
 
-    def _find_generation_lock(self, agent_id: uuid_pkg.uuid4) -> threading.Lock:
+    def _find_generation_lock(
+        self, agent_id: uuid_pkg.uuid4
+    ) -> threading.Lock:
         self._internalLock.acquire()
         try:
             if agent_id not in self._generation_locks:
@@ -93,7 +105,9 @@ class AgentManager:
         finally:
             self._internalLock.release()
 
-    def _find_contribution_lock(self, agent_id: uuid_pkg.uuid4) -> threading.Lock:
+    def _find_contribution_lock(
+        self, agent_id: uuid_pkg.uuid4
+    ) -> threading.Lock:
         self._internalLock.acquire()
         try:
             if agent_id not in self._contribution_lock:
@@ -102,21 +116,25 @@ class AgentManager:
         finally:
             self._internalLock.release()
 
-    def acquire_contribution_lock(self, agent_id: uuid_pkg.uuid4) -> AgentContributionLock:
-        """ Acquire a write lock to create a new contribution (e.g. Idea). Blocks until the write
-            lock was acquired
-            :returns the AgentContributionLock which must be release with AgentContributionLock.release()
+    def acquire_contribution_lock(
+        self, agent_id: uuid_pkg.uuid4
+    ) -> AgentContributionLock:
+        """Acquire a write lock to create a new contribution (e.g. Idea). Blocks until the write
+        lock was acquired
+        :returns the AgentContributionLock which must be release with AgentContributionLock.release()
         """
         # Acquiring the lock for the specific agent
         lock = self._find_contribution_lock(agent_id=agent_id)
         lock.acquire(blocking=True)
         return AgentContributionLock(lock=lock, agent_id=agent_id)
 
-    def _acquire_generation_lock(self, agent_id: uuid_pkg.uuid4, blocking: bool) -> AgentGenerationLock:
-        """ tries to acquire a write lock for the specified agent
-            if blocking is true, the current job will wait until the lock is obtained, if false
-            and a job is already running the method returns a non-acquired lock
-            :returns an AgentLock with acquire: True if this was successful, False otherwise
+    def _acquire_generation_lock(
+        self, agent_id: uuid_pkg.uuid4, blocking: bool
+    ) -> AgentGenerationLock:
+        """tries to acquire a write lock for the specified agent
+        if blocking is true, the current job will wait until the lock is obtained, if false
+        and a job is already running the method returns a non-acquired lock
+        :returns an AgentLock with acquire: True if this was successful, False otherwise
         """
         # Acquiring the lock for the specific agent
         lock = self._find_generation_lock(agent_id=agent_id)
@@ -127,35 +145,49 @@ class AgentManager:
         if lock.acquire(blocking=blocking):
             if last_context is not None:
                 last_context = AgentContext(last_context.last_idea)
-            return AgentGenerationLock(agent_id=agent_id, lock=lock, context=last_context)
+            return AgentGenerationLock(
+                agent_id=agent_id, lock=lock, context=last_context
+            )
         else:
             return AgentGenerationLock(agent_id=agent_id)
 
-    def try_acquire_generation_lock(self, agent_id: uuid_pkg.uuid4) -> AgentGenerationLock:
-        """ tries to acquire a write lock for the specified agent
-            :returns an AgentLock with acquire: True if this was successful, False otherwise
+    def try_acquire_generation_lock(
+        self, agent_id: uuid_pkg.uuid4
+    ) -> AgentGenerationLock:
+        """tries to acquire a write lock for the specified agent
+        :returns an AgentLock with acquire: True if this was successful, False otherwise
         """
         return self._acquire_generation_lock(agent_id=agent_id, blocking=False)
 
-    def acquire_generation_lock(self, agent_id: uuid_pkg.uuid4) -> AgentGenerationLock:
-        """ tries to acquire a write lock for the specified agent
-            :returns an AgentLock with acquire: True if this was successful, False otherwise
+    def acquire_generation_lock(
+        self, agent_id: uuid_pkg.uuid4
+    ) -> AgentGenerationLock:
+        """tries to acquire a write lock for the specified agent
+        :returns an AgentLock with acquire: True if this was successful, False otherwise
         """
         return self._acquire_generation_lock(agent_id=agent_id, blocking=True)
 
-    def release_contribution_lock(self, agent_id: uuid_pkg.uuid4, lock: threading.Lock):
-        """ Only to be called from AgentLock.release() """
-        if (agent_id in self._contribution_lock
-                and lock == self._contribution_lock[agent_id]):
+    def release_contribution_lock(
+        self, agent_id: uuid_pkg.uuid4, lock: threading.Lock
+    ):
+        """Only to be called from AgentLock.release()"""
+        if (
+            agent_id in self._contribution_lock
+            and lock == self._contribution_lock[agent_id]
+        ):
             lock.release()
 
-    def release_generation_lock(self,
-                                agent_id: uuid_pkg.uuid4,
-                                lock: threading.Lock,
-                                next_context: AgentContext | None = None):
-        """ Only to be called from AgentLock.release() """
-        if (agent_id in self._generation_locks
-                and lock == self._generation_locks[agent_id]):
+    def release_generation_lock(
+        self,
+        agent_id: uuid_pkg.uuid4,
+        lock: threading.Lock,
+        next_context: AgentContext | None = None,
+    ):
+        """Only to be called from AgentLock.release()"""
+        if (
+            agent_id in self._generation_locks
+            and lock == self._generation_locks[agent_id]
+        ):
             self._last_generation[agent_id] = datetime.now(UTC)
 
             if next_context is not None:
@@ -164,8 +196,8 @@ class AgentManager:
             lock.release()
 
     def last_generation_completed(self, agent_id: uuid_pkg.uuid4):
-        """ returns the last time an agent completed a task or None if the agent
-            has not completed a task yet
+        """returns the last time an agent completed a task or None if the agent
+        has not completed a task yet
         """
         if agent_id in self._last_generation:
             return self._last_generation[agent_id]

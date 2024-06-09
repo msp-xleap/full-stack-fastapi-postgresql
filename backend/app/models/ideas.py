@@ -10,9 +10,7 @@ class IdeaBase(SQLModel):
     folder_id: str | None = None
     created_by_ai: bool
     """ did this AI create this idea? """
-    created_by_an_ai: bool = Field(
-        default=False, nullable=False
-    )
+    created_by_an_ai: bool = Field(default=False, nullable=False)
     """ did an AI (this or another) create this idea? """
     created_by: str | None = None
     """ ID of the user or AI who created the idea (may depend on anonymity settings) """
@@ -42,8 +40,8 @@ class Idea(IdeaBase, table=True):
 
 
 class IdeaGenerationData(SQLModel):
-    """ Generate number of examples based on a briefing
-    """
+    """Generate number of examples based on a briefing"""
+
     reference: str
     """ the secret to be presented to XLeap with every generated example idea
         This is required to bypass Agent.is_active check in XLeap

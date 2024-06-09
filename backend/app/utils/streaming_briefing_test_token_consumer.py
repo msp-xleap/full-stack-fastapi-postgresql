@@ -9,7 +9,7 @@ from .token_buffer import TokenBuffer
 def _maybe_unquote(s: str) -> str:
     length = len(s)
     if length > 1 and s[0] == '"' and s[length - 1] == '"':
-        return s[1:length-1]
+        return s[1 : length - 1]
     return s
 
 
@@ -17,19 +17,21 @@ class XLeapStreamingTokenizer(RunnableGenerator):
     _buffer = TokenBuffer()
     _contribution_counter: int = 0
     _token_counter: int = 0
-    _trigger_format_token: str = '##--##'
-    _trigger_format_token_lf = '\n##--##'
+    _trigger_format_token: str = "##--##"
+    _trigger_format_token_lf = "\n##--##"
 
     def __init__(self):
         # noinspection PyTypeChecker
         super().__init__(self.gen)
 
-        self.name = 'XLeapStreamingTokenizer'
+        self.name = "XLeapStreamingTokenizer"
 
-    def _extract_message_from_buffer(self, is_complete: bool) -> str | None :
-        first_separator = self._trigger_format_token \
-            if 0 == self._contribution_counter \
+    def _extract_message_from_buffer(self, is_complete: bool) -> str | None:
+        first_separator = (
+            self._trigger_format_token
+            if 0 == self._contribution_counter
             else self._trigger_format_token_lf
+        )
 
         buffer = self._buffer
 
@@ -46,7 +48,9 @@ class XLeapStreamingTokenizer(RunnableGenerator):
         if -1 == end:
             return None
 
-        contribution = _maybe_unquote(buffer.substring(message_start, end).strip())
+        contribution = _maybe_unquote(
+            buffer.substring(message_start, end).strip()
+        )
         buffer.delete(start, end)
         return contribution
 
@@ -58,7 +62,9 @@ class XLeapStreamingTokenizer(RunnableGenerator):
     def complete(self) -> str | None:
         return self._extract_message_from_buffer(True)
 
-    async def gen(self, chunks: AsyncIterable[AIMessageChunk]) -> AsyncIterable[str]:
+    async def gen(
+        self, chunks: AsyncIterable[AIMessageChunk]
+    ) -> AsyncIterable[str]:
         async for chunk in chunks:
             complete = self.append_token(chunk.content)
             if complete is not None:

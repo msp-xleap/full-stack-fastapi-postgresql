@@ -21,10 +21,12 @@ from app.utils import (
 router = APIRouter()
 
 
-def _maybe_kick_idea_generation(agent,
-                                agent_id: str,
-                                session: SessionDep,
-                                background_tasks: BackgroundTasks):
+def _maybe_kick_idea_generation(
+    agent,
+    agent_id: str,
+    session: SessionDep,
+    background_tasks: BackgroundTasks,
+):
     """
     To be called when we receive an Idea from XLeap. Check if the specified Agent should generate
     its next own idea.
@@ -58,7 +60,9 @@ def _maybe_kick_idea_generation(agent,
             last_ai_idea = get_last_ai_idea(session, agent_id)
             last_ai_idea_count = 0
             if last_ai_idea is not None:
-                last_ai_idea_count = get_human_ideas_since(session, agent.id, last_ai_idea)
+                last_ai_idea_count = get_human_ideas_since(
+                    session, agent.id, last_ai_idea
+                )
 
             ai_share = get_ai_idea_share(session, agent_id)
 
@@ -81,13 +85,19 @@ def _maybe_kick_idea_generation(agent,
             if should_post:
                 lock.set_last_idea(last_ai_idea)
                 background_tasks.add_task(
-                    generate_idea_and_post, str(agent.id), agent.host_id, lock, 1, None
+                    generate_idea_and_post,
+                    str(agent.id),
+                    agent.host_id,
+                    lock,
+                    1,
+                    None,
                 )
         finally:
             if not was_tasked:
                 lock.release()
     else:
         logging.info(f"Agent {agent.id} lock was already held")
+
 
 @router.post(
     "/agents/{agent_id}/ideas",
@@ -110,14 +120,19 @@ async def create_idea(
     # Check if agent exists
     agent = get_agent_by_id(agent_id, session)
 
-    cou_result = crud.create_or_update_idea(session=session, idea=idea, agent_id=agent_id)
+    cou_result = crud.create_or_update_idea(
+        session=session, idea=idea, agent_id=agent_id
+    )
     new_idea = cou_result.idea  # noqa
 
     if cou_result.is_new:
-        _maybe_kick_idea_generation(agent=agent,
-                                    agent_id=agent_id,
-                                    session=session,
-                                    background_tasks=background_tasks)
+        _maybe_kick_idea_generation(
+            agent=agent,
+            agent_id=agent_id,
+            session=session,
+            background_tasks=background_tasks,
+        )
+
 
 @router.post(
     "/agents/{agent_id}/ideas",
@@ -128,10 +143,10 @@ async def create_idea(
     status_code=202,
 )
 async def create_idea(  # noqa
-        agent_id: str,
-        session: SessionDep,
-        new_idea: IdeaBase,
-        background_tasks: BackgroundTasks,
+    agent_id: str,
+    session: SessionDep,
+    new_idea: IdeaBase,
+    background_tasks: BackgroundTasks,
 ) -> None:
     """
     Create a new idea. If idea for a given agent already exists, update the
@@ -144,21 +159,25 @@ async def create_idea(  # noqa
         session=session, idea_id=new_idea.id, agent_id=agent_id
     )
 
-    cou_result = crud.create_or_update_idea(session=session, idea=new_idea, agent_id=agent_id)
+    cou_result = crud.create_or_update_idea(
+        session=session, idea=new_idea, agent_id=agent_id
+    )
 
     if cou_result.is_new:
-        _maybe_kick_idea_generation(agent=agent,
-                                    agent_id=agent_id,
-                                    session=session,
-                                    background_tasks=background_tasks)
+        _maybe_kick_idea_generation(
+            agent=agent,
+            agent_id=agent_id,
+            session=session,
+            background_tasks=background_tasks,
+        )
 
 
 @router.post("/agents/{agent_id}/ideas/bulk", status_code=202)
 async def create_ideas(
-        agent_id: str,
-        ideas: list[IdeaBase],
-        session: SessionDep,
-        background_tasks: BackgroundTasks,
+    agent_id: str,
+    ideas: list[IdeaBase],
+    session: SessionDep,
+    background_tasks: BackgroundTasks,
 ) -> None:
     """
     Create multiple new ideas for an agent.
@@ -168,16 +187,20 @@ async def create_ideas(
 
     last_new_idea: Idea | None = None
     for idea in ideas:
-        cou_result = crud.create_or_update_idea(session=session, idea=idea, agent_id=agent_id)
+        cou_result = crud.create_or_update_idea(
+            session=session, idea=idea, agent_id=agent_id
+        )
 
         if cou_result.is_new:
             last_new_idea = cou_result.idea
 
     if last_new_idea is not None:
-        _maybe_kick_idea_generation(agent=agent,
-                                    agent_id=agent_id,
-                                    session=session,
-                                    background_tasks=background_tasks)
+        _maybe_kick_idea_generation(
+            agent=agent,
+            agent_id=agent_id,
+            session=session,
+            background_tasks=background_tasks,
+        )
 
 
 MARK_IDEAS_DELETED_ONLY = True
@@ -193,10 +216,10 @@ MARK_IDEAS_DELETED_ONLY = True
     status_code=200,
 )
 async def delete_ideas(
-        agent_id: str,
-        idea_ids: list[str],
-        session: SessionDep,
-        ) -> None:
+    agent_id: str,
+    idea_ids: list[str],
+    session: SessionDep,
+) -> None:
     """
     Deletes multiple Ideas for an agent
     :param agent_id: ID of Agent
@@ -204,10 +227,14 @@ async def delete_ideas(
     :param session: the database session
     """
     # Check if agent exists
-    get_agent_by_id(agent_id, session)  # throws 404 error is agent was not found
+    get_agent_by_id(
+        agent_id, session
+    )  # throws 404 error is agent was not found
 
     for idea_id in idea_ids:
-        delete_idea_by_agent_and_id(agent_id, idea_id, MARK_IDEAS_DELETED_ONLY, session, True)
+        delete_idea_by_agent_and_id(
+            agent_id, idea_id, MARK_IDEAS_DELETED_ONLY, session, True
+        )
 
 
 @router.delete(
@@ -219,9 +246,8 @@ async def delete_ideas(
     status_code=200,
 )
 async def delete_idea(
-        agent_id: str,
-        idea_id: str,
-        session: SessionDep) -> None:
+    agent_id: str, idea_id: str, session: SessionDep
+) -> None:
     """
     Deletes an Idea for the specified agent
     :param agent_id: ID of Agent
@@ -229,9 +255,14 @@ async def delete_idea(
     :param session: the database session
     """
     # Check if agent exists
-    get_agent_by_id(agent_id, session)  # throws 404 error is agent was not found
+    get_agent_by_id(
+        agent_id, session
+    )  # throws 404 error is agent was not found
 
-    delete_idea_by_agent_and_id(agent_id, idea_id, MARK_IDEAS_DELETED_ONLY, session)
+    delete_idea_by_agent_and_id(
+        agent_id, idea_id, MARK_IDEAS_DELETED_ONLY, session
+    )
+
 
 @router.post(
     "/agents/{agent_id}/ideas/generate",
@@ -242,10 +273,10 @@ async def delete_idea(
     status_code=202,
 )
 async def generate_idea_(
-        agent_id: str,
-        session: SessionDep,
-        config: IdeaGenerationData,
-        background_tasks: BackgroundTasks,
+    agent_id: str,
+    session: SessionDep,
+    config: IdeaGenerationData,
+    background_tasks: BackgroundTasks,
 ) -> None:
     """
     On demand request to generate one or multiple ideas.
@@ -256,5 +287,9 @@ async def generate_idea_(
 
     lock = agent_manager.acquire_generation_lock(agent.id)
     background_tasks.add_task(
-        generate_idea_and_post, str(agent.id), lock, config.num_items, config.reference
+        generate_idea_and_post,
+        str(agent.id),
+        lock,
+        config.num_items,
+        config.reference,
     )

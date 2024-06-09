@@ -39,14 +39,18 @@ async def generate_idea_and_post(
     """
     with Session(engine) as session:
         try:
-            strategy = get_prompt_strategy(agent_id=agent_id, host_id=host_id, session=session)
+            strategy = get_prompt_strategy(
+                agent_id=agent_id, host_id=host_id, session=session
+            )
 
             logging.info(
                 f"""Using prompt strategy {strategy.type} (version {strategy.version}) for agent {agent_id}"""
             )
 
             if task_reference is not None:
-                logging.info(f"On-Demand generation requested ${task_reference}")
+                logging.info(
+                    f"On-Demand generation requested ${task_reference}"
+                )
 
             match strategy.type:
                 case PromptStrategyType.CHAINING:
@@ -70,7 +74,9 @@ async def generate_idea_and_post(
                         agent_id, session, ideas_to_generate, task_reference
                     )
                 case _:
-                    raise ValueError(f"Unhandled strategy type: '{strategy.type}'")
+                    raise ValueError(
+                        f"Unhandled strategy type: '{strategy.type}'"
+                    )
         except Exception as e:
             lock.set_last_idea(None)
             raise e
