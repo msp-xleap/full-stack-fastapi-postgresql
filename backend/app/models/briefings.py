@@ -210,7 +210,7 @@ class AIBriefing2Base(SQLModel):
     instance_id: str
     """ reference to the ID in XLeap for the briefing """
     workspace_type: str = ""
-    """ The type of workspace this briefing is for 
+    """ The type of workspace this briefing is for
         e.g. 'brainstorm', 'deepdive', 'presentation'
     """
     frequency: int = 7
@@ -223,7 +223,7 @@ class AIBriefing2Base(SQLModel):
         E.g. this is to be used when generating contributions. Other steps may use other temperatures.
     """
     response_length: int = 3
-    """ A number in the range 1 - 3 where 
+    """ A number in the range 1 - 3 where
         Where 1 means short, 2 medium, and 3 long.
     """
     response_length_template: str = ""

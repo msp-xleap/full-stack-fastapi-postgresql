@@ -236,7 +236,7 @@ async def test_briefing(
         generate_ideas_and_post,
     )
     # Check if agent already exists
-    agent = get_agent_by_id(agent_id, session)
+    agent = get_agent_by_id(agent_id, session)  # noqa
 
     background_tasks.add_task(
         generate_ideas_and_post, agent_id, config.secret, config.num_samples,

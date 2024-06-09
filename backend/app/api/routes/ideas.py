@@ -111,7 +111,7 @@ async def create_idea(
     agent = get_agent_by_id(agent_id, session)
 
     cou_result = crud.create_or_update_idea(session=session, idea=idea, agent_id=agent_id)
-    new_idea = cou_result.idea
+    new_idea = cou_result.idea  # noqa
 
     if cou_result.is_new:
         _maybe_kick_idea_generation(agent=agent,
@@ -127,7 +127,7 @@ async def create_idea(
     },
     status_code=202,
 )
-async def create_idea(
+async def create_idea(  # noqa
         agent_id: str,
         session: SessionDep,
         new_idea: IdeaBase,
@@ -140,7 +140,7 @@ async def create_idea(
     # Check if agent exists
     agent = get_agent_by_id(agent_id, session)
     # Check if idea already exists
-    idea_old = check_if_idea_exists(
+    check_if_idea_exists(
         session=session, idea_id=new_idea.id, agent_id=agent_id
     )
 
