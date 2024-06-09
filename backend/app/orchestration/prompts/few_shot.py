@@ -1,8 +1,8 @@
+import aiohttp
 from langchain_core.prompts import (
     ChatPromptTemplate,
     FewShotChatMessagePromptTemplate,
 )
-import aiohttp
 from langchain_openai import ChatOpenAI
 
 from app.api.deps import SessionDep
@@ -41,19 +41,23 @@ async def generate_idea_and_post(
         session, n=ideas_to_select, agent_id=attached_agent.id
     )
     zero_shot_prompt = FewShotPrompt(
-        agent=attached_agent, briefing=attached_briefing, ideas=attached_ideas, task_reference=task_reference
+        agent=attached_agent,
+        briefing=attached_briefing,
+        ideas=attached_ideas,
+        task_reference=task_reference,
     )
     await zero_shot_prompt.generate_idea()
 
     # refresh agent object again, then check if our agent is still active,
     # before posting the Idea to XLeap
     attached_agent = session.get(AIAgent, attached_agent.id)
-    if (attached_agent.is_active
-            or task_reference is not None):
+    if attached_agent.is_active or task_reference is not None:
         try:
             await zero_shot_prompt.post_idea()
         except aiohttp.ClientResponseError as err:
-            zero_shot_prompt.maybe_deactivate_agent(err, attached_agent, session)
+            zero_shot_prompt.maybe_deactivate_agent(
+                err, attached_agent, session
+            )
             raise err
 
 

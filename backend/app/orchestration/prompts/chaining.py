@@ -1,4 +1,3 @@
-import logging
 import re
 
 import aiohttp
@@ -36,9 +35,8 @@ async def generate_idea_and_post(
     :param ideas_to_generate: the number of ideas to generate
     :param task_reference: if a task reference is given this is an on-demand generation
     which can ignore the agent active check
-
-    Todo: get question from the agent settings
     """
+
     attached_agent = get_agent_by_id(agent_id, session)
     attached_briefing = get_briefing2_by_agent_id(agent_id, session)
     ideas_to_select = attached_briefing.frequency * 3
@@ -48,25 +46,25 @@ async def generate_idea_and_post(
     attached_ideas = get_last_n_ideas(
         session, n=ideas_to_select, agent_id=attached_agent.id
     )
-    # Reorder the ideas such that they get not lost in the middle
-    docs = [Document(idea.text) for idea in attached_ideas]
-    reordering = LongContextReorder()
-    attached_docs = reordering.transform_documents(documents=docs)
 
     prompt_chaining = ChainingPrompt(
-        agent=attached_agent, briefing=attached_briefing, ideas=attached_ideas, task_reference=task_reference
+        agent=attached_agent,
+        briefing=attached_briefing,
+        ideas=attached_ideas,
+        task_reference=task_reference,
     )
     await prompt_chaining.generate_idea()
 
     # refresh agent object again, then check if our agent is still active,
     # before posting the Idea to XLeap
     attached_agent = session.get(AIAgent, attached_agent.id)
-    if (attached_agent.is_active
-            or task_reference is not None):
+    if attached_agent.is_active or task_reference is not None:
         try:
             await prompt_chaining.post_idea()
         except aiohttp.ClientResponseError as err:
-            prompt_chaining.maybe_deactivate_agent(err, attached_agent, session)
+            prompt_chaining.maybe_deactivate_agent(
+                err, attached_agent, session
+            )
             raise err
 
 
@@ -126,18 +124,27 @@ class ChainingPrompt(BasePrompt):
                 idea_generation_chain,
                 idea_selection_chain,
             ],
-            input_variables=["question", "idea", "persona", "setting", "language", "context"],
+            input_variables=[
+                "question",
+                "idea",
+                "persona",
+                "setting",
+                "language",
+                "context",
+            ],
             output_variables=["selected_idea"],
         )
 
         # Invoke the chain with the input
         idea = await ss_chain.ainvoke(
-            input={"question": self._briefing.workspace_instruction,
-                   "idea": examples,
-                   "persona": self._briefing.persona,
-                   "setting": self._briefing.participant_info,
-                   "context": self._briefing.workspace_info,
-                   "language": "German"},
+            input={
+                "question": self._briefing.workspace_instruction,
+                "idea": examples,
+                "persona": self._briefing.persona,
+                "setting": self._briefing.participant_info,
+                "context": self._briefing.workspace_info,
+                "language": "German",
+            },
             config={"callbacks": [langfuse_handler]},
         )
 
@@ -198,7 +205,7 @@ class ChainingPrompt(BasePrompt):
             prompt_name="SYSTEM_PROMPT"
         )
         context_prompt = await self._get_prompt_from_langfuse(
-            prompt_name=f"CONTEXT_PROMPT"
+            prompt_name="CONTEXT_PROMPT"
         )
         chaining_prompt_examples = await self._get_prompt_from_langfuse(
             prompt_name="CHAINING_PROMPT_EXAMPLES"
@@ -220,8 +227,13 @@ class ChainingPrompt(BasePrompt):
         self,
     ) -> str:
         """ """
+        # Reorder the ideas such that they get not lost in the middle
+        docs = [Document(idea.text) for idea in self._ideas]
+        reordering = LongContextReorder()
+        reordered_docs = reordering.transform_documents(documents=docs)
+
         idea_examples: str = ""
-        for example in self._ideas:
+        for example in reordered_docs:
             idea_examples += "- " + example.page_content + "\n"
 
         return idea_examples

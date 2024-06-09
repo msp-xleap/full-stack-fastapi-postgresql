@@ -61,8 +61,10 @@ def update_idea(
         Idea: Updated idea object
     """
     # Temporarily exclude the creator field from update/delete
-    do_not_update_creator: set[str] = {'created_by'}
-    idea_data = idea_new.model_dump(exclude_unset=True, exclude=do_not_update_creator)
+    do_not_update_creator: set[str] = {"created_by"}
+    idea_data = idea_new.model_dump(
+        exclude_unset=True, exclude=do_not_update_creator
+    )
     idea_db.sqlmodel_update(idea_data)
     idea_db.deleted = False  # Idea was restored
     session.add(idea_db)
@@ -77,7 +79,9 @@ class CreateOrUpdateResult:
         self.is_new: bool = is_new
 
 
-def create_or_update_idea(session: Session, agent_id: uuid_pkg.uuid4, idea: IdeaBase) -> CreateOrUpdateResult:
+def create_or_update_idea(
+    session: Session, agent_id: uuid_pkg.uuid4, idea: IdeaBase
+) -> CreateOrUpdateResult:
     # Check if idea already exists
     idea_old = check_if_idea_exists(
         session=session, idea_id=idea.id, agent_id=agent_id
@@ -85,8 +89,14 @@ def create_or_update_idea(session: Session, agent_id: uuid_pkg.uuid4, idea: Idea
 
     if not idea_old:
         # Create idea if it does not exist
-        return CreateOrUpdateResult(idea=create_idea(session=session, idea=idea, agent_id=agent_id), is_new=True)
+        return CreateOrUpdateResult(
+            idea=create_idea(session=session, idea=idea, agent_id=agent_id),
+            is_new=True,
+        )
     else:
         # deleted = idea_old.deleted
         # Update idea if it exists
-        return CreateOrUpdateResult(idea=update_idea(session=session, idea_db=idea_old, idea_new=idea), is_new=False)
+        return CreateOrUpdateResult(
+            idea=update_idea(session=session, idea_db=idea_old, idea_new=idea),
+            is_new=False,
+        )

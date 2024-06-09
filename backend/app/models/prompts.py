@@ -13,6 +13,7 @@ class PromptStrategyType(enum.StrEnum):
 
     CHAINING = "chaining"
     FEW_SHOT = "few_shot"
+    MULTI_AGENT = "multi_agent"
     # ZERO_SHOT = "zero_shot"
     XLEAP_ZERO_SHOT = "xleap_zero_shot"
     XLEAP_FEW_SHOT = "xleap_few_shot"

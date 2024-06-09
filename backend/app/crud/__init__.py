@@ -7,7 +7,7 @@ from .briefings import (
     get_ai_agent_references,
     replace_briefing2_references,
 )
-from .ideas import create_idea, update_idea, create_or_update_idea
+from .ideas import create_idea, create_or_update_idea, update_idea
 from .users import create_user
 
 __all__ = [

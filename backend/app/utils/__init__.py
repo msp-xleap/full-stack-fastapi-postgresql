@@ -12,12 +12,12 @@ from .briefings import (
 )
 from .ideas import (
     check_if_idea_exists,
+    delete_idea_by_agent_and_id,
+    get_ai_idea_share,
+    get_human_ideas_since,
     get_last_ai_idea,
     get_last_n_ideas,
-    get_ai_idea_share,
     should_ai_post_new_idea,
-    get_human_ideas_since,
-    delete_idea_by_agent_and_id
 )
 from .prompts import get_prompt_strategy
 

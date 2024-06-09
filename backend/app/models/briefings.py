@@ -206,11 +206,12 @@ class AIBriefing2ReferenceBase(SQLModel):
     url_expires_at: str
     filename: str
 
+
 class AIBriefing2Base(SQLModel):
     instance_id: str
     """ reference to the ID in XLeap for the briefing """
     workspace_type: str = ""
-    """ The type of workspace this briefing is for 
+    """ The type of workspace this briefing is for
         e.g. 'brainstorm', 'deepdive', 'presentation'
     """
     frequency: int = 7
@@ -223,7 +224,7 @@ class AIBriefing2Base(SQLModel):
         E.g. this is to be used when generating contributions. Other steps may use other temperatures.
     """
     response_length: int = 3
-    """ A number in the range 1 - 3 where 
+    """ A number in the range 1 - 3 where
         Where 1 means short, 2 medium, and 3 long.
     """
     response_length_template: str = ""
@@ -231,7 +232,7 @@ class AIBriefing2Base(SQLModel):
         This template has no variables
     """
     context_intro_template: str = ""
-    """ The generic template for the context information of a workspace. 
+    """ The generic template for the context information of a workspace.
         This template has no variables
     """
     with_additional_info: bool = False
@@ -251,7 +252,7 @@ class AIBriefing2Base(SQLModel):
          self.with_persona is True
     """
     persona_template: str = ""
-    """ The language template for the persona instruction. 
+    """ The language template for the persona instruction.
         The template provides the {{persona}} variable for self.persona
     """
     with_tone: bool = False
@@ -261,7 +262,7 @@ class AIBriefing2Base(SQLModel):
         self.with_tone is True
     """
     tone_template: str = ""
-    """ The language template for the tone instruction. 
+    """ The language template for the tone instruction.
         The template provides the {{tone}} variable for self.tone
     """
     with_session_info: bool = False
@@ -299,7 +300,7 @@ class AIBriefing2Base(SQLModel):
     """ Whether information about the workspace (e.g. Brainstorm) should be provided to the AI """
     workspace_info: str = ""
     """ The workspace information (e.g. the purpose of the brainstorm)
-        to be passed to the self.workspace_info_template as {{workspace_info}} 
+        to be passed to the self.workspace_info_template as {{workspace_info}}
         if self.with_workspace_info is True
     """
     workspace_info_template: str = ""
@@ -317,7 +318,7 @@ class AIBriefing2Base(SQLModel):
     """ Whether the workspace has an instruction """
     workspace_instruction: str = ""
     """ The instruction passed to the self.workspace_instruction_template as {{workspace_instruction}} if
-        self.with_workspace_instruction is True 
+        self.with_workspace_instruction is True
     """
     workspace_instruction_template: str = ""
     """ The language template for the workspace instruction.
@@ -327,7 +328,7 @@ class AIBriefing2Base(SQLModel):
     with_num_exemplar: int = 0
     """ The number of provided exemplar """
     exemplar_template: str = ""
-    """ The language template for the exemplar 
+    """ The language template for the exemplar
         The template provides one variable, and ends with a colon ':'
         The examples are supposed to follow next.
         It provides the {{num-exemplar}} variable for self.with_num_exemplar
@@ -337,13 +338,13 @@ class AIBriefing2Base(SQLModel):
         The reference exemplar
     """
     with_response_language: bool = False
-    """ Are we asking the AI to respond in a specific language. 
+    """ Are we asking the AI to respond in a specific language.
         Only used if the requested response language differs from the language
         in the templates
     """
     response_language: str = ""
     """ The language to respond in passed to the self.response_language_template as
-        {{response_language}} if self. with_response_language is True.    
+        {{response_language}} if self. with_response_language is True.
     """
     response_language_template: str = ""
     """ The template for the response language instruction. It has a variable {{response_language}}
@@ -354,7 +355,7 @@ class AIBriefing2Base(SQLModel):
      The template provides no variable
     """
     task_template_pn: str = ""
-    """ The task template to be used when the AI is ask to contribution 1 own contribution and there are participant 
+    """ The task template to be used when the AI is ask to contribution 1 own contribution and there are participant
      contributions but no prior AI contributions.
      The template provides no variable
     """
@@ -393,9 +394,9 @@ class AIBriefing2Base(SQLModel):
     The value for the variable is provided as part of an on-demand request
     """
     test_briefing_template: str = ""
-    """  The test briefing template is used when the host clicks on the test briefing 
-      button of an AI tab. The template provides a single variable {{num-generate}} 
-      for the number of ideas the Agent shall generate, if the number is 0 there the 
+    """  The test briefing template is used when the host clicks on the test briefing
+      button of an AI tab. The template provides a single variable {{num-generate}}
+      for the number of ideas the Agent shall generate, if the number is 0 there the
       variable is not present. This number is provided in a separate test request.
     """
 
@@ -452,7 +453,7 @@ class Briefing2(SQLModel, table=True):
     temperature: int = 70
     response_length: int = 3
     response_length_langfuse_name: str = ""
-    with_response_language:bool = False
+    with_response_language: bool = False
     response_language: str = ""
     response_language_langfuse_name: str = ""
     context_intro_langfuse_name: str = ""

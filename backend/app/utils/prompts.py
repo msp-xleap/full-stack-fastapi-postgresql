@@ -1,8 +1,11 @@
 from sqlmodel import Session, select
+
 from app.models import PromptStrategy, PromptStrategyType
 
 
-def get_prompt_strategy(*, session: Session, agent_id: str, host_id: str) -> PromptStrategy:
+def get_prompt_strategy(
+    *, session: Session, agent_id: str, host_id: str
+) -> PromptStrategy:
     """
      returns the prompt strategy to use.
      This works as follows:
@@ -28,12 +31,14 @@ def get_prompt_strategy(*, session: Session, agent_id: str, host_id: str) -> Pro
         query = select(PromptStrategy).where(PromptStrategy.host_id == None)  # noqa
         strategy = session.exec(query).first()
 
-    if strategy is None :
+    if strategy is None:
         # ignore, alchemy cannot handle "is None"
-        query = select(PromptStrategy).where(PromptStrategy.agent_id == None, PromptStrategy.host_id == "")  # noqa
+        query = select(PromptStrategy).where(
+            PromptStrategy.agent_id == None, PromptStrategy.host_id == ""
+        )  # noqa
         strategy = session.exec(query).first()
 
     if strategy is not None:
         return strategy
 
-    return PromptStrategy(type=PromptStrategyType.CHAINING, version=0)
+    return PromptStrategy(type=PromptStrategyType.MULTI_AGENT, version=0)

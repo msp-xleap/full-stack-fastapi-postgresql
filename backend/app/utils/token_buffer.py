@@ -1,5 +1,3 @@
-
-
 class TokenBuffer:
     _buffer = list[str]()
     _last_search: str | None = None
@@ -37,13 +35,17 @@ class TokenBuffer:
             if search_length + idx > buff_length:
                 return -1
             search_index = 0
-            while (search_index + 1 < search_length
-                   and idx + 1 + search_index < buff_length):
+            while (
+                search_index + 1 < search_length
+                and idx + 1 + search_index < buff_length
+            ):
                 search_index += 1
                 if buff[idx + search_index] != search[search_index]:
                     break
-            if (search_index == search_length-1
-                    and buff[idx + search_index] == search[search_index]):
+            if (
+                search_index == search_length - 1
+                and buff[idx + search_index] == search[search_index]
+            ):
                 return idx
 
     def length(self):

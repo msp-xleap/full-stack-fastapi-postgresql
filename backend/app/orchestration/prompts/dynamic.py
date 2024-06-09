@@ -1,8 +1,9 @@
 import logging
 
-from app.core.db import engine
 from sqlmodel import Session
-from app.models import AIAgent, Briefing2, PromptStrategyType
+
+from app.core.db import engine
+from app.models import PromptStrategyType
 from app.utils import (
     AgentGenerationLock,
     get_prompt_strategy,
@@ -10,6 +11,9 @@ from app.utils import (
 
 from .chaining import generate_idea_and_post as chaining_generate_idea_and_post
 from .few_shot import generate_idea_and_post as few_shot_generate_idea_and_post
+from .multi_agent import (
+    generate_idea_and_post as multi_agent_generate_idea_and_post,
+)
 from .xleap_few_shot import (
     generate_idea_and_post as xleap_generate_idea_and_post,
 )
@@ -35,14 +39,18 @@ async def generate_idea_and_post(
     """
     with Session(engine) as session:
         try:
-            strategy = get_prompt_strategy(agent_id=agent_id, host_id=host_id, session=session)
+            strategy = get_prompt_strategy(
+                agent_id=agent_id, host_id=host_id, session=session
+            )
 
             logging.info(
                 f"""Using prompt strategy {strategy.type} (version {strategy.version}) for agent {agent_id}"""
             )
 
             if task_reference is not None:
-                logging.info(f"On-Demand generation requested ${task_reference}")
+                logging.info(
+                    f"On-Demand generation requested ${task_reference}"
+                )
 
             match strategy.type:
                 case PromptStrategyType.CHAINING:
@@ -51,6 +59,10 @@ async def generate_idea_and_post(
                     )
                 case PromptStrategyType.FEW_SHOT:
                     await few_shot_generate_idea_and_post(
+                        agent_id, session, ideas_to_generate, task_reference
+                    )
+                case PromptStrategyType.MULTI_AGENT:
+                    await multi_agent_generate_idea_and_post(
                         agent_id, session, ideas_to_generate, task_reference
                     )
                 case PromptStrategyType.XLEAP_ZERO_SHOT:
@@ -62,7 +74,9 @@ async def generate_idea_and_post(
                         agent_id, session, ideas_to_generate, task_reference
                     )
                 case _:
-                    raise ValueError(f"Unhandled strategy type: '{strategy.type}'")
+                    raise ValueError(
+                        f"Unhandled strategy type: '{strategy.type}'"
+                    )
         except Exception as e:
             lock.set_last_idea(None)
             raise e

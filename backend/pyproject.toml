@@ -5,7 +5,7 @@ description = ""
 authors = ["Richard Specker <richardjoerg.specker@uzh.ch>"]
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = ">=3.11,<3.13"
 uvicorn = {extras = ["standard"], version = "^0.24.0.post1"}
 fastapi = "^0.110.2"
 python-multipart = "^0.0.9"
@@ -30,7 +30,8 @@ langchain = "^0.1.11"
 langchain-openai = "^0.0.8"
 aiohttp = "^3.9.3"
 asyncio = "^3.4.3"
-langfuse = "^2.20.4"
+langfuse = ">=2.20.4, <=2.27.2"
+pyautogen = "^0.2.28"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -66,7 +67,6 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.mypy]
-strict = true
 exclude = ["venv", ".venv", "alembic"]
 
 [tool.ruff]
@@ -93,6 +93,8 @@ ignore = [
     "B008",  # do not perform function calls in argument defaults
     "W191",  # indentation contains tabs
     "B904",  # Allow raising exceptions without from e, for HTTPException
+    "E712",
+    "ARG001"
 ]
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]

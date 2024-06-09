@@ -4,14 +4,12 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 import aiohttp
-from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
+from sqlmodel import Session
 
 from app.models import AIAgent, Idea
 from app.orchestration.data import resolve_server_addr
 from app.orchestration.prompts import langfuse_client, langfuse_handler
-
-from sqlmodel import Session
 
 
 class BrainstormBasePrompt(ABC):
@@ -31,7 +29,7 @@ class BrainstormBasePrompt(ABC):
         ideas: list[Idea] | None = None,
         temperature: float = 0.5,
         task_reference: str | None = None,
-        ideas_to_generate: int = 1
+        ideas_to_generate: int = 1,
     ):
         self._agent = agent
         self._api_key = agent.api_key
@@ -52,9 +50,9 @@ class BrainstormBasePrompt(ABC):
         """
         return idea_to_post
 
-    async def post_idea(self,
-                        idea: str | None = None,
-                        task_reference: str | None = None) -> None:
+    async def post_idea(
+        self, idea: str | None = None, task_reference: str | None = None
+    ) -> None:
         """
         Post idea to the XLeap
         :param idea (optional), default self.generated_idea
@@ -77,7 +75,7 @@ class BrainstormBasePrompt(ABC):
 
         data = {"text": idea_to_post, "folder_id": ""}
         if task_reference is not None:
-            data['task_reference'] = task_reference
+            data["task_reference"] = task_reference
 
         logging.info(
             f"""
@@ -103,9 +101,9 @@ class BrainstormBasePrompt(ABC):
                 response.raise_for_status()
 
     @staticmethod
-    def maybe_deactivate_agent(err: aiohttp.ClientResponseError,
-                                      agent: AIAgent,
-                                      session: Session):
+    def maybe_deactivate_agent(
+        err: aiohttp.ClientResponseError, agent: AIAgent, session: Session
+    ):
         """
         Deactivates the agent is these HTTP status are returned
           402 Payment Required - if the XLeap subscription expired
@@ -119,11 +117,13 @@ class BrainstormBasePrompt(ABC):
         must_deactivate_agent = False
         # 402 payment required => XLeap license expired
         if 402 == err.status:
-            logging.info('XLeap subscription expired, agent is being deactivated')
+            logging.info(
+                "XLeap subscription expired, agent is being deactivated"
+            )
             must_deactivate_agent = True
         # 409 conflict => The agent should not be generating content since it was deactivated
         elif 409 == err.status:
-            logging.info('Agent should not have been active, deactivating')
+            logging.info("Agent should not have been active, deactivating")
             must_deactivate_agent = True
 
         if must_deactivate_agent:
@@ -133,7 +133,6 @@ class BrainstormBasePrompt(ABC):
                 agent.is_active = False
                 session.merge(agent)
                 session.commit()
-
 
     @abstractmethod
     async def generate_idea(self) -> str:
