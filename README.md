@@ -14,6 +14,7 @@
 - 🐋 [Docker Compose](https://www.docker.com) for development and production.
 - 🔒 Secure password hashing by default.
 - 🔑 JWT token authentication.
+
 - ✅ Tests with [Pytest](https://pytest.org).
 - 🚢 Deployment instructions using Docker Compose.
 - 🏭 CI (continuous integration) and CD (continuous deployment) based on GitHub Actions.
