@@ -2,8 +2,7 @@ import copy
 import re
 
 import aiohttp
-import autogen
-from autogen import AssistantAgent, GroupChat, GroupChatManager
+from autogen import AssistantAgent, GroupChat, GroupChatManager, UserProxyAgent
 from langchain_community.document_transformers import LongContextReorder
 from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
@@ -159,6 +158,13 @@ class MultiAgent(BasePrompt):
             personas, we could make this part of the code dynamic to create
             as many agents as there are personas.
         """
+        # user_proxy = UserProxyAgent(
+        #     name="user_proxy",
+        #     system_message="Admin",
+        #     code_execution_config=False,
+        #     human_input_mode="TERMINATE",
+        # )
+
         # Initialize first agent `Mayor`
         mayor = await self._generate_autogen_agent("MAYOR", "Mayor", tone)
         # Initiliaze second agent
@@ -166,6 +172,7 @@ class MultiAgent(BasePrompt):
             "OTHER", self._briefing.persona, tone
         )
 
+        #agent_list = [user_proxy, mayor, second_agent]
         agent_list = [mayor, second_agent]
 
         return agent_list
@@ -175,7 +182,7 @@ class MultiAgent(BasePrompt):
         agents: list[AssistantAgent],
         task: str,
         max_rounds: int = 6,
-        allow_repeat_speaker: bool = False,
+        allow_repeat_speaker: bool = True,
     ) -> str:
         """
         Sets up a group chat environment for the agents with specified
@@ -189,7 +196,7 @@ class MultiAgent(BasePrompt):
             max_rounds (int, optional): Maximum number of rounds the agents
                 are allowed to interact. Default is 6.
             allow_repeat_speaker (bool, optional): Flag to allow or disallow
-                the same agent to speak consecutively. Default is False.
+                the same agent to speak consecutively. Default is True.
 
         Returns:
             str: Concatenated string of all messages from the group chat.
@@ -329,7 +336,7 @@ class MultiAgent(BasePrompt):
             type=type, role=role, tone=tone
         )
 
-        autogen_agent = autogen.AssistantAgent(
+        autogen_agent = AssistantAgent(
             name=role,
             system_message=agent_prompt,
             llm_config=agent_config,
