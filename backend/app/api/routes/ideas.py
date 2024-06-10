@@ -47,25 +47,6 @@ def _maybe_kick_idea_generation(
     if lock.acquired:
         was_tasked = False
         try:
-            briefing = get_briefing2_by_agent_id(agent_id, session)
-
-            # a frequency of 0 (or below) means the Agent will be triggered manually
-            # However, we should not get here, since an on demand agent stay inactive.
-            if briefing.frequency <= 0:
-                logging.info(f"Agent {agent.id} is in on-demand mode")
-                return
-
-            frequency = briefing.frequency + 1
-
-            last_ai_idea = get_last_ai_idea(session, agent_id)
-            last_ai_idea_count = 0
-            if last_ai_idea is not None:
-                last_ai_idea_count = get_human_ideas_since(
-                    session, agent.id, last_ai_idea
-                )
-
-            ai_share = get_ai_idea_share(session, agent_id)
-
             # Post the idea if specific conditions are met. These include:
             # the agent being active, no current lock preventing posting,
             # and criteria indicating the need for more visibility of
@@ -75,14 +56,12 @@ def _maybe_kick_idea_generation(
             should_post = should_ai_post_new_idea(
                 agent=agent,
                 lock=lock,
-                last_ai_idea=last_ai_idea,
-                frequency=frequency,
-                ai_idea_share=ai_share,
-                last_ai_idea_count=last_ai_idea_count,
+                session=session,
             )
 
             # Generate idea and post if agent is active
             if should_post:
+                last_ai_idea = get_last_ai_idea(session, agent.id)
                 lock.set_last_idea(last_ai_idea)
                 background_tasks.add_task(
                     generate_idea_and_post,
