@@ -1,3 +1,5 @@
+import copy
+import logging
 import re
 
 import aiohttp
@@ -18,10 +20,10 @@ from app.utils.briefings import get_briefing2_by_agent_id
 
 
 async def generate_idea_and_post(
-    agent_id: str,
-    session: SessionDep,
-    ideas_to_generate: int = 1,
-    task_reference: str | None = None,
+        agent_id: str,
+        session: SessionDep,
+        ideas_to_generate: int = 1,
+        task_reference: str | None = None,
 ) -> None:
     """
     Generate idea and post it to the XLeap server
@@ -131,6 +133,10 @@ class MultiAgent(BasePrompt):
             config={"callbacks": [langfuse_handler]},
         )
 
+        # Storing trace id. Trace id will be required to upload multi-agent
+        # conversation
+        self._trace_id = langfuse_handler.trace.id
+
         return tone.content
 
     async def _initialize_agents(self, tone: str) -> list[AssistantAgent]:
@@ -161,11 +167,11 @@ class MultiAgent(BasePrompt):
         return agent_list
 
     async def _conduct_group_discussion(
-        self,
-        agents: list[AssistantAgent],
-        task: str,
-        max_rounds: int = 6,
-        allow_repeat_speaker: bool = False,
+            self,
+            agents: list[AssistantAgent],
+            task: str,
+            max_rounds: int = 6,
+            allow_repeat_speaker: bool = False,
     ) -> str:
         """
         Sets up a group chat environment for the agents with specified
@@ -204,9 +210,13 @@ class MultiAgent(BasePrompt):
         # discussion.
         agents[0].initiate_chat(manager, message=task)
 
+        # Add conversation to trace
+        await self.add_conversation_to_trace(task, group_chat, agents)
+
         return manager.messages_to_string(group_chat.messages)
 
-    async def _generate_tone_analyis_prompt(self) -> ChatPromptTemplate:  # type: ignore
+    async def _generate_tone_analyis_prompt(
+            self) -> ChatPromptTemplate:  # type: ignore
         """
         Retrieves a prompt template for analyzing the tone of examples.
 
@@ -260,7 +270,7 @@ class MultiAgent(BasePrompt):
         return task_prompt
 
     async def _generate_agent_prompt(
-        self, type: str, role: str, tone: str
+            self, type: str, role: str, tone: str
     ) -> str:
         """
         Generates a customized prompt for an agent based on the specified
@@ -297,7 +307,7 @@ class MultiAgent(BasePrompt):
         return agent_system_message
 
     async def _generate_autogen_agent(
-        self, type: str, role: str, tone: str
+            self, type: str, role: str, tone: str
     ) -> AssistantAgent:
         """
         Generates an autonomous agent with specified parameters.
@@ -323,6 +333,47 @@ class MultiAgent(BasePrompt):
         )
 
         return autogen_agent
+
+    async def add_conversation_to_trace(self, task: str, group_chat: GroupChat, agents: list):
+        """
+        Adds a conversation to the trace in Langfuse by creating a span with
+        conversation metadata.
+
+        This method retrieves configuration data, modifies it by removing
+        sensitive information, and uses it in the tracing span.
+
+        Args:
+            task: The task associated with the conversation.
+            group_chat: The group chat object containing the messages of the
+                conversation.
+            agents: List of agents
+
+        Returns:
+            None. The function's purpose is to perform side effects by
+                interacting with the langfuse handler.
+        """
+        # Get configs for discussion
+        llm_configs = await self._get_agent_configs()
+
+        # Create a deep copy of the dictionary to modify
+        config_copy = copy.deepcopy(llm_configs)
+
+        # Remove 'api_key' from the copy
+        if 'api_key' in config_copy['config_list'][0]:
+            del config_copy['config_list'][0]['api_key']
+
+        # Document all input messages
+        inputs = {agent.name: agent.system_message for agent in agents}
+        inputs["task"] = task
+
+        # Create new nested span
+        langfuse_handler.langfuse.span(
+            trace_id=self._trace_id,
+            name="Multi-Agent Conversation",
+            metadata=config_copy,
+            input=inputs,
+            output=group_chat.messages
+        )
 
     async def _load_ideas_as_examples(self) -> str:
         """
@@ -361,7 +412,8 @@ class MultiAgent(BasePrompt):
             "config_list": [
                 {"model": self._agent.model, "api_key": self._agent.api_key}
             ],
-            "temperature": 0.7,  # Adjusts the randomness of the model's responses
+            "temperature": 0.7,
+            # Adjusts the randomness of the model's responses
             "top_p": 0.7,  # Controls the diversity of the model's responses
             "frequency_penalty": 0.7,  # Discourages repetitive responses
             "presence_penalty": 0.7,  # Encourages novel topic introduction
