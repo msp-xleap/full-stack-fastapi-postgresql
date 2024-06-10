@@ -11,9 +11,6 @@ from app.utils import (
     check_if_idea_exists,
     delete_idea_by_agent_and_id,
     get_agent_by_id,
-    get_ai_idea_share,
-    get_briefing2_by_agent_id,
-    get_human_ideas_since,
     get_last_ai_idea,
     should_ai_post_new_idea,
 )

@@ -95,6 +95,7 @@ ignore = [
     "W191",  # indentation contains tabs
     "B904",  # Allow raising exceptions without from e, for HTTPException
     "E712",
+    "E711",
     "ARG001"
 ]
 # Allow fix for all enabled rules (when `--fix`) is provided.

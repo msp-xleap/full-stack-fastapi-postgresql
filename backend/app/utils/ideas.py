@@ -281,7 +281,7 @@ def get_total_human_ideas(session: Session, agent_id: uuid_pkg.UUID) -> int:
         .where(
             Idea.agent_id == agent_id,
             Idea.created_by_ai == False,  # Exclude AI-generated ideas
-            Idea.deleted == False         # Exclude deleted ideas
+            Idea.deleted == False,  # Exclude deleted ideas
         )
     )
 
@@ -290,8 +290,11 @@ def get_total_human_ideas(session: Session, agent_id: uuid_pkg.UUID) -> int:
     return count if count is not None else 0
 
 
-def get_human_ideas_since(session: Session, agent_id: uuid_pkg.UUID,
-                          reference_idea: Idea | None = None) -> int:
+def get_human_ideas_since(
+    session: Session,
+    agent_id: uuid_pkg.UUID,
+    reference_idea: Idea | None = None,
+) -> int:
     """
     Counts the number of human-created ideas since the last AI-generated idea, or all human ideas if no reference is given.
 
@@ -310,7 +313,7 @@ def get_human_ideas_since(session: Session, agent_id: uuid_pkg.UUID,
         .where(
             Idea.agent_id == agent_id,
             Idea.created_by_ai == False,  # Exclude AI-generated ideas
-            Idea.deleted == False         # Exclude deleted ideas
+            Idea.deleted == False,  # Exclude deleted ideas
         )
     )
 
