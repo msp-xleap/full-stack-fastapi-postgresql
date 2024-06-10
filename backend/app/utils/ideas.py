@@ -180,7 +180,9 @@ def should_ai_post_new_idea(
     # Define various metrics related to idea generation for the agent. These
     # metrics are used as conditions for the AI contributions
 
-        # Fetch the most recent AI-generated idea to establish a reference point
+    # Fetch the total number of human ideas
+    total_human_ideas = get_total_human_ideas(session, agent.id)
+    # Fetch the most recent AI-generated idea to establish a reference point
     last_ai_idea = get_last_ai_idea(session, agent.id)
     # Count the number of human-generated ideas that have been created since
     # the last AI-generated idea.
@@ -208,8 +210,8 @@ def should_ai_post_new_idea(
     # 25% buffer around the target share for flexibility.
     buffer = 0.25 * target_share
 
-    # Checking idea count relative to frequency
-    if human_ideas_since_ai < frequency // 2:
+    # Ensuring that AI ideas are not posted to early in the process
+    if total_human_ideas < frequency // 2:
         if debug:
             logging.info(
                 f"should_ai_post_new_idea: No, because there are not enough"
@@ -259,6 +261,33 @@ def should_ai_post_new_idea(
     if debug:
         logging.info("should_ai_post_new_idea: No finally")
     return False
+
+
+def get_total_human_ideas(session: Session, agent_id: uuid_pkg.UUID) -> int:
+    """
+    Counts the total number of human-created ideas for a given agent.
+
+    Args:
+        session (Session): Active database session.
+        agent_id (UUID): The unique identifier for the agent.
+
+    Returns:
+        int: Total number of human-generated ideas.
+    """
+    # Base query for counting all human ideas
+    query = (
+        select(func.count())
+        .select_from(Idea)
+        .where(
+            Idea.agent_id == agent_id,
+            Idea.created_by_ai == False,  # Exclude AI-generated ideas
+            Idea.deleted == False         # Exclude deleted ideas
+        )
+    )
+
+    # Execute the query and return the count, defaulting to 0 if none found
+    count = session.execute(query).scalar_one_or_none()
+    return count if count is not None else 0
 
 
 def get_human_ideas_since(session: Session, agent_id: uuid_pkg.UUID,
