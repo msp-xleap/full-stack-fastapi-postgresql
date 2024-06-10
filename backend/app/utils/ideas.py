@@ -5,7 +5,6 @@ from random import random
 from fastapi import HTTPException
 from sqlmodel import Session, desc, func, select
 
-from app.api.deps import SessionDep
 from app.models import AIAgent, Idea
 from app.utils import AgentGenerationLock, get_briefing2_by_agent_id
 
@@ -17,7 +16,7 @@ def check_if_idea_exists(
     Given an idea ID and an agent ID, check if the idea exists in the database.
 
     Args:
-        session (SessionDep): Database session.
+        session (Session): Database session.
         idea_id (str): Idea ID of XLeap.
         agent_id (uuid_pkg.uuid4): Agent ID.
 
@@ -135,7 +134,7 @@ def get_ai_idea_share(session: Session, agent_id: uuid_pkg.uuid4) -> float:
 def should_ai_post_new_idea(
     agent: AIAgent,
     lock: AgentGenerationLock,
-    session: SessionDep,
+    session: Session,
     # frequency: int,
 ) -> bool:
     """
@@ -148,7 +147,7 @@ def should_ai_post_new_idea(
     Args:
         agent (AIAgent): Agent instance, must have an 'is_active' attribute.
         lock (AgentGenerationLock): Lock instance, must have a 'last_id' attribute.
-        session (SessionDep): the database session
+        session (Session): the database session
 
     Returns:
         bool: True if a new AI idea should be posted, False otherwise.
