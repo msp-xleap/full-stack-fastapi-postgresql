@@ -66,6 +66,11 @@ class MultiAgent(BasePrompt):
     Class using Langchain and Autogen to facilitate collaborative
     idea generation through multiple agent interaction.
 
+    Sources:
+    - https://microsoft.github.io/autogen/
+    - https://github.com/microsoft/autogen
+    - https://arxiv.org/abs/2308.08155
+
     Future Work:
     - Use AutoBuild to create agents. We did not use AutoBuild because it
       was too slow. Future models with faster response times may use AutoBuild.
