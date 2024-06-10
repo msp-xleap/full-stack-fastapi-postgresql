@@ -32,6 +32,7 @@ aiohttp = "^3.9.3"
 asyncio = "^3.4.3"
 langfuse = ">=2.20.4, <=2.27.2"
 pyautogen = "^0.2.28"
+pyjwt = "^2.8.0"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -94,6 +95,7 @@ ignore = [
     "W191",  # indentation contains tabs
     "B904",  # Allow raising exceptions without from e, for HTTPException
     "E712",
+    "E711",
     "ARG001"
 ]
 # Allow fix for all enabled rules (when `--fix`) is provided.

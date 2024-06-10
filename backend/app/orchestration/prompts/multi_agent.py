@@ -1,3 +1,4 @@
+import copy
 import re
 
 import aiohttp
@@ -131,6 +132,10 @@ class MultiAgent(BasePrompt):
             config={"callbacks": [langfuse_handler]},
         )
 
+        # Storing trace id. Trace id will be required to upload multi-agent
+        # conversation
+        self._trace_id = langfuse_handler.trace.id
+
         return tone.content
 
     async def _initialize_agents(self, tone: str) -> list[AssistantAgent]:
@@ -203,6 +208,9 @@ class MultiAgent(BasePrompt):
         # message (task) which sets the context or the topic for the group
         # discussion.
         agents[0].initiate_chat(manager, message=task)
+
+        # Add conversation to trace
+        await self.add_conversation_to_trace(task, group_chat, agents)
 
         return manager.messages_to_string(group_chat.messages)
 
@@ -324,6 +332,49 @@ class MultiAgent(BasePrompt):
 
         return autogen_agent
 
+    async def add_conversation_to_trace(
+        self, task: str, group_chat: GroupChat, agents: list
+    ):
+        """
+        Adds a conversation to the trace in Langfuse by creating a span with
+        conversation metadata.
+
+        This method retrieves configuration data, modifies it by removing
+        sensitive information, and uses it in the tracing span.
+
+        Args:
+            task: The task associated with the conversation.
+            group_chat: The group chat object containing the messages of the
+                conversation.
+            agents: List of agents
+
+        Returns:
+            None. The function's purpose is to perform side effects by
+                interacting with the langfuse handler.
+        """
+        # Get configs for discussion
+        llm_configs = await self._get_agent_configs()
+
+        # Create a deep copy of the dictionary to modify
+        config_copy = copy.deepcopy(llm_configs)
+
+        # Remove 'api_key' from the copy
+        if "api_key" in config_copy["config_list"][0]:
+            del config_copy["config_list"][0]["api_key"]
+
+        # Document all input messages
+        inputs = {agent.name: agent.system_message for agent in agents}
+        inputs["task"] = task
+
+        # Create new nested span
+        langfuse_handler.langfuse.span(
+            trace_id=self._trace_id,
+            name="Multi-Agent Conversation",
+            metadata=config_copy,
+            input=inputs,
+            output=group_chat.messages,
+        )
+
     async def _load_ideas_as_examples(self) -> str:
         """
         Loads and reorders idea examples for use in generating tasks. When
@@ -361,7 +412,8 @@ class MultiAgent(BasePrompt):
             "config_list": [
                 {"model": self._agent.model, "api_key": self._agent.api_key}
             ],
-            "temperature": 0.7,  # Adjusts the randomness of the model's responses
+            "temperature": 0.7,
+            # Adjusts the randomness of the model's responses
             "top_p": 0.7,  # Controls the diversity of the model's responses
             "frequency_penalty": 0.7,  # Discourages repetitive responses
             "presence_penalty": 0.7,  # Encourages novel topic introduction
