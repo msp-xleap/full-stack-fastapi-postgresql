@@ -28,7 +28,7 @@ def get_prompt_strategy(
 
     if strategy is None and host_id is not None and host_id != "":
         # ignore, alchemy cannot handle "is None"
-        query = select(PromptStrategy).where(PromptStrategy.host_id == None)  # noqa
+        query = select(PromptStrategy).where(PromptStrategy.host_id == host_id)  # noqa
         strategy = session.exec(query).first()
 
     if strategy is None:
