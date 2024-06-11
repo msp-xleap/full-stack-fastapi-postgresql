@@ -265,6 +265,7 @@ async def generate_idea_(
     background_tasks.add_task(
         generate_idea_and_post,
         str(agent.id),
+        agent.host_id,
         lock,
         config.num_items,
         config.reference,
