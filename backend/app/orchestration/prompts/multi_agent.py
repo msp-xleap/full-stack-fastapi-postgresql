@@ -181,7 +181,7 @@ class MultiAgent(BasePrompt):
         self,
         agents: list[AssistantAgent],
         task: str,
-        max_rounds: int = 6,
+        max_rounds: int = 5,
         allow_repeat_speaker: bool = True,
     ) -> str:
         """
