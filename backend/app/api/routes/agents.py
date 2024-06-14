@@ -10,6 +10,7 @@ from app.api.deps import SessionDep
 from app.models import (
     AIAgent,
     AIAgentCreate,
+    AIAgentConfigBase,
     AIAgentIdResponse,
     AIAgentsOut,
     AIBriefing2Base,
@@ -75,6 +76,28 @@ async def create_agent(
     # background_tasks.add_task(get_agent_briefing, agent)
 
     return AIAgentIdResponse(agent_id=str(agent.id))
+
+
+@router.patch(
+    "/{agent_id}/",
+    responses={403: {"detail": "Invalid secret"},
+               404: {"detail": "Agent not found"}},
+    status_code=200,
+)
+async def update_agent(
+        *,
+        session: SessionDep,
+        agent_id: str,
+        agent_config_in: AIAgentConfigBase
+) -> Any:
+    """
+    Updates an agent.
+    """
+    # Find agent by ID
+    agent = get_agent_by_id(agent_id, session)
+
+    # update the agent object
+    crud.update_ai_agent(session=session, agent=agent, ai_config_agent=agent_config_in)
 
 
 @router.post(
