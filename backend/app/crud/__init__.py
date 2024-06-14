@@ -1,4 +1,4 @@
-from .agents import activate_ai_agent, create_ai_agent, deactivate_ai_agent
+from .agents import activate_ai_agent, create_ai_agent, deactivate_ai_agent, update_ai_agent
 from .briefings import (
     create_ai_agent_briefing2,
     create_ai_agent_briefing2_reference,
@@ -19,6 +19,7 @@ __all__ = [
     "create_or_update_ai_agent_briefing2",
     "create_or_update_idea",
     "create_user",
+    "update_ai_agent",
     "deactivate_ai_agent",
     "get_ai_agent_file_references",
     "get_ai_agent_references",

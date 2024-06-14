@@ -41,6 +41,8 @@ from .ideas import (
 
 from .prompts import PromptStrategyType, PromptStrategy
 
+from .threshold import ThresholdStrategy
+
 from .varia import Message, NewPassword, Token, TokenPayload
 
 __all__ = [
@@ -82,4 +84,5 @@ __all__ = [
     "XLeapBriefingPrompt",
     "XLeapDetailsBase",
     "AIBriefingTest",
+    "ThresholdStrategy",
 ]

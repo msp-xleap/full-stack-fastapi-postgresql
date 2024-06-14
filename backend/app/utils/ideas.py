@@ -7,6 +7,7 @@ from sqlmodel import Session, desc, func, select
 
 from app.models import AIAgent, Idea
 from app.utils import AgentGenerationLock, get_briefing2_by_agent_id
+from .threshold import get_threshold_strategy_type
 
 
 def check_if_idea_exists(
@@ -130,7 +131,6 @@ def get_ai_idea_share(session: Session, agent_id: uuid_pkg.uuid4) -> float:
 
     return ai_idea_share
 
-
 def should_ai_post_new_idea(
     agent: AIAgent,
     lock: AgentGenerationLock,
@@ -153,9 +153,14 @@ def should_ai_post_new_idea(
         bool: True if a new AI idea should be posted, False otherwise.
     """
     debug = True
+    threshold_strategy_type = get_threshold_strategy_type(
+        session=session,
+        agent_id=str(agent.id),
+        host_id=agent.host_id)
+
     if debug:
         logging.info(
-            f"should_ai_post_new_idea: Computing share for agent {agent.id}"
+            f"should_ai_post_new_idea: Computing share for agent {agent.id}, options are: ${threshold_strategy_type}"
         )
 
     # Primary rule: If the agent is triggered manually
@@ -165,7 +170,11 @@ def should_ai_post_new_idea(
     if briefing.frequency <= 0:
         logging.info(f"Agent {agent.id} is in on-demand mode")
         return False
-    frequency = briefing.frequency + 1
+    frequency = briefing.frequency
+
+    # AS@RS: why have a +1 for the frequency?
+    if "+1" in threshold_strategy_type:
+        frequency = frequency + 1
 
     # Secondary rule: If the agent is not active there is no need to check
     # anything else
@@ -218,37 +227,47 @@ def should_ai_post_new_idea(
             )
         return False
 
-    # Dynamic condition based on AI idea share:
-    # Using a buffer to add flexibility to the decision to post.
-    if ai_ideas_share < target_share - buffer:
-        # Post more if the share of AI ideas is significantly below the target.
-        if debug:
-            logging.info(
-                f"should_ai_post_new_idea: Yes, because AI share is to low: "
-                f"{ai_ideas_share} < {target_share - buffer}"
-            )
-        return True
-    elif ai_ideas_share > target_share + buffer:
-        # Do not post if AI ideas are significantly overrepresented.
-        if debug:
-            logging.info(
-                f"should_ai_post_new_idea: No, because AI share is to high: "
-                f"{ai_ideas_share} > {target_share + buffer}"
-            )
-        return False
+    allow_dynamic = False
+    if "+dynamic" in threshold_strategy_type:
+        allow_dynamic = True
 
-    # Fallback conditions for additional posting checks:
-    # Random chance to post based on the defined frequency.
-    random_chance_to_post = random() < 1 / frequency
+    if allow_dynamic:
+        # Dynamic condition based on AI idea share:
+        # Using a buffer to add flexibility to the decision to post.
+        if ai_ideas_share < target_share - buffer:
+            # Post more if the share of AI ideas is significantly below the target.
+            if debug:
+                logging.info(
+                    f"should_ai_post_new_idea: Yes, because AI share is to low: "
+                    f"{ai_ideas_share} < {target_share - buffer}"
+                )
+            return True
+        elif ai_ideas_share > target_share + buffer:
+            # Do not post if AI ideas are significantly overrepresented.
+            if debug:
+                logging.info(
+                    f"should_ai_post_new_idea: No, because AI share is to high: "
+                    f"{ai_ideas_share} > {target_share + buffer}"
+                )
+            return False
+
+    allow_random_posts = False
+    if "+random" in threshold_strategy_type:
+        allow_random_posts = True
+
+    if allow_random_posts:
+        # Fallback conditions for additional posting checks:
+        # Random chance to post based on the defined frequency.
+        random_chance_to_post = random() < 1 / frequency
+
+        # Evaluate fallback conditions
+        if allow_random_posts and random_chance_to_post:
+            if debug:
+                logging.info("should_ai_post_new_idea: Yes, because of randomness")
+            return True
+
     # Significant change in idea count, suggesting a burst of new ideas.
     significant_idea_increase = human_ideas_since_ai >= frequency
-
-    # Evaluate fallback conditions
-    if random_chance_to_post:
-        if debug:
-            logging.info("should_ai_post_new_idea: Yes, because of randomness")
-        return True
-
     if significant_idea_increase:
         if debug:
             logging.info(

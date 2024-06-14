@@ -160,7 +160,10 @@ def _workspace_name_2_sub_category(name: str) -> BriefingSubCategory:
         case "resultmultitable":
             return BriefingSubCategory.WS_MULTI_RESULTS
 
-    raise ValueError(f"Unhandled workspace name: '{name}'")
+    if name is None:
+        return BriefingSubCategory.WS_BRAINSTORM
+
+    raise ValueError("Unhandled workspace name: '" + str(name) + "'")
 
 
 def _get_langfuse_prompt_name(
