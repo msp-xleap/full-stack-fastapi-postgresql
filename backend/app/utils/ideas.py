@@ -2,12 +2,19 @@ import logging
 import uuid as uuid_pkg
 from random import random
 
-from fastapi import HTTPException
+from fastapi import HTTPException, BackgroundTasks
 from sqlmodel import Session, desc, func, select
+
+from .agent_manager import agent_manager
 
 from app.models import AIAgent, Idea
 from app.utils import AgentGenerationLock, get_briefing2_by_agent_id
 from .threshold import get_threshold_strategy_type
+
+from typing import Any, Callable
+from typing_extensions import Annotated, Doc, ParamSpec
+
+P = ParamSpec("P")
 
 
 def check_if_idea_exists(
@@ -130,6 +137,7 @@ def get_ai_idea_share(session: Session, agent_id: uuid_pkg.uuid4) -> float:
     ai_idea_share = ai_ideas / total_ideas
 
     return ai_idea_share
+
 
 def should_ai_post_new_idea(
     agent: AIAgent,
@@ -396,3 +404,71 @@ def delete_idea_by_agent_and_id(
         else:
             session.delete(idea)
         session.commit()
+
+
+
+def maybe_kick_idea_generation(
+        agent,
+        agent_id: str,
+        session: Session,
+        background_tasks: BackgroundTasks,
+        generate_idea_and_post: Annotated[
+            Callable[P, Any],
+            Doc(
+                """
+                The function to call after the response is sent.
+
+                It can be a regular `def` function or an `async def` function.
+                """
+            ),
+        ],
+):
+    """
+    To be called when we receive an Idea from XLeap. Check if the specified Agent should generate
+    its next own idea.
+    :param agent: the agent object
+    :param agent_id: the agent ID
+    :param session: the database session
+    :param background_tasks: the background tasks
+    """
+
+    logging.getLogger().setLevel(logging.INFO)
+
+    # no need to check anything when the agent is not active
+    if not agent.is_active:
+        logging.info(f"Agent {agent.id} is not active")
+        return
+
+    lock = agent_manager.try_acquire_generation_lock(agent.id)
+    if lock.acquired:
+        was_tasked = False
+        try:
+            # Post the idea if specific conditions are met. These include:
+            # the agent being active, no current lock preventing posting,
+            # and criteria indicating the need for more visibility of
+            # AI-generated ideas—such as AI ideas being underrepresented,
+            # a favorable random chance outcome, or a significant increase
+            # in idea count.
+            should_post = should_ai_post_new_idea(
+                agent=agent,
+                lock=lock,
+                session=session,
+            )
+
+            # Generate idea and post if agent is active
+            if should_post:
+                last_ai_idea = get_last_ai_idea(session, agent.id)
+                lock.set_last_idea(last_ai_idea)
+                background_tasks.add_task(
+                    generate_idea_and_post,
+                    str(agent.id),
+                    agent.host_id,
+                    lock,
+                    1,
+                    None,
+                )
+        finally:
+            if not was_tasked:
+                lock.release()
+    else:
+        logging.info(f"Agent {agent.id} lock was already held")

@@ -18,6 +18,7 @@ from .ideas import (
     get_last_ai_idea,
     get_last_n_ideas,
     should_ai_post_new_idea,
+    maybe_kick_idea_generation,
 )
 from .prompts import get_prompt_strategy
 
@@ -41,5 +42,6 @@ __all__ = [
     "langfuse_base_from_briefing_base",
     "langfuse_base_from_briefing_reference_base",
     "should_ai_post_new_idea",
+    "maybe_kick_idea_generation",
     "TextTypeSwapper",
 ]

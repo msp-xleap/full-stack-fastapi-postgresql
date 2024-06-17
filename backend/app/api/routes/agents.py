@@ -21,7 +21,9 @@ from app.utils import (
     check_agent_exists_by_instance_id,
     get_agent_by_id,
     get_briefing2_by_agent_id,
+    maybe_kick_idea_generation,
 )
+from app.orchestration.prompts.dynamic import generate_idea_and_post
 
 router = APIRouter()
 
@@ -133,7 +135,7 @@ async def update_agent(
     },
     status_code=200,
 )
-async def activate_agent(agent_id: str, session: SessionDep) -> None:
+async def activate_agent(agent_id: str, session: SessionDep, background_tasks: BackgroundTasks) -> None:
     """
     Activate agent.
 
@@ -143,6 +145,7 @@ async def activate_agent(agent_id: str, session: SessionDep) -> None:
     Args:
         agent_id (str): UUID of the agent to be activated
         session (SessionDep): Database session
+        background_tasks (BackgroundTasks)
 
     Raises:
         HTTPException - 403: If the secret is invalid.
@@ -154,8 +157,20 @@ async def activate_agent(agent_id: str, session: SessionDep) -> None:
     # Find agent by ID
     agent = get_agent_by_id(agent_id, session)
 
-    # Activate agent
-    crud.activate_ai_agent(session=session, ai_agent=agent)
+    if not agent.is_active:
+        # Activate agent
+        crud.activate_ai_agent(session=session, ai_agent=agent)
+
+        # The agent may have been started after participants
+        # already contributed some ideas. In that case the AI
+        # should directly provide a new contribution
+        maybe_kick_idea_generation(
+            agent=agent,
+            agent_id=agent_id,
+            session=session,
+            background_tasks=background_tasks,
+            generate_idea_and_post=generate_idea_and_post
+        )
 
 
 @router.post(

@@ -1,5 +1,3 @@
-import logging
-
 from fastapi import APIRouter, BackgroundTasks
 
 from app import crud
@@ -11,68 +9,10 @@ from app.utils import (
     check_if_idea_exists,
     delete_idea_by_agent_and_id,
     get_agent_by_id,
-    get_last_ai_idea,
-    should_ai_post_new_idea,
+    maybe_kick_idea_generation,
 )
 
 router = APIRouter()
-
-
-def _maybe_kick_idea_generation(
-    agent,
-    agent_id: str,
-    session: SessionDep,
-    background_tasks: BackgroundTasks,
-):
-    """
-    To be called when we receive an Idea from XLeap. Check if the specified Agent should generate
-    its next own idea.
-    :param agent: the agent object
-    :param agent_id: the agent ID
-    :param session: the database session
-    :param background_tasks: the background tasks
-    """
-
-    logging.getLogger().setLevel(logging.INFO)
-
-    # no need to check anything when the agent is not active
-    if not agent.is_active:
-        logging.info(f"Agent {agent.id} is not active")
-        return
-
-    lock = agent_manager.try_acquire_generation_lock(agent.id)
-    if lock.acquired:
-        was_tasked = False
-        try:
-            # Post the idea if specific conditions are met. These include:
-            # the agent being active, no current lock preventing posting,
-            # and criteria indicating the need for more visibility of
-            # AI-generated ideas—such as AI ideas being underrepresented,
-            # a favorable random chance outcome, or a significant increase
-            # in idea count.
-            should_post = should_ai_post_new_idea(
-                agent=agent,
-                lock=lock,
-                session=session,
-            )
-
-            # Generate idea and post if agent is active
-            if should_post:
-                last_ai_idea = get_last_ai_idea(session, agent.id)
-                lock.set_last_idea(last_ai_idea)
-                background_tasks.add_task(
-                    generate_idea_and_post,
-                    str(agent.id),
-                    agent.host_id,
-                    lock,
-                    1,
-                    None,
-                )
-        finally:
-            if not was_tasked:
-                lock.release()
-    else:
-        logging.info(f"Agent {agent.id} lock was already held")
 
 
 @router.post(
@@ -102,11 +42,12 @@ async def create_idea(
     new_idea = cou_result.idea  # noqa
 
     if cou_result.is_new:
-        _maybe_kick_idea_generation(
+        maybe_kick_idea_generation(
             agent=agent,
             agent_id=agent_id,
             session=session,
             background_tasks=background_tasks,
+            generate_idea_and_post=generate_idea_and_post
         )
 
 
@@ -140,11 +81,12 @@ async def create_idea(  # noqa
     )
 
     if cou_result.is_new:
-        _maybe_kick_idea_generation(
+        maybe_kick_idea_generation(
             agent=agent,
             agent_id=agent_id,
             session=session,
             background_tasks=background_tasks,
+            generate_idea_and_post=generate_idea_and_post,
         )
 
 
@@ -171,11 +113,12 @@ async def create_ideas(
             last_new_idea = cou_result.idea
 
     if last_new_idea is not None:
-        _maybe_kick_idea_generation(
+        maybe_kick_idea_generation(
             agent=agent,
             agent_id=agent_id,
             session=session,
             background_tasks=background_tasks,
+            generate_idea_and_post=generate_idea_and_post
         )
 
 
