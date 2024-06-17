@@ -2,7 +2,7 @@ import json
 import logging
 from typing import Any
 
-from fastapi import APIRouter, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 from sqlmodel import select
 
 from app import crud
@@ -76,6 +76,31 @@ async def create_agent(
     # background_tasks.add_task(get_agent_briefing, agent)
 
     return AIAgentIdResponse(agent_id=str(agent.id))
+
+
+@router.delete(
+    "/{agent_id}/",
+)
+async def delete_agent(
+        agent_id: str,
+        session: SessionDep,
+        background_tasks: BackgroundTasks
+) -> None:
+    """
+    Deletes an Agent (currently only makes sure the agent is stopped!!!)
+    """
+    try:
+        # Find agent by ID
+        agent = get_agent_by_id(agent_id, session)
+
+        # Activate agent
+        if agent.is_active:
+            crud.deactivate_ai_agent(session=session, ai_agent=agent)
+
+        # TODO create background task to delete all content related to this agent
+    except HTTPException:
+        # ignore if the agent does not exist
+        return
 
 
 @router.patch(
